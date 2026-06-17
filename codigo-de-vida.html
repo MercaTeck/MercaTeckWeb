@@ -5,30 +5,161 @@
 <title>Código de Vida — MercaTeck</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@200;300;400&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#080809;--surface:#0f0f11;--gold:#c9a96e;--text:#ede9e0;--muted:#555260;--border:rgba(201,169,110,0.12);}
+:root{--bg:#0d0d0d;--surface:#161616;--teal:#58BFBC;--azul:#4C8FAA;--arena:#EFCC94;--crema:#ECDCC5;--muted:#6a6a6a;--border:rgba(88,191,188,.14);}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;}
-nav{position:fixed;top:0;width:100%;z-index:100;padding:1.8rem 5rem;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom,rgba(8,8,9,.95),transparent);}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.12em;color:var(--text);text-decoration:none;}
-.logo em{color:var(--gold);font-style:normal;}
-.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:8rem 2rem;}
-.hero-tag{font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:2rem;}
-.hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(4rem,10vw,8rem);line-height:.95;margin-bottom:1.5rem;}
-.hero p{color:var(--muted);max-width:480px;line-height:1.8;margin-bottom:1rem;}
-.placeholder-note{margin-top:2rem;padding:1rem 1.5rem;border:1px dashed rgba(201,169,110,.3);color:var(--gold);font-size:.85rem;letter-spacing:.05em;}
-.back-btn{position:fixed;bottom:2rem;right:2rem;background:var(--gold);color:var(--bg);padding:.7rem 1.2rem;text-decoration:none;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;z-index:99;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--crema);font-family:'DM Sans',sans-serif;font-weight:300;overflow-x:hidden;}
+nav{position:fixed;top:0;width:100%;z-index:100;padding:1.5rem 5rem;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom,rgba(13,13,13,.96),transparent);}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.12em;color:var(--crema);text-decoration:none;}
+.logo span{color:var(--teal);}
+.nav-back{color:var(--muted);text-decoration:none;font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;transition:color .2s;}
+.nav-back:hover{color:var(--teal);}
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:8rem 2rem 4rem;position:relative;overflow:hidden;}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(88,191,188,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(88,191,188,.03) 1px,transparent 1px);background-size:60px 60px;}
+.hero-glow{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(88,191,188,.07) 0%,transparent 60%);top:50%;left:50%;transform:translate(-50%,-50%);}
+.hero-content{position:relative;z-index:1;max-width:780px;}
+.hero-eye{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:.4em;color:var(--teal);text-transform:uppercase;margin-bottom:1.5rem;}
+.hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(4rem,11vw,9rem);line-height:.9;text-transform:uppercase;letter-spacing:-.01em;margin-bottom:1.5rem;}
+.hero h1 span{color:var(--teal);display:block;}
+.hero p{font-size:1.05rem;color:rgba(236,220,197,.55);line-height:1.8;max-width:480px;margin:0 auto 2.5rem;}
+.hero-badge{display:inline-block;border:1px dashed rgba(88,191,188,.3);color:var(--teal);font-size:.78rem;letter-spacing:.08em;padding:.6rem 1.4rem;border-radius:2px;}
+section{padding:6rem 5rem;}
+.sec-label{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:.3em;text-transform:uppercase;color:var(--teal);margin-bottom:.8rem;display:block;text-align:center;}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,5vw,4rem);text-transform:uppercase;text-align:center;margin-bottom:1rem;line-height:1;}
+.sec-sub{color:var(--muted);text-align:center;font-size:.9rem;max-width:480px;margin:0 auto 3.5rem;line-height:1.7;}
+.sols{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;max-width:1100px;margin:0 auto;}
+.sol{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2.5rem 2rem;border-top:3px solid;transition:transform .3s,box-shadow .3s;}
+.sol:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(0,0,0,.4);}
+.sol.mem{border-top-color:var(--teal);}
+.sol.hue{border-top-color:var(--arena);}
+.sol.cui{border-top-color:var(--azul);}
+.sol-ico{font-size:3rem;display:block;margin-bottom:1.2rem;}
+.sol-tag{font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.25em;text-transform:uppercase;display:block;margin-bottom:.5rem;}
+.sol.mem .sol-tag{color:var(--teal);}
+.sol.hue .sol-tag{color:var(--arena);}
+.sol.cui .sol-tag{color:var(--azul);}
+.sol h3{font-family:'Instrument Serif',serif;font-size:1.6rem;font-weight:400;margin-bottom:1rem;color:var(--crema);}
+.sol p{color:rgba(236,220,197,.55);font-size:.88rem;line-height:1.75;margin-bottom:1.5rem;}
+.sol-feats{list-style:none;}
+.sol-feats li{font-size:.82rem;color:var(--muted);padding:.4rem 0;display:flex;align-items:center;gap:.6rem;border-bottom:1px solid rgba(88,191,188,.06);}
+.sol-feats li::before{content:'→';font-size:.7rem;flex-shrink:0;}
+.sol.mem .sol-feats li::before{color:var(--teal);}
+.sol.hue .sol-feats li::before{color:var(--arena);}
+.sol.cui .sol-feats li::before{color:var(--azul);}
+.tech{background:var(--surface);border-top:1px solid var(--border);text-align:center;}
+.tech-chips{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;margin-top:1rem;}
+.tech-chip{padding:.4rem 1rem;border:1px solid var(--border);font-size:.8rem;color:var(--teal);border-radius:2px;background:rgba(88,191,188,.05);}
+.cta{text-align:center;padding:6rem 2rem;border-top:1px solid var(--border);}
+.cta h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,4vw,3rem);text-transform:uppercase;margin-bottom:1.5rem;}
+.cta-btn{display:inline-block;padding:1rem 3rem;background:var(--teal);color:var(--bg);text-decoration:none;font-size:.8rem;letter-spacing:.18em;text-transform:uppercase;font-weight:400;transition:background .2s,transform .2s;border-radius:2px;}
+.cta-btn:hover{background:var(--arena);transform:translateY(-2px);}
+footer{padding:2.5rem 5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;}
+.foot-logo{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.12em;color:var(--crema);text-decoration:none;}
+.foot-logo span{color:var(--teal);}
+footer p{font-size:.72rem;color:var(--muted);}
+footer a.back{color:var(--teal);text-decoration:none;font-size:.75rem;}
+.back-btn{position:fixed;bottom:2rem;right:2rem;background:var(--teal);color:var(--bg);padding:.7rem 1.2rem;text-decoration:none;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;z-index:99;border-radius:2px;}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.in{opacity:1;transform:translateY(0);}
+@media(max-width:900px){
+  nav{padding:1.2rem 1.5rem;}
+  section{padding:4rem 1.5rem;}
+  .sols{grid-template-columns:1fr;}
+  footer{padding:2rem 1.5rem;flex-direction:column;text-align:center;}
+}
 </style>
 </head>
 <body>
 <nav>
-  <a href="index.html" class="logo">MERCATECK<em>.</em></a>
+  <a href="index.html" class="logo">CÓDIGO DE <span>VIDA</span></a>
+  <a href="index.html" class="nav-back">← Portafolio MercaTeck</a>
 </nav>
+
 <div class="hero">
-  <div class="hero-tag">✦ Proyecto Personal</div>
-  <h1>Código<br>de Vida</h1>
-  <p>Esta página está en construcción.</p>
-  <div class="placeholder-note">📝 Pendiente: completar descripción, lenguaje y funciones del proyecto.</div>
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-eye">Tecnología QR · Identidad · Vida</div>
+    <h1>Código<span>de Vida</span></h1>
+    <p>Guardá lo que sos. Protegé lo que amás. Tres soluciones con QR para las cosas que importan.</p>
+    <span class="hero-badge">✦ Proyecto desarrollado por MercaTeck</span>
+  </div>
 </div>
+
+<section>
+  <span class="sec-label">Las soluciones</span>
+  <h2 class="sec-title">Tres productos, un código</h2>
+  <p class="sec-sub">Cada solución usa tecnología QR para conectar el mundo físico con la información que importa.</p>
+  <div class="sols">
+    <div class="sol mem reveal">
+      <span class="sol-ico">🕊️</span>
+      <span class="sol-tag">Memorias · 01</span>
+      <h3>Mi Código de Memorias</h3>
+      <p>Un espacio eterno para quien ya no está. QR para cripta o lápida con la historia, fotos y mensajes de quienes los aman.</p>
+      <ul class="sol-feats">
+        <li>Galería de hasta 10 fotos</li>
+        <li>Biografía emotiva</li>
+        <li>Mensajes de familiares</li>
+        <li>QR imprimible</li>
+      </ul>
+    </div>
+    <div class="sol hue reveal">
+      <span class="sol-ico">🐾</span>
+      <span class="sol-tag">Huellas · 02</span>
+      <h3>Mi Código de Huellas</h3>
+      <p>Porque ellos también son familia. QR para el collar de tu mascota. Si se pierde, quien la encuentre sabe cómo contactarte.</p>
+      <ul class="sol-feats">
+        <li>Foto e identificación</li>
+        <li>Nombre, raza y datos</li>
+        <li>Contacto del dueño</li>
+        <li>QR optimizado para collar</li>
+      </ul>
+    </div>
+    <div class="sol cui reveal">
+      <span class="sol-ico">❤️</span>
+      <span class="sol-tag">Cuidados · 03</span>
+      <h3>Mi Código de Cuidados</h3>
+      <p>Tu info médica siempre disponible. QR en la pulsera que puede salvar tu vida en una emergencia.</p>
+      <ul class="sol-feats">
+        <li>Grupo sanguíneo y alergias</li>
+        <li>Contacto de emergencia</li>
+        <li>Botón directo al 911</li>
+        <li>Alerta WhatsApp con GPS</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="tech">
+  <span class="sec-label">Tecnología</span>
+  <h2 class="sec-title">Cómo está hecho</h2>
+  <p class="sec-sub">Una plataforma completa con login, suscripciones, panel de administración y generación de códigos QR.</p>
+  <div class="tech-chips">
+    <span class="tech-chip">HTML / CSS / JS</span>
+    <span class="tech-chip">Supabase</span>
+    <span class="tech-chip">Mercado Pago</span>
+    <span class="tech-chip">Netlify</span>
+    <span class="tech-chip">Generación QR</span>
+    <span class="tech-chip">GPS / WhatsApp</span>
+  </div>
+</section>
+
+<div class="cta">
+  <h2>¿Querés una solución así<br>para tu negocio?</h2>
+  <a href="index.html#contacto" class="cta-btn">Hablemos →</a>
+</div>
+
+<footer>
+  <a href="index.html" class="foot-logo">CÓDIGO DE <span>VIDA</span></a>
+  <p>© 2026 Código de Vida — Memorias · Huellas · Cuidados</p>
+  <a href="index.html" class="back">← Volver al portafolio</a>
+</footer>
+
 <a href="index.html" class="back-btn">← Portafolio</a>
+
+<script>
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');obs.unobserve(e.target);}});},{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
 </body>
 </html>

@@ -612,6 +612,18 @@ footer p { font-size:.75rem; color:var(--muted); }
   .burger { display:flex; }
 }
 
+
+/* ── APPS GRID 2x2 ── */
+.apps-grid { grid-template-columns:1fr 1fr !important; }
+.apps-grid .svc { display:flex; flex-direction:column; }
+.app-tags { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:1.2rem; }
+.app-tag {
+  padding:.28rem .7rem; border:1px solid var(--border);
+  font-size:.68rem; letter-spacing:.06em; color:var(--gold);
+  border-radius:2px; background:rgba(201,169,110,.05);
+}
+@media(max-width:900px){ .apps-grid { grid-template-columns:1fr !important; } }
+
 </style>
 </head>
 <body>
@@ -791,10 +803,11 @@ footer p { font-size:.75rem; color:var(--muted); }
       <div class="work-num">07</div>
       <div class="work-info">
         <h3>Código de Vida</h3>
-        <p>Proyecto Personal · [Completar descripción]</p>
+        <p>Proyecto Propio · Tecnología QR · Memorias, Mascotas y Salud</p>
       </div>
       <div class="work-tags">
-        <span class="tag">Proyecto</span>
+        <span class="tag">QR</span>
+        <span class="tag">Supabase</span>
         <span class="tag">2026</span>
       </div>
       <div class="work-arrow">↗</div>
@@ -805,9 +818,8 @@ footer p { font-size:.75rem; color:var(--muted); }
 <!-- ABOUT -->
 <section class="about" id="sobre-mi">
   <div class="about-left reveal">
-    <div class="about-img">
-      <span>👤</span>
-      <div class="about-img-label">Tu foto aquí</div>
+    <div class="about-img" style="padding:0;overflow:hidden;">
+      <img src="german-perfil.jpg" alt="Germán Mercado" style="width:100%;height:100%;object-fit:cover;display:block;"/>
     </div>
     <div class="about-year">
       <strong>+5</strong>
@@ -849,6 +861,8 @@ footer p { font-size:.75rem; color:var(--muted); }
     <div class="svc reveal"><span class="svc-icon">📱</span><h3>Responsive</h3><p>Cada sitio perfecto en celular, tablet y PC. Siempre.</p></div>
     <div class="svc reveal"><span class="svc-icon">🔄</span><h3>Mantenimiento</h3><p>Actualizaciones, backups y soporte continuo. Tu sitio siempre online.</p></div>
     <div class="svc reveal"><span class="svc-icon">⚡</span><h3>Apps a Medida</h3><p>Innovación y eficiencia para tu negocio: creo aplicaciones personalizadas que automatizan tareas y simplifican la gestión diaria.</p></div>
+    <div class="svc reveal"><span class="svc-icon">📲</span><h3>Redes Sociales</h3><p>Gestión de contenido y estrategia para Instagram y Facebook que conecta tu marca con más clientes.</p></div>
+    <div class="svc reveal"><span class="svc-icon">📊</span><h3>Generación de Analíticas</h3><p>Procesamiento de datos para tu negocio: convierto tu información en reportes claros para decidir mejor.</p></div>
   </div>
 </section>
 
@@ -856,27 +870,51 @@ footer p { font-size:.75rem; color:var(--muted); }
 <section class="services" id="apps" style="background:var(--bg);">
   <span class="s-label">Aplicaciones</span>
   <h2 class="s-title reveal">Apps que he<br>desarrollado</h2>
-  <p class="s-sub reveal" style="max-width:480px;margin-top:1rem;">Soluciones reales creadas para automatizar y simplificar la gestión de negocios.</p>
-  <div class="services-grid" style="margin-top:3rem;">
+  <p class="s-sub reveal" style="max-width:480px;margin-top:1rem;">Soluciones reales creadas con IA para automatizar y simplificar la gestión de negocios.</p>
+  <div class="services-grid apps-grid" style="margin-top:3rem;">
     <div class="svc reveal">
       <span class="svc-icon">💰</span>
       <h3>Mis Finanzas</h3>
-      <p>[Completar: lenguaje y funciones. Ej: app de gestión de finanzas personales que permite registrar ingresos y gastos, ver gráficos y controlar el presupuesto.]</p>
+      <p>App de gestión financiera para personas y negocios. Registra ingresos y gastos por categorías, controla cajas diarias por turnos, da consejos financieros con IA y gestiona suscripciones con pagos automáticos. Incluye acceso seguro por PIN y respaldo de datos.</p>
+      <div class="app-tags">
+        <span class="app-tag">Apps Script</span>
+        <span class="app-tag">Supabase</span>
+        <span class="app-tag">Claude IA</span>
+        <span class="app-tag">Mercado Pago</span>
+      </div>
     </div>
     <div class="svc reveal">
       <span class="svc-icon">🚚</span>
-      <h3>CAPAC — Panel de Flota</h3>
-      <p>[Completar: lenguaje y funciones. Panel de control de flota de vehículos. (Sin mostrar patentes ni datos de la empresa.)]</p>
+      <h3>Panel de Control para Empresas</h3>
+      <p>Panel que integra múltiples archivos de Google Sheets en un solo tablero. Centraliza y simplifica la información, genera alertas automáticas, registra tareas con fotos, funciona sin conexión y produce informes ejecutivos con gráficos exportables a PDF.</p>
+      <div class="app-tags">
+        <span class="app-tag">Apps Script</span>
+        <span class="app-tag">Google Sheets</span>
+        <span class="app-tag">Chart.js</span>
+        <span class="app-tag">Offline</span>
+      </div>
     </div>
     <div class="svc reveal">
       <span class="svc-icon">📌</span>
       <h3>Pin RSV</h3>
-      <p>[Completar: lenguaje y funciones de la app.]</p>
+      <p>Sistema de recepción conforme con firma digital. Permite registrar la recepción del PIN del sistema GPS de flota mediante un formulario con firma en pantalla. Cada registro se guarda con fecha y firma como imagen, dejando constancia formal. Optimizado para móvil.</p>
+      <div class="app-tags">
+        <span class="app-tag">Apps Script</span>
+        <span class="app-tag">Google Drive</span>
+        <span class="app-tag">Firma digital</span>
+        <span class="app-tag">Responsive</span>
+      </div>
     </div>
     <div class="svc reveal">
       <span class="svc-icon">🌐</span>
-      <h3>Globalmeet</h3>
-      <p>[Completar: lenguaje y funciones de la app.]</p>
+      <h3>GlobalMeet</h3>
+      <p>Plataforma SaaS de reuniones con traducción simultánea en 10 idiomas. Ofrece chat, videollamadas y un modo auricular manos libres por comando de voz. Incluye login con Google, suscripciones, salas compartibles y moderación en vivo. Diseñada por MercaTeck.</p>
+      <div class="app-tags">
+        <span class="app-tag">React</span>
+        <span class="app-tag">Supabase</span>
+        <span class="app-tag">Claude IA</span>
+        <span class="app-tag">Web Speech</span>
+      </div>
     </div>
   </div>
 </section>
@@ -970,7 +1008,7 @@ footer p { font-size:.75rem; color:var(--muted); }
     <h2>Hablemos de<br>tu <em>proyecto</em></h2>
     <p>Cada gran sitio web comienza con una conversación. Contame sobre tu negocio y te respondo en menos de 24 horas.</p>
     <ul class="contact-details">
-      <li><span class="ci">✉</span><div><strong>Email</strong><br>TU-EMAIL@gmail.com</div></li>
+      <li><span class="ci">✉</span><div><strong>Email</strong><br>mercateckinfo@gmail.com</div></li>
       <li><span class="ci">📱</span><div><strong>WhatsApp</strong><br>+54 9 XXX XXX XXXX</div></li>
       <li><span class="ci">📍</span><div><strong>Ubicación</strong>Tu ciudad, Argentina</div></li>
       <li><span class="ci">⏰</span><div><strong>Horario</strong>Lun – Vie, 9:00 a 18:00</div></li>
@@ -993,6 +1031,7 @@ footer p { font-size:.75rem; color:var(--muted); }
           <option>Landing Page</option>
           <option>Sitio Web Completo</option>
           <option>Tienda Online</option>
+          <option>App Web</option>
           <option>Rediseño de sitio existente</option>
           <option>Mantenimiento</option>
           <option>Otro</option>
@@ -1020,8 +1059,8 @@ footer p { font-size:.75rem; color:var(--muted); }
   <a href="#inicio" class="foot-logo"><img src="logo-mercateck.png" alt="MercaTeck" style="height:32px;width:auto;display:block;filter:brightness(1);"/></a>
   <p>© 2026 MercaTeck — Diseño Web. Todos los derechos reservados.</p>
   <div class="foot-links">
-    <a href="TU-LINK-INSTAGRAM">Instagram</a>
-    <a href="TU-LINK-FACEBOOK">Facebook</a>
+    <a href="https://www.instagram.com/mercateck_" target="_blank" rel="noopener">Instagram</a>
+    <a href="https://www.facebook.com/share/1H6eej4g8R/" target="_blank" rel="noopener">Facebook</a>
     <a href="#">LinkedIn</a>
   </div>
 </footer>
@@ -1037,9 +1076,9 @@ footer p { font-size:.75rem; color:var(--muted); }
 //    {{project_type}}, {{budget}}, {{message}}
 //    Y en "To Email" poné tu dirección real.
 
-const EJS_KEY      = "TU_PUBLIC_KEY_AQUI";    // Account → API Keys
-const EJS_SERVICE  = "TU_SERVICE_ID_AQUI";    // Email Services
-const EJS_TEMPLATE = "TU_TEMPLATE_ID_AQUI";   // Email Templates
+const EJS_KEY      = "7rvILr_7tmPMcx27d";    // Account → API Keys
+const EJS_SERVICE  = "service_zbyhojv";    // Email Services
+const EJS_TEMPLATE = "template_3yiaowo";   // Email Templates
 
 // 📧 TU EMAIL AL QUE LLEGAN LOS MENSAJES se configura en el
 //    template de EmailJS, campo "To Email".
