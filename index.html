@@ -17,7 +17,7 @@
   --border: rgba(201,169,110,0.12);
 }
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior:smooth; }
+html { scroll-behavior:smooth; overflow-x:hidden; max-width:100%; }
 
 body {
   background:var(--bg);
@@ -92,6 +92,7 @@ nav a:hover::after { width:100%; }
 
 /* ── HERO ── */
 .hero {
+  overflow:hidden;
   min-height:100vh;
   display:flex; flex-direction:column; justify-content:center;
   padding:10rem 5rem 6rem;
@@ -133,6 +134,7 @@ nav a:hover::after { width:100%; }
   overflow:hidden;
 }
 .hero h1 .line { display:block; overflow:hidden; }
+.hero h1 .line span { white-space:nowrap; }
 .hero h1 .line span { display:block; transform:translateY(110%); }
 .hero h1 em {
   font-style:normal;
@@ -548,7 +550,7 @@ footer p { font-size:.75rem; color:var(--muted); }
   nav { padding:1.2rem 1.5rem; }
   nav ul { display:none; }
   .hero,.works,.about,.services,.pricing,.contact { padding:5rem 1.5rem; }
-  .hero h1 { font-size:clamp(3.5rem,15vw,5rem); }
+  .hero h1 { font-size:clamp(2.6rem,11vw,4rem); }
   .hero-counter { display:none; }
   .about { grid-template-columns:1fr; gap:3rem; }
   .services-grid,.pricing-grid { grid-template-columns:1fr; }
@@ -624,6 +626,15 @@ footer p { font-size:.75rem; color:var(--muted); }
 }
 @media(max-width:900px){ .apps-grid { grid-template-columns:1fr !important; } }
 
+
+/* FAILSAFE: reveal hero even if load event never fires */
+.hero-failsafe #nav,.hero-failsafe #heroLabel,.hero-failsafe #heroDesc,.hero-failsafe #heroBtns{opacity:1 !important;transform:none !important;}
+.hero-failsafe .hero h1 .line span{transform:translateY(0) !important;}
+
+  @media(max-width:400px){
+    .hero h1 { font-size:clamp(2.2rem,10.5vw,3rem); }
+    .hero-label { font-size:.7rem; }
+  }
 </style>
 </head>
 <body>
@@ -1060,7 +1071,7 @@ footer p { font-size:.75rem; color:var(--muted); }
   <p>© 2026 MercaTeck — Diseño Web. Todos los derechos reservados.</p>
   <div class="foot-links">
     <a href="https://www.instagram.com/mercateck_" target="_blank" rel="noopener">Instagram</a>
-    <a href="https://www.facebook.com/share/1H6eej4g8R/" target="_blank" rel="noopener">Facebook</a>
+    <a href="https://www.facebook.com/share/18siY2Jr7Q/" target="_blank" rel="noopener">Facebook</a>
     <a href="#">LinkedIn</a>
   </div>
 </footer>
@@ -1084,7 +1095,7 @@ const EJS_TEMPLATE = "template_3yiaowo";   // Email Templates
 //    template de EmailJS, campo "To Email".
 // ─────────────────────────────────────────────────────────────
 
-emailjs.init(EJS_KEY);
+if (typeof emailjs !== 'undefined') { try { emailjs.init(EJS_KEY); } catch(e){} }
 
 // CURSOR
 const cur = document.getElementById('cur');
@@ -1101,6 +1112,9 @@ document.addEventListener('mousemove',e=>{
 })();
 
 // HERO ENTRANCE — staggered lines
+// Failsafe: si por algo el evento load no dispara, mostramos todo igual
+setTimeout(()=>{document.body.classList.add('hero-failsafe');},2500);
+
 window.addEventListener('load',()=>{
   // nav
   setTimeout(()=>{
@@ -1209,6 +1223,7 @@ function sendEmail(){
   btn.querySelector('span').textContent='Enviando...';
   btn.classList.add('loading');
 
+  if (typeof emailjs === 'undefined') { alert('No se pudo cargar el sistema de envío. Revisá tu conexión e intentá de nuevo.'); btn.classList.remove('loading'); return; }
   emailjs.send(EJS_SERVICE,EJS_TEMPLATE,{
     from_name:name, from_email:email,
     from_phone:phone||'No indicado',

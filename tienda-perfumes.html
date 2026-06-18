@@ -133,7 +133,18 @@
     footer a { color:var(--gold); text-decoration:none; font-size:0.75rem; }
 
     .back-btn { position:fixed; bottom:2rem; right:2rem; background:var(--gold); color:#06080e; padding:0.7rem 1.2rem; text-decoration:none; font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase; z-index:99; }
-  </style>
+  
+    @media(max-width:900px){
+      nav{padding:1.2rem 1.5rem;}
+      nav ul{display:none;}
+      .hero{padding:7rem 1.5rem 4rem;}
+      section{padding:4rem 1.5rem;}
+      .fragancias-grid{grid-template-columns:1fr;}
+      .ritual{grid-template-columns:1fr;gap:2.5rem;}
+      .ritual-visual{aspect-ratio:16/10;font-size:4rem;}
+      footer{padding:2rem 1.5rem;flex-direction:column;text-align:center;gap:.8rem;}
+    }
+</style>
 </head>
 <body>
 

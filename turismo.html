@@ -126,7 +126,21 @@
     footer a { color:var(--sand); text-decoration:none; }
 
     .back-btn { position:fixed; bottom:2rem; right:2rem; background:var(--green); color:#fff; padding:0.7rem 1.2rem; text-decoration:none; font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase; border-radius:100px; z-index:99; }
-  </style>
+  
+    @media(max-width:900px){
+      nav{padding:1.2rem 1.5rem;}
+      nav ul{display:none;}
+      .hero{grid-template-columns:1fr;padding-top:4rem;}
+      .hero-left{padding:3rem 1.5rem;}
+      .hero-right{min-height:40vh;}
+      .search-bar{grid-template-columns:1fr;gap:.8rem;}
+      section{padding:3rem 1.5rem;}
+      .dest-grid{grid-template-columns:1fr;}
+      .dest-card.big{grid-row:auto;aspect-ratio:4/3;}
+      .pack-grid{grid-template-columns:1fr;}
+      footer{padding:2rem 1.5rem;flex-direction:column;text-align:center;gap:.8rem;}
+    }
+</style>
 </head>
 <body>
 

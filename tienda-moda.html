@@ -94,7 +94,24 @@
     footer a { color:var(--accent); text-decoration:none; }
 
     .back-btn { position:fixed; bottom:2rem; right:2rem; background:var(--accent); color:#fff; padding:0.7rem 1.2rem; text-decoration:none; font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase; border-radius:1px; z-index:99; }
-  </style>
+  
+    @media(max-width:900px){
+      nav{padding:1.2rem 1.5rem;flex-wrap:wrap;gap:.5rem;}
+      nav ul{display:none;}
+      .hero{grid-template-columns:1fr;}
+      .hero-left{min-height:40vh;padding:3rem 1.5rem;}
+      .hero-right{padding:3rem 1.5rem;}
+      section{padding:3rem 1.5rem;}
+      .products-grid{grid-template-columns:1fr 1fr;gap:1rem;}
+      .banner{grid-template-columns:1fr;padding:3rem 1.5rem;gap:2rem;text-align:center;}
+      .banner h2{font-size:2.2rem;}
+      footer{padding:1.5rem;flex-direction:column;text-align:center;gap:.8rem;}
+    }
+    @media(max-width:480px){
+      .products-grid{grid-template-columns:1fr 1fr;}
+      .hero h1{font-size:2.5rem;}
+    }
+</style>
 </head>
 <body>
 
