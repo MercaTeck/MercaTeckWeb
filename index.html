@@ -635,6 +635,17 @@ footer p { font-size:.75rem; color:var(--muted); }
     .hero h1 { font-size:clamp(2.2rem,10.5vw,3rem); }
     .hero-label { font-size:.7rem; }
   }
+
+/* ── Botón Ingresá en tarjeta de app ── */
+.app-enter-btn{
+  display:inline-block; margin-top:1.2rem; align-self:flex-start;
+  padding:.6rem 1.4rem; background:var(--gold,#c9a96e); color:#0a0a0c;
+  font-size:.8rem; letter-spacing:.08em; text-transform:uppercase;
+  text-decoration:none; border-radius:3px; font-weight:600;
+  transition:transform .2s, background .2s;
+}
+.app-enter-btn:hover{ transform:translateY(-2px); background:#e8d5a3; }
+
 </style>
 </head>
 <body>
@@ -896,14 +907,15 @@ footer p { font-size:.75rem; color:var(--muted); }
     </div>
     <div class="svc reveal">
       <span class="svc-icon">🚚</span>
-      <h3>Panel de Control para Empresas</h3>
-      <p>Panel que integra múltiples archivos de Google Sheets en un solo tablero. Centraliza y simplifica la información, genera alertas automáticas, registra tareas con fotos, funciona sin conexión y produce informes ejecutivos con gráficos exportables a PDF.</p>
+      <h3>GesFlota</h3>
+      <p>Plataforma SaaS de gestión de flota para empresas de construcción e infraestructura. Centraliza el control de vehículos en tiempo real: mantenimiento preventivo, VTV, seguros, check-lists digitales (pesados y livianos) y alertas automáticas por email. Sincroniza con Google Sheets, genera informes en PDF/Excel con recomendaciones por IA, y maneja multi-obra con planes y pagos. Diseñada por MercaTeck.</p>
       <div class="app-tags">
-        <span class="app-tag">Apps Script</span>
+        <span class="app-tag">Supabase</span>
         <span class="app-tag">Google Sheets</span>
-        <span class="app-tag">Chart.js</span>
-        <span class="app-tag">Offline</span>
+        <span class="app-tag">Claude IA</span>
+        <span class="app-tag">Mercado Pago</span>
       </div>
+      <a href="gesflota.html" class="app-enter-btn">Ingresá →</a>
     </div>
     <div class="svc reveal">
       <span class="svc-icon">📌</span>
