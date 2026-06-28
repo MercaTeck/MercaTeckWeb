@@ -13,29 +13,61 @@
    TOKENS
 ══════════════════════════════════════════ */
 :root{
-  --black:#080C12;
-  --card:#0F1520;
-  --card2:#141C2E;
+  --black:#0B0E14;
+  --card:#12161F;
+  --card2:#161B26;
   --gold:#C49A3A;
-  --gold-lt:#E8B84B;
-  --gold-dim:rgba(196,154,58,.12);
-  --gold-border:rgba(196,154,58,.2);
+  --gold-lt:#D9B65E;
+  --gold-dim:rgba(196,154,58,.08);
+  --gold-border:rgba(196,154,58,.18);
   --cream:#F0E8D4;
-  --white:#FFFFFF;
-  --gray:#8A8FA8;
-  --bdr:rgba(255,255,255,.06);
-  --red:#EF4444;
-  --green:#10B981;
-  --amber:#F59E0B;
-  --blue:#3B82F6;
+  --white:#F4F6FA;
+  --gray:#9BA3B4;
+  --gray-soft:#6E7686;
+  --bdr:rgba(255,255,255,.07);
+  --bdr-soft:rgba(255,255,255,.04);
+  --input-bg:rgba(0,0,0,.3);
+  --input-bdr:rgba(255,255,255,.1);
+  --red:#E5564E;
+  --green:#3DAE7C;
+  --amber:#D99A3C;
+  --blue:#4B82C4;
+  --shadow:0 1px 3px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.18);
 
   --font:'Inter',system-ui,sans-serif;
   --font-display:'Bebas Neue',sans-serif;
   --font-mono:'JetBrains Mono',monospace;
-  --r:10px; --r2:16px;
-  --max:1200px;
-  --nav-h:64px;
+  --r:8px; --r2:14px;
+  --max:1180px;
+  --nav-h:66px;
 }
+
+/* ── TEMA CLARO ── */
+[data-theme="light"],
+body[data-theme="light"]{
+  --black:#F7F8FA;
+  --card:#FFFFFF;
+  --card2:#F4F5F8;
+  --gold:#A87C2A;
+  --gold-lt:#C49A3A;
+  --gold-dim:rgba(168,124,42,.07);
+  --gold-border:rgba(168,124,42,.2);
+  --cream:#2A2418;
+  --white:#1A1D24;
+  --gray:#5C6473;
+  --gray-soft:#8A92A0;
+  --bdr:rgba(0,0,0,.09);
+  --bdr-soft:rgba(0,0,0,.05);
+  --input-bg:#FFFFFF;
+  --input-bdr:rgba(0,0,0,.18);
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06);
+}
+[data-theme="light"] body,
+body[data-theme="light"]{background:var(--black) !important;color:var(--white);}
+[data-theme="light"] .hero,
+body[data-theme="light"] .hero{background:var(--black);}
+[data-theme="light"] .vboard-track,
+[data-theme="light"] .vbar-track{background:rgba(0,0,0,.07);}
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
 body{font-family:var(--font);background:var(--black);color:var(--white);line-height:1.6;overflow-x:hidden;}
@@ -54,7 +86,7 @@ img{max-width:100%;}
 ══════════════════════════════════════════ */
 nav{
   position:fixed;top:0;left:0;right:0;z-index:100;height:var(--nav-h);
-  background:rgba(8,12,18,.9);backdrop-filter:blur(12px);
+  background:rgba(11,14,20,.85);backdrop-filter:blur(16px);
   border-bottom:1px solid var(--bdr);
   display:flex;align-items:center;
 }
@@ -70,13 +102,13 @@ nav{
 .nav-logo span:first-child{color:var(--cream);}
 .nav-logo span:nth-child(2){color:var(--gold);}
 .nav-logo span:last-child{color:var(--gold);font-size:26px;line-height:0;vertical-align:bottom;}
-.nav-links{display:flex;gap:1.75rem;flex:1;margin-left:1rem;}
-.nav-links a{font-size:13px;color:var(--gray);transition:color .15s;}
+.nav-links{display:flex;gap:1.75rem;flex:1;margin-left:1.5rem;}
+.nav-links a{font-size:13px;color:var(--gray);transition:color .15s;font-weight:450;}
 .nav-links a:hover{color:var(--white);}
-.nav-actions{display:flex;gap:.75rem;align-items:center;margin-left:auto;}
-.btn-outline{padding:8px 18px;border-radius:var(--r);border:1px solid var(--gold-border);color:var(--gold);font-size:13px;font-weight:500;cursor:pointer;background:transparent;transition:all .15s;}
-.btn-outline:hover{background:var(--gold-dim);}
-.btn-gold{padding:8px 20px;border-radius:var(--r);border:none;background:var(--gold);color:#000;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+.nav-actions{display:flex;gap:.6rem;align-items:center;margin-left:auto;}
+.btn-outline{padding:8px 16px;border-radius:var(--r);border:1px solid var(--bdr);color:var(--white);font-size:13px;font-weight:500;cursor:pointer;background:transparent;transition:all .15s;}
+.btn-outline:hover{background:rgba(255,255,255,.04);border-color:var(--gray-soft);}
+.btn-gold{padding:8px 18px;border-radius:var(--r);border:none;background:var(--gold);color:#0B0E14;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
 .btn-gold:hover{background:var(--gold-lt);}
 .nav-mobile{display:none;}
 
@@ -90,36 +122,45 @@ nav{
 }
 .hero::before{
   content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse 80% 60% at 60% 40%,rgba(196,154,58,.06) 0%,transparent 70%);
+  background:
+    radial-gradient(ellipse 70% 50% at 75% 30%,rgba(196,154,58,.05) 0%,transparent 60%);
   pointer-events:none;
+}
+.hero::after{
+  content:'';position:absolute;inset:0;opacity:.4;pointer-events:none;
+  background-image:linear-gradient(var(--bdr-soft) 1px,transparent 1px),linear-gradient(90deg,var(--bdr-soft) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse 60% 50% at 50% 40%,#000 0%,transparent 80%);
+  -webkit-mask-image:radial-gradient(ellipse 60% 50% at 50% 40%,#000 0%,transparent 80%);
 }
 .hero-grid{
   max-width:var(--max);margin:0 auto;padding:4rem 1.5rem;
-  display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;
-  width:100%;
+  display:grid;grid-template-columns:1.05fr 1fr;gap:4rem;align-items:center;
+  width:100%;position:relative;z-index:1;
 }
 .hero-eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
-  background:var(--gold-dim);border:1px solid var(--gold-border);
-  border-radius:20px;padding:5px 14px;
-  font-size:12px;font-weight:600;color:var(--gold);
-  letter-spacing:.06em;text-transform:uppercase;margin-bottom:1.5rem;
+  display:inline-flex;align-items:center;gap:9px;
+  background:transparent;border:1px solid var(--bdr);
+  border-radius:6px;padding:6px 13px;
+  font-size:11px;font-weight:600;color:var(--gray);
+  letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.75rem;
+  font-family:var(--font-mono);
 }
-.hero-eyebrow span{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.hero-eyebrow span{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 h1{
-  font-family:var(--font-display);font-size:clamp(52px,7vw,80px);
-  line-height:.95;letter-spacing:.5px;color:var(--white);margin-bottom:1.25rem;
+  font-family:var(--font);font-size:clamp(34px,4.5vw,52px);
+  line-height:1.08;letter-spacing:-.02em;color:var(--white);margin-bottom:1.25rem;font-weight:600;
 }
-h1 .gold{color:var(--gold);}
-.hero-sub{font-size:17px;color:var(--gray);line-height:1.7;max-width:460px;margin-bottom:2rem;}
+h1 .gold{color:var(--gold);font-weight:600;}
+.hero-sub{font-size:16px;color:var(--gray);line-height:1.7;max-width:460px;margin-bottom:2rem;}
 .hero-ctas{display:flex;gap:.75rem;flex-wrap:wrap;}
-.btn-primary{padding:13px 28px;border-radius:var(--r);border:none;background:var(--gold);color:#000;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;}
-.btn-primary:hover{background:var(--gold-lt);transform:translateY(-1px);}
-.btn-secondary{padding:13px 28px;border-radius:var(--r);border:1px solid var(--bdr);background:rgba(255,255,255,.04);color:var(--white);font-size:15px;font-weight:500;cursor:pointer;transition:all .15s;}
-.btn-secondary:hover{background:rgba(255,255,255,.07);}
-.hero-stats{display:flex;gap:2rem;margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--bdr);}
-.hero-stat-n{font-family:var(--font-mono);font-size:28px;font-weight:600;color:var(--gold);}
+.btn-primary{padding:13px 26px;border-radius:var(--r);border:none;background:var(--gold);color:#0B0E14;font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:8px;}
+.btn-primary:hover{background:var(--gold-lt);transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.25);}
+.btn-secondary{padding:13px 26px;border-radius:var(--r);border:1px solid var(--bdr);background:transparent;color:var(--white);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;}
+.btn-secondary:hover{background:rgba(255,255,255,.04);border-color:var(--gray-soft);}
+.hero-stats{display:flex;gap:2.5rem;margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--bdr);}
+.hero-stat-n{font-family:var(--font);font-size:26px;font-weight:700;color:var(--white);letter-spacing:-.02em;}
 .hero-stat-l{font-size:12px;color:var(--gray);margin-top:2px;}
 
 /* Vehicle board — hero signature element */
@@ -160,13 +201,13 @@ h1 .gold{color:var(--gold);}
 section{padding:6rem 1.5rem;}
 .container{max-width:var(--max);margin:0 auto;}
 .section-label{
-  font-family:var(--font-mono);font-size:11px;color:var(--gold);
-  letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem;
+  font-family:var(--font);font-size:12px;color:var(--gold);font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;margin-bottom:.85rem;
   display:flex;align-items:center;gap:8px;
 }
-.section-label::before{content:'';width:24px;height:1px;background:var(--gold);}
-h2{font-family:var(--font-display);font-size:clamp(36px,5vw,54px);color:var(--white);letter-spacing:.3px;margin-bottom:1rem;}
-.section-sub{font-size:16px;color:var(--gray);max-width:560px;line-height:1.7;}
+.section-label::before{content:'';width:18px;height:1px;background:var(--gold-border);}
+h2{font-family:var(--font);font-size:clamp(26px,3.2vw,38px);color:var(--white);letter-spacing:-.02em;margin-bottom:1rem;font-weight:600;line-height:1.15;}
+.section-sub{font-size:15px;color:var(--gray);max-width:560px;line-height:1.7;}
 .gold-rule{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--gold-border),transparent);}
 
 /* ══════════════════════════════════════════
@@ -176,9 +217,9 @@ h2{font-family:var(--font-display);font-size:clamp(36px,5vw,54px);color:var(--wh
 .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:3.5rem;}
 .feat-card{
   background:var(--card);border:1px solid var(--bdr);border-radius:var(--r2);
-  padding:1.75rem;transition:border-color .2s;
+  padding:1.75rem;transition:transform .2s,box-shadow .2s,border-color .2s;
 }
-.feat-card:hover{border-color:var(--gold-border);}
+.feat-card:hover{border-color:var(--gold-border);transform:translateY(-2px);box-shadow:var(--shadow);}
 .feat-icon{
   width:44px;height:44px;border-radius:10px;background:var(--gold-dim);border:1px solid var(--gold-border);
   display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;font-size:20px;
@@ -193,8 +234,10 @@ h2{font-family:var(--font-display);font-size:clamp(36px,5vw,54px);color:var(--wh
 .how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;margin-top:3.5rem;}
 .how-step{position:relative;padding:2rem;border-radius:var(--r2);background:var(--card2);border:1px solid var(--bdr);}
 .how-num{
-  font-family:var(--font-display);font-size:64px;color:rgba(196,154,58,.12);
-  line-height:1;margin-bottom:.5rem;
+  font-family:var(--font);font-size:15px;font-weight:700;color:var(--gold);
+  line-height:1;margin-bottom:1rem;letter-spacing:.05em;
+  width:34px;height:34px;border-radius:8px;background:var(--gold-dim);border:1px solid var(--gold-border);
+  display:flex;align-items:center;justify-content:center;
 }
 .how-title{font-size:17px;font-weight:600;color:var(--white);margin-bottom:.5rem;}
 .how-desc{font-size:13px;color:var(--gray);line-height:1.7;}
@@ -210,21 +253,23 @@ h2{font-family:var(--font-display);font-size:clamp(36px,5vw,54px);color:var(--wh
 .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:3.5rem;}
 .price-card{
   background:var(--card);border:1px solid var(--bdr);border-radius:var(--r2);
-  padding:2rem;transition:all .2s;position:relative;
+  padding:2rem;transition:transform .2s,box-shadow .2s;position:relative;
 }
+.price-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);}
 .price-card.featured{
-  border-color:var(--gold);
-  background:linear-gradient(135deg,var(--card),rgba(196,154,58,.06));
+  border-color:var(--gold-border);
+  background:var(--card);
+  box-shadow:0 0 0 1px var(--gold-border),var(--shadow);
 }
 .price-badge{
   position:absolute;top:-12px;left:50%;transform:translateX(-50%);
-  background:var(--gold);color:#000;font-size:11px;font-weight:700;
-  padding:3px 14px;border-radius:10px;white-space:nowrap;letter-spacing:.05em;
+  background:var(--gold);color:#0B0E14;font-size:10px;font-weight:700;
+  padding:4px 14px;border-radius:6px;white-space:nowrap;letter-spacing:.08em;text-transform:uppercase;
 }
-.price-plan{font-size:12px;font-weight:600;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem;}
+.price-plan{font-size:11px;font-weight:600;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.75rem;}
 .price-amount{display:flex;align-items:baseline;gap:4px;margin-bottom:.25rem;}
 .price-currency{font-size:18px;color:var(--gray);}
-.price-value{font-family:var(--font-display);font-size:52px;color:var(--white);line-height:1;}
+.price-value{font-family:var(--font-display);font-size:48px;color:var(--white);line-height:1;font-weight:400;}
 .price-period{font-size:13px;color:var(--gray);}
 .price-desc{font-size:13px;color:var(--gray);margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--bdr);}
 .price-features{list-style:none;display:flex;flex-direction:column;gap:.6rem;margin-bottom:2rem;}
@@ -323,12 +368,13 @@ footer{
 .auth-sub{font-size:13px;color:var(--gray);text-align:center;margin-bottom:1.75rem;}
 .field{margin-bottom:1rem;}
 .field label{display:block;font-size:12px;font-weight:500;color:var(--gray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em;}
-.field input,.field select{
-  width:100%;padding:11px 13px;background:rgba(0,0,0,.3);
-  border:1px solid rgba(255,255,255,.1);border-radius:var(--r);
+.field input,.field select,.field textarea{
+  width:100%;padding:11px 13px;background:var(--input-bg);
+  border:1px solid var(--input-bdr);border-radius:var(--r);
   color:var(--white);font-size:14px;outline:none;transition:border-color .15s;
 }
-.field input:focus,.field select:focus{border-color:var(--gold);}
+.field input::placeholder,.field textarea::placeholder{color:var(--gray-soft);}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);}
 .auth-btn{
   width:100%;padding:13px;border-radius:var(--r);border:none;
   background:var(--gold);color:#000;font-size:15px;font-weight:700;
@@ -401,26 +447,26 @@ footer{
 
 /* App cards */
 .app-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.25rem;}
-.app-stat{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r2);padding:1rem;transition:border-color .2s;}
-.app-stat:hover{border-color:var(--gold-border);}
-.app-stat-val{font-family:var(--font-display);font-size:30px;color:var(--gold);}
+.app-stat{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:1.1rem;transition:transform .15s,box-shadow .15s;}
+.app-stat:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+.app-stat-val{font-family:var(--font-display);font-size:30px;color:var(--gold);font-weight:400;}
 .app-stat-val.green{color:var(--green);}
 .app-stat-val.red{color:var(--red);}
 .app-stat-val.amber{color:var(--amber);}
-.app-stat-lbl{font-size:11px;color:var(--gray);margin-top:3px;text-transform:uppercase;letter-spacing:.05em;}
-.app-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;margin-bottom:1rem;}
-.app-card-hdr{padding:.85rem 1rem;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center;}
-.app-card-hdr h3{font-size:14px;font-weight:600;color:var(--white);}
+.app-stat-lbl{font-size:10px;color:var(--gray);margin-top:4px;text-transform:uppercase;letter-spacing:.07em;}
+.app-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:1rem;box-shadow:var(--shadow);}
+.app-card-hdr{padding:.9rem 1.1rem;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center;}
+.app-card-hdr h3{font-size:14px;font-weight:600;color:var(--white);letter-spacing:.01em;}
 .app-table{width:100%;border-collapse:collapse;font-size:13px;}
-.app-table th{text-align:left;font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.08em;padding:9px 12px;border-bottom:1px solid var(--bdr);background:rgba(0,0,0,.15);}
-.app-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--white);}
+.app-table th{text-align:left;font-size:10px;color:var(--gray-soft);text-transform:uppercase;letter-spacing:.09em;padding:10px 12px;border-bottom:1px solid var(--bdr);background:transparent;font-weight:600;}
+.app-table td{padding:11px 12px;border-bottom:1px solid var(--bdr-soft);color:var(--white);}
 .app-table tr:last-child td{border-bottom:none;}
-.app-table tr:hover td{background:rgba(196,154,58,.03);}
-.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:2px 9px;border-radius:10px;}
-.badge-ok{background:rgba(16,185,129,.12);color:#34D399;border:1px solid rgba(16,185,129,.2);}
-.badge-warn{background:rgba(245,158,11,.12);color:#FCD34D;border:1px solid rgba(245,158,11,.2);}
-.badge-red{background:rgba(239,68,68,.12);color:#F87171;border:1px solid rgba(239,68,68,.2);}
-.badge-gold{background:rgba(196,154,58,.12);color:var(--gold);border:1px solid var(--gold-border);}
+.app-table tr:hover td{background:rgba(255,255,255,.015);}
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:3px 9px;border-radius:6px;}
+.badge-ok{background:rgba(61,174,124,.1);color:#5CC79A;border:1px solid rgba(61,174,124,.18);}
+.badge-warn{background:rgba(217,154,60,.1);color:#E0B26A;border:1px solid rgba(217,154,60,.18);}
+.badge-red{background:rgba(229,86,78,.1);color:#EB8077;border:1px solid rgba(229,86,78,.18);}
+.badge-gold{background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-border);}
 
 /* ══════════════════════════════════════════
    ADMIN VIEW
@@ -541,11 +587,13 @@ footer{
       <a href="#seguridad" onclick="showView('landing')">Seguridad</a>
     </div>
     <div class="nav-actions" id="navActions">
+      <button class="btn-outline" id="themeToggle" onclick="toggleTheme()" title="Cambiar tema" style="padding:8px 12px;">🌙</button>
       <button class="btn-outline" onclick="showView('login')">Ingresar</button>
       <button class="btn-gold" onclick="showView('register')">Registrarse</button>
     </div>
     <div class="nav-actions" id="navApp" style="display:none;">
       <span style="font-size:13px;color:var(--gray)" id="navUserName"></span>
+      <button class="btn-outline" id="themeToggle2" onclick="toggleTheme()" title="Cambiar tema" style="padding:8px 12px;">🌙</button>
       <button class="btn-outline" id="navAdminBtn" style="display:none;" onclick="showView('admin')">Admin</button>
       <button class="btn-outline" onclick="logout()">Salir</button>
     </div>
@@ -568,7 +616,7 @@ footer{
           <span></span>
           GesFlota by MercaTeck
         </div>
-        <h1>TU FLOTA,<br/>BAJO <span class="gold">CONTROL.</span></h1>
+        <h1>Tu flota, siempre <span class="gold">bajo control</span></h1>
         <p class="hero-sub">Plataforma de gestión de flota para empresas que no se pueden permitir imprevistos. Control de mantenimiento, VTV, check-lists semanales y alertas en tiempo real.</p>
         <div class="hero-ctas">
           <button class="btn-primary" onclick="showView('register')">
@@ -590,6 +638,9 @@ footer{
             <div class="hero-stat-n" id="counterComp">0%</div>
             <div class="hero-stat-l">Cumplimiento promedio</div>
           </div>
+        </div>
+        <div style="margin-top:2rem;padding-left:1rem;border-left:2px solid var(--gold-border);">
+          <p style="font-size:13px;color:var(--gray);font-style:italic;line-height:1.6;max-width:420px;">"El éxito no consiste en trabajar más duro, sino en trabajar de forma más inteligente."</p>
         </div>
       </div>
 
@@ -629,7 +680,7 @@ footer{
   <section id="features">
     <div class="container">
       <div class="section-label">Funcionalidades</div>
-      <h2>TODO LO QUE NECESITÁS,<br/>EN UN SOLO LUGAR.</h2>
+      <h2>Todo lo que necesitás, en un solo lugar</h2>
       <p class="section-sub">Desde el check-list semanal hasta los informes mensuales, GesFlota centraliza el control de tu flota.</p>
       <div class="features-grid">
         <div class="feat-card">
@@ -672,23 +723,23 @@ footer{
   <section id="how">
     <div class="container">
       <div class="section-label">Cómo funciona</div>
-      <h2>EN TRES PASOS.</h2>
+      <h2>Empezá en tres pasos</h2>
       <p class="section-sub">Empezás a usar GesFlota en minutos, sin instalaciones ni configuraciones complejas.</p>
       <div class="how-grid">
         <div class="how-step">
-          <div class="how-num">01</div>
+          <div class="how-num">1</div>
           <div class="how-title">Registrá tu empresa</div>
           <div class="how-desc">Creá tu cuenta con tu Gmail o email corporativo. Te llega un mail de confirmación y accedés al panel de configuración inicial.</div>
           <div class="how-arrow">→</div>
         </div>
         <div class="how-step">
-          <div class="how-num">02</div>
+          <div class="how-num">2</div>
           <div class="how-title">Cargá tu flota</div>
           <div class="how-desc">Subí tus vehículos desde un Excel con la plantilla, o generá un Google Sheet desde la plataforma. Configurá las obras y responsables.</div>
           <div class="how-arrow">→</div>
         </div>
         <div class="how-step">
-          <div class="how-num">03</div>
+          <div class="how-num">3</div>
           <div class="how-title">Empezá a operar</div>
           <div class="how-desc">Tu equipo completa check-lists, carga arreglos y recibe alertas automáticas. Vos controlás todo desde el panel en tiempo real.</div>
         </div>
@@ -702,17 +753,30 @@ footer{
   <section id="pricing">
     <div class="container">
       <div class="section-label">Planes</div>
-      <h2>ELEGÍ EL PLAN<br/>QUE SE ADAPTA.</h2>
+      <h2>Elegí el plan que se adapta a tu empresa</h2>
       <p class="section-sub">Sin costos ocultos. Cancelás cuando quieras. Pagás por transferencia o Mercado Pago.</p>
+      <div style="display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:2rem;">
+        <span id="lblMensual" style="font-size:14px;font-weight:600;color:var(--gold);">Mensual</span>
+        <div onclick="togglePeriodo()" style="cursor:pointer;width:52px;height:28px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:14px;position:relative;transition:all .2s;">
+          <div id="periodoKnob" style="position:absolute;top:2px;left:2px;width:22px;height:22px;background:var(--gold);border-radius:50%;transition:all .2s;"></div>
+        </div>
+        <span id="lblAnual" style="font-size:14px;font-weight:600;color:var(--gray);">Anual <span style="font-size:11px;background:var(--green);color:#000;padding:1px 7px;border-radius:8px;margin-left:3px;">-15%</span></span>
+      </div>
+
+      <!-- Frase rotativa -->
+      <div id="fraseRotativa" style="text-align:center;margin-top:2rem;min-height:24px;transition:opacity .6s;opacity:0;">
+        <p style="font-size:14px;color:var(--gold);font-style:italic;" id="fraseRotativaTexto"></p>
+      </div>
+
       <div class="pricing-grid">
 
         <div class="price-card">
           <div class="price-plan">Básico</div>
           <div class="price-amount">
             <span class="price-currency">$</span>
-            <span class="price-value">19.000</span>
+            <span class="price-value" data-precio="19000" id="precioBasico">19.000</span>
           </div>
-          <div class="price-period">ARS / mes</div>
+          <div class="price-period" id="periodoBasico">ARS / mes</div>
           <p class="price-desc" style="margin-top:.5rem;">Ideal para empresas pequeñas que quieren organizar su flota sin complicaciones.</p>
           <ul class="price-features">
             <li><span>✓</span><span>Hasta 20 vehículos</span></li>
@@ -734,9 +798,9 @@ footer{
           <div class="price-plan">Pro</div>
           <div class="price-amount">
             <span class="price-currency">$</span>
-            <span class="price-value">39.000</span>
+            <span class="price-value" data-precio="39000" id="precioPro">39.000</span>
           </div>
-          <div class="price-period">ARS / mes</div>
+          <div class="price-period" id="periodoPro">ARS / mes</div>
           <p class="price-desc" style="margin-top:.5rem;">Para empresas medianas que necesitan control total de su operación.</p>
           <ul class="price-features">
             <li><span>✓</span><span>Todo lo del plan Básico</span></li>
@@ -756,9 +820,9 @@ footer{
           <div class="price-plan">Enterprise</div>
           <div class="price-amount">
             <span class="price-currency">$</span>
-            <span class="price-value">79.000</span>
+            <span class="price-value" data-precio="79000" id="precioEnt">79.000</span>
           </div>
-          <div class="price-period">ARS / mes</div>
+          <div class="price-period" id="periodoEnt">ARS / mes</div>
           <p class="price-desc" style="margin-top:.5rem;">Para grandes empresas con múltiples obras y necesidad de control centralizado.</p>
           <ul class="price-features">
             <li><span>✓</span><span>Todo lo del plan Pro</span></li>
@@ -785,7 +849,7 @@ footer{
   <section id="checklist-addon" style="background:var(--card);">
     <div class="container">
       <div class="section-label">Add-on disponible</div>
-      <h2>CHECKLIST DIGITAL<br/>CON SINCRONIZACIÓN.</h2>
+      <h2>Check-list digital con sincronización</h2>
       <p class="section-sub">Formularios de check-list para vehículos pesados y livianos que se sincronizan automáticamente con el panel de control de tu empresa. Se contrata por separado.</p>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:3rem;align-items:start;">
@@ -889,7 +953,7 @@ footer{
       <div class="sec-grid">
         <div>
           <div class="section-label">Seguridad y privacidad</div>
-          <h2>TUS DATOS,<br/>SOLO TUYOS.</h2>
+          <h2>Tus datos, solo tuyos</h2>
           <p class="section-sub">Cada empresa tiene su espacio completamente aislado. Nadie más puede ver tu información.</p>
           <div class="sec-items">
             <div class="sec-item">
@@ -946,7 +1010,7 @@ footer{
   <section id="pagos">
     <div class="container">
       <div class="section-label">Formas de pago</div>
-      <h2>PAGÁS COMO<br/>TE CONVENGA.</h2>
+      <h2>Pagás como te convenga</h2>
       <p class="section-sub">Sin tarjeta de crédito obligatoria. Aceptamos transferencia bancaria y Mercado Pago.</p>
       <div class="pay-grid">
         <div class="pay-card">
@@ -973,7 +1037,7 @@ footer{
   <!-- CTA -->
   <div class="cta-section">
     <div class="container">
-      <h2>LISTO PARA TOMAR<br/><span style="color:var(--gold)">EL CONTROL?</span></h2>
+      <h2>¿Listo para tomar <span style="color:var(--gold)">el control</span>?</h2>
       <p>Empezá con 14 días gratis. Sin tarjeta. Sin compromiso.</p>
       <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;">
         <button class="btn-primary" onclick="showView('register')">Crear cuenta gratis</button>
@@ -1079,7 +1143,7 @@ footer{
       <div class="field"><label>Contraseña</label><input type="password" id="regPass" placeholder="Mínimo 8 caracteres"/></div>
       <div class="field">
         <label>Plan</label>
-        <select id="regPlan" style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);padding:11px 13px;color:var(--white);font-size:14px;width:100%;outline:none;">
+        <select id="regPlan" style="background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);padding:11px 13px;color:var(--white);font-size:14px;width:100%;outline:none;">
           <option value="basico">Básico — $19.000/mes</option>
           <option value="pro" selected>Pro — $39.000/mes</option>
           <option value="enterprise">Enterprise — $79.000/mes</option>
@@ -1145,6 +1209,10 @@ footer{
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
           Informes
         </div>
+        <div class="sidebar-item" onclick="setTab(this,'dash-soporte')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          Soporte
+        </div>
         <div class="sidebar-item" onclick="setTab(this,'dash-config')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
           Configuración
@@ -1203,7 +1271,7 @@ footer{
               <h3>Estado actual de flota</h3>
               <div style="display:flex;gap:.5rem;align-items:center;">
                 <button class="btn-gold" style="font-size:12px;padding:6px 14px;" onclick="openNewVeh()">+ Cargar vehículo</button>
-                <select id="flotaPeriodo" onchange="cambiarPeriodoFlota()" style="font-size:12px;padding:6px 10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);cursor:pointer;">
+                <select id="flotaPeriodo" onchange="cambiarPeriodoFlota()" style="font-size:12px;padding:6px 10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
                   <option value="actual">Semana actual</option>
                   <option value="ant1">Semana anterior</option>
                   <option value="ant2">Hace 2 semanas</option>
@@ -1216,27 +1284,27 @@ footer{
             </div>
             <!-- Filtros -->
             <div style="padding:.85rem 1rem;border-bottom:1px solid var(--bdr);display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;">
-              <input type="text" id="flotaSearch" placeholder="🔍 Buscar por patente..." onkeyup="filterFlota()" style="flex:1;min-width:180px;font-size:13px;padding:8px 12px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);outline:none;"/>
-              <select id="flotaObra" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);cursor:pointer;">
+              <input type="text" id="flotaSearch" placeholder="🔍 Buscar por patente..." onkeyup="filterFlota()" style="flex:1;min-width:180px;font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);outline:none;"/>
+              <select id="flotaObra" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
                 <option value="">Todas las obras</option>
                 <option>Obra Norte</option><option>Obra Sur</option><option>Obra Este</option><option>Obra Oeste</option>
               </select>
-              <select id="flotaVtv" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);cursor:pointer;">
+              <select id="flotaVtv" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
                 <option value="">VTV: todas</option>
                 <option value="venc">VTV vencida</option>
                 <option value="acerca">VTV por vencer</option>
               </select>
-              <select id="flotaSeguro" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);cursor:pointer;">
+              <select id="flotaSeguro" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
                 <option value="">Seguro: todos</option>
                 <option value="venc">Seguro vencido</option>
                 <option value="acerca">Seguro por vencer</option>
               </select>
-              <select id="flotaProp" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);cursor:pointer;">
+              <select id="flotaProp" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
                 <option value="">Propiedad: todas</option>
                 <option value="Propio">Propio</option>
                 <option value="Alquilado">Alquilado</option>
               </select>
-              <select id="flotaCheck" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);cursor:pointer;">
+              <select id="flotaCheck" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
                 <option value="">Check-list: todos</option>
                 <option value="ok">Al día</option>
                 <option value="pend">Pendiente / Sin cargar</option>
@@ -1295,6 +1363,7 @@ footer{
                     <td style="font-family:var(--font-mono);">$45.000</td>
                     <td style="white-space:nowrap;">
                       <button class="btn-edit-veh" style="margin-bottom:3px;display:block;width:100%;" onclick="addMantObs('XA123BC')">📝 Obs.</button>
+                      <button class="btn-edit-veh" style="margin-bottom:3px;display:block;width:100%;" onclick="verHistorialVehiculo('XA123BC')">📋 Historial</button>
                       <button class="btn-edit-veh" style="display:block;width:100%;color:#34D399;border-color:rgba(16,185,129,.25);" onclick="finalizeMant('XA123BC')">✓ Finalizar</button>
                     </td>
                   </tr>
@@ -1306,6 +1375,7 @@ footer{
                     <td style="font-family:var(--font-mono);">$78.000</td>
                     <td style="white-space:nowrap;">
                       <button class="btn-edit-veh" style="margin-bottom:3px;display:block;width:100%;" onclick="addMantObs('WD012GH')">📝 Obs.</button>
+                      <button class="btn-edit-veh" style="margin-bottom:3px;display:block;width:100%;" onclick="verHistorialVehiculo('WD012GH')">📋 Historial</button>
                       <button class="btn-edit-veh" style="display:block;width:100%;color:#34D399;border-color:rgba(16,185,129,.25);" onclick="finalizeMant('WD012GH')">✓ Finalizar</button>
                     </td>
                   </tr>
@@ -1382,23 +1452,23 @@ footer{
             <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
               <button id="btnOpenChecklist" style="display:none;font-size:12px;padding:6px 14px;background:var(--green);color:#000;border:none;border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="openChecklistForm()">📋 Cargar check-list</button>
               <button id="btnShareChecklist" style="display:none;font-size:12px;padding:6px 14px;background:var(--gold);color:#000;border:none;border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="openShareChecklist()">📲 Compartir / QR</button>
-              <select id="checklistFiltroObra" style="font-size:12px;padding:6px 12px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);cursor:pointer;">
+              <select id="checklistFiltroObra" style="font-size:12px;padding:6px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
                 <option>Todas las obras</option>
                 <option>Obra Norte</option>
                 <option>Obra Sur</option>
                 <option>Obra Este</option>
               </select>
-              <select id="checklistFiltroTipo" style="font-size:12px;padding:6px 12px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);cursor:pointer;">
+              <select id="checklistFiltroTipo" style="font-size:12px;padding:6px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
                 <option>Semanal + Mensual</option>
                 <option>Solo Semanal</option>
                 <option>Solo Mensual</option>
               </select>
-              <select id="checklistFiltroPeriodo" style="font-size:12px;padding:6px 12px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);cursor:pointer;">
+              <select id="checklistFiltroPeriodo" style="font-size:12px;padding:6px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
                 <option value="semana">Esta semana</option>
                 <option value="mes">Este mes</option>
                 <option value="todo">Histórico</option>
               </select>
-              <input type="text" id="checklistFiltroPat" placeholder="🔍 Patente / ID" style="font-size:12px;padding:6px 12px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);width:140px;"/>
+              <input type="text" id="checklistFiltroPat" placeholder="🔍 Patente / ID" style="font-size:12px;padding:6px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);width:140px;"/>
             </div>
           </div>
 
@@ -1560,7 +1630,7 @@ footer{
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem;margin-bottom:1rem;">
               <div>
                 <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">Tipo de informe</label>
-                <select id="infTipo" style="width:100%;padding:9px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;">
+                <select id="infTipo" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
                   <option value="general">General (Estado, VTV, Seguro, Check-list)</option>
                   <option value="estado">Estado de mantenimiento</option>
                   <option value="vtv">VTV</option>
@@ -1570,7 +1640,7 @@ footer{
               </div>
               <div>
                 <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">Estado</label>
-                <select id="infEstado" style="width:100%;padding:9px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;">
+                <select id="infEstado" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
                   <option value="todos">Todos</option>
                   <option value="realizado">Realizados / Al día</option>
                   <option value="pendiente">Pendientes</option>
@@ -1579,7 +1649,7 @@ footer{
               </div>
               <div>
                 <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">Período</label>
-                <select id="infPeriodo" style="width:100%;padding:9px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;">
+                <select id="infPeriodo" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
                   <option value="semana">Esta semana</option>
                   <option value="mes" selected>Este mes</option>
                   <option value="todo">Todo</option>
@@ -1587,21 +1657,21 @@ footer{
               </div>
               <div>
                 <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">Obra / Sector</label>
-                <select id="infObra" style="width:100%;padding:9px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;">
+                <select id="infObra" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
                   <option value="">Todas</option>
                   <option>Obra Norte</option><option>Obra Sur</option><option>Obra Este</option><option>Obra Oeste</option>
                 </select>
               </div>
               <div>
                 <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">Tipo de vehículo</label>
-                <select id="infTipoVeh" style="width:100%;padding:9px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;">
+                <select id="infTipoVeh" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
                   <option value="">Todos</option>
                   <option>Camión</option><option>Camioneta</option><option>Batea</option><option>Máquina vial</option><option>Autoelevador</option>
                 </select>
               </div>
               <div>
                 <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">Patente / ID (opcional)</label>
-                <input type="text" id="infPatente" placeholder="XA123BC o A-101" style="width:100%;padding:9px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;"/>
+                <input type="text" id="infPatente" placeholder="XA123BC o A-101" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"/>
               </div>
             </div>
 
@@ -1622,6 +1692,65 @@ footer{
 
           <!-- Resultado del informe -->
           <div id="infResultado"></div>
+        </div>
+
+        <!-- TAB: SOPORTE (tickets) -->
+        <div id="dash-soporte" style="display:none;">
+          <h2 style="font-size:26px;color:var(--white);margin-bottom:.5rem;font-weight:600;letter-spacing:-.02em;">Soporte</h2>
+          <p style="font-size:14px;color:var(--gray);margin-bottom:1.5rem;">Enviá tu consulta y nuestro equipo te responde por email. Elegí el tema para que llegue al área correcta.</p>
+
+          <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:1.5rem;align-items:start;">
+            <!-- Formulario de ticket -->
+            <div class="app-card" style="padding:1.5rem;">
+              <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:1rem;">📨 Nuevo ticket</div>
+              <div class="field">
+                <label>Tema</label>
+                <select id="tkTema">
+                  <option value="Soporte técnico">🛠️ Soporte técnico</option>
+                  <option value="Ventas">💼 Ventas</option>
+                  <option value="Capacitación">🎓 Capacitación</option>
+                  <option value="Pagos y facturación">💳 Pagos y facturación</option>
+                  <option value="Sugerencias">💡 Sugerencias</option>
+                  <option value="Otro">📋 Otro</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Asunto</label>
+                <input type="text" id="tkAsunto" placeholder="Resumí tu consulta en una línea"/>
+              </div>
+              <div class="field">
+                <label>Prioridad</label>
+                <select id="tkPrioridad">
+                  <option value="Normal">Normal</option>
+                  <option value="Alta">Alta</option>
+                  <option value="Urgente">Urgente</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Mensaje</label>
+                <textarea id="tkMensaje" style="min-height:120px;resize:vertical;" placeholder="Contanos en detalle qué necesitás..."></textarea>
+              </div>
+              <button class="btn-gold" style="width:100%;padding:12px;font-size:14px;" onclick="enviarTicket()">Enviar ticket</button>
+              <p style="font-size:11px;color:var(--gray);text-align:center;margin-top:.75rem;">Te responderemos al email de tu cuenta dentro de las 24-48hs hábiles.</p>
+            </div>
+
+            <!-- Info de canales -->
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+              <div class="app-card" style="padding:1.25rem;">
+                <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:.75rem;">Canales de atención</div>
+                <div style="display:flex;flex-direction:column;gap:.85rem;font-size:13px;color:var(--gray);">
+                  <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">📧</span><div><div style="color:var(--white);">Email</div><div style="font-size:12px;">mercateckinfo@gmail.com</div></div></div>
+                  <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">⏱️</span><div><div style="color:var(--white);">Horario</div><div style="font-size:12px;">Lun a Vie, 9 a 18hs</div></div></div>
+                  <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">💬</span><div><div style="color:var(--white);">Chat con Ges</div><div style="font-size:12px;">Asistente IA, 24/7 (abajo a la derecha)</div></div></div>
+                </div>
+              </div>
+              <!-- Mis tickets -->
+              <div class="app-card" style="padding:1.25rem;">
+                <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:.75rem;">Mis tickets</div>
+                <div id="ticketsList" style="display:flex;flex-direction:column;gap:.5rem;"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- TAB: CONFIG -->
@@ -1664,38 +1793,38 @@ footer{
             <div style="display:flex;flex-direction:column;gap:.85rem;">
               <div class="freq-row" style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:.6rem;align-items:center;">
                 <span style="font-size:13px;color:var(--white);">🚛 Camión</span>
-                <select data-freq-tipo="camion" data-freq-unidad style="padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;">
+                <select data-freq-tipo="camion" data-freq-unidad style="padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
                   <option value="km">Por km</option><option value="horas">Por horas</option>
                 </select>
-                <input type="number" data-freq-tipo="camion" data-freq-valor value="10000" placeholder="Cada..." style="padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;"/>
+                <input type="number" data-freq-tipo="camion" data-freq-valor value="10000" placeholder="Cada..." style="padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"/>
               </div>
               <div class="freq-row" style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:.6rem;align-items:center;">
                 <span style="font-size:13px;color:var(--white);">🚗 Camioneta</span>
-                <select data-freq-tipo="camioneta" data-freq-unidad style="padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;">
+                <select data-freq-tipo="camioneta" data-freq-unidad style="padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
                   <option value="km">Por km</option><option value="horas">Por horas</option>
                 </select>
-                <input type="number" data-freq-tipo="camioneta" data-freq-valor value="10000" placeholder="Cada..." style="padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;"/>
+                <input type="number" data-freq-tipo="camioneta" data-freq-valor value="10000" placeholder="Cada..." style="padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"/>
               </div>
               <div class="freq-row" style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:.6rem;align-items:center;">
                 <span style="font-size:13px;color:var(--white);">🚜 Máquina vial</span>
-                <select data-freq-tipo="maqvial" data-freq-unidad style="padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;">
+                <select data-freq-tipo="maqvial" data-freq-unidad style="padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
                   <option value="horas">Por horas</option><option value="km">Por km</option>
                 </select>
-                <input type="number" data-freq-tipo="maqvial" data-freq-valor value="250" placeholder="Cada..." style="padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;"/>
+                <input type="number" data-freq-tipo="maqvial" data-freq-valor value="250" placeholder="Cada..." style="padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"/>
               </div>
               <div class="freq-row" style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:.6rem;align-items:center;">
                 <span style="font-size:13px;color:var(--white);">🏗️ Autoelevador</span>
-                <select data-freq-tipo="autoelevador" data-freq-unidad style="padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;">
+                <select data-freq-tipo="autoelevador" data-freq-unidad style="padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
                   <option value="horas">Por horas</option><option value="km">Por km</option>
                 </select>
-                <input type="number" data-freq-tipo="autoelevador" data-freq-valor value="200" placeholder="Cada..." style="padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;"/>
+                <input type="number" data-freq-tipo="autoelevador" data-freq-valor value="200" placeholder="Cada..." style="padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"/>
               </div>
               <div class="freq-row" style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:.6rem;align-items:center;">
                 <span style="font-size:13px;color:var(--white);">⚙️ Otro</span>
-                <select data-freq-tipo="otro" data-freq-unidad style="padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;">
+                <select data-freq-tipo="otro" data-freq-unidad style="padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
                   <option value="km">Por km</option><option value="horas">Por horas</option>
                 </select>
-                <input type="number" data-freq-tipo="otro" data-freq-valor value="10000" placeholder="Cada..." style="padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;"/>
+                <input type="number" data-freq-tipo="otro" data-freq-valor value="10000" placeholder="Cada..." style="padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"/>
               </div>
             </div>
             <button class="btn-gold" style="font-size:13px;padding:9px 18px;margin-top:1.25rem;" onclick="saveFreqConfig()">Guardar frecuencias</button>
@@ -1748,9 +1877,9 @@ footer{
             <div id="firmaCard" style="display:none;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--bdr);">
               <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:.5rem;">✍️ Firma de la empresa</div>
               <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Se agrega al pie de cada email enviado.</div>
-              <div class="field"><label>Nombre de la empresa</label><input type="text" id="firmaEmpresa" placeholder="Mi Empresa S.A." style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;"/></div>
-              <div class="field"><label>Descripción / pie de firma</label><textarea id="firmaDesc" placeholder="Departamento de Flota · Tel: ..." style="width:100%;min-height:60px;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;resize:vertical;"></textarea></div>
-              <div class="field"><label>Logo (URL o subir)</label><input type="file" id="firmaLogo" accept="image/*" style="width:100%;padding:9px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--gray);font-size:13px;"/></div>
+              <div class="field"><label>Nombre de la empresa</label><input type="text" id="firmaEmpresa" placeholder="Mi Empresa S.A." style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/></div>
+              <div class="field"><label>Descripción / pie de firma</label><textarea id="firmaDesc" placeholder="Departamento de Flota · Tel: ..." style="width:100%;min-height:60px;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;resize:vertical;"></textarea></div>
+              <div class="field"><label>Logo (URL o subir)</label><input type="file" id="firmaLogo" accept="image/*" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--gray);font-size:13px;"/></div>
               <button class="btn-gold" style="font-size:13px;padding:9px 18px;margin-top:.5rem;" onclick="saveFirma()">Guardar firma</button>
             </div>
           </div>
@@ -1842,8 +1971,8 @@ footer{
               <span style="font-size:9px;background:var(--green);color:#000;padding:1px 6px;border-radius:4px;font-weight:700;">ENTERPRISE</span>
             </div>
             <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Reemplazá "MercaTeck / GesFlota" por el nombre de tu empresa en el panel y la app.</div>
-            <div class="field"><label>Nombre de tu empresa</label><input type="text" id="wlNombre" placeholder="Mi Empresa" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;"/></div>
-            <div class="field"><label>Logo (subir imagen)</label><input type="file" id="wlLogo" accept="image/*" style="width:100%;padding:9px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--gray);font-size:13px;"/></div>
+            <div class="field"><label>Nombre de tu empresa</label><input type="text" id="wlNombre" placeholder="Mi Empresa" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/></div>
+            <div class="field"><label>Logo (subir imagen)</label><input type="file" id="wlLogo" accept="image/*" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--gray);font-size:13px;"/></div>
             <button class="btn-gold" style="font-size:13px;padding:9px 18px;margin-top:.5rem;" onclick="saveWhiteLabel()">Aplicar marca</button>
           </div>
 
@@ -2013,7 +2142,7 @@ footer{
       <div style="background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);padding:1rem;margin-bottom:1.25rem;">
         <div style="font-size:12px;color:var(--gray);">Plan seleccionado</div>
         <div style="font-size:18px;font-weight:700;color:var(--white);" id="payPlanName">Pro</div>
-        <div style="font-size:22px;font-weight:700;color:var(--gold);">$<span id="payAmount">39.000</span> <span style="font-size:13px;font-weight:400;color:var(--gray);">ARS/mes</span></div>
+        <div style="font-size:22px;font-weight:700;color:var(--gold);">$<span id="payAmount">39.000</span> <span id="payPeriod" style="font-size:13px;font-weight:400;color:var(--gray);">ARS/mes</span></div>
       </div>
       <div style="font-size:13px;font-weight:500;color:var(--white);margin-bottom:.75rem;">Elegí tu forma de pago:</div>
       <div class="pay-methods">
@@ -2060,7 +2189,7 @@ footer{
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
         <div class="field">
           <label>Estado mantenimiento</label>
-          <select id="editEstado" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;">
+          <select id="editEstado" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;">
             <option>Buen estado</option>
             <option>Alerta — servicio próximo</option>
             <option>Se acerca vencimiento</option>
@@ -2070,11 +2199,11 @@ footer{
         </div>
         <div class="field">
           <label>Fecha último servicio</label>
-          <input type="date" id="editFechaServ" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+          <input type="date" id="editFechaServ" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
         </div>
         <div class="field">
           <label>Estado VTV</label>
-          <select id="editVtv" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;">
+          <select id="editVtv" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;">
             <option>Vigente</option>
             <option>Se acerca vencimiento</option>
             <option>Vencida</option>
@@ -2082,15 +2211,15 @@ footer{
         </div>
         <div class="field">
           <label>Vence VTV</label>
-          <input type="date" id="editVtvFecha" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+          <input type="date" id="editVtvFecha" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
         </div>
         <div class="field">
           <label>Vencimiento seguro</label>
-          <input type="date" id="editSeguro" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+          <input type="date" id="editSeguro" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
         </div>
         <div class="field">
           <label>Propiedad</label>
-          <select id="editPropiedad" onchange="toggleAlquiler()" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;">
+          <select id="editPropiedad" onchange="toggleAlquiler()" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;">
             <option value="propio">Propio</option>
             <option value="alquilado">Alquilado</option>
           </select>
@@ -2101,11 +2230,11 @@ footer{
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
           <div class="field">
             <label>Proveedor</label>
-            <input type="text" id="editProveedor" placeholder="Nombre" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+            <input type="text" id="editProveedor" placeholder="Nombre" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
           </div>
           <div class="field">
             <label>Fin de contrato</label>
-            <input type="date" id="editFinContrato" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+            <input type="date" id="editFinContrato" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
           </div>
         </div>
       </div>
@@ -2135,6 +2264,23 @@ footer{
         <button class="btn-outline" style="flex:1;padding:11px;font-size:13px;" onclick="window.print()">🖨️ Imprimir QR</button>
         <button class="btn-gold" style="flex:1;padding:11px;font-size:13px;" onclick="shareWhatsApp()">📱 WhatsApp</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL HISTORIAL DE VEHÍCULO (mantenimiento) -->
+<div class="modal-overlay" id="histVehModal">
+  <div class="modal-box" style="max-width:560px;max-height:88vh;display:flex;flex-direction:column;">
+    <div class="modal-hdr">
+      <h3>📋 Historial — <span id="histVehPat">—</span></h3>
+      <button class="modal-close" onclick="closeHistVeh()">×</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <div style="font-size:13px;color:var(--gray);">Total acumulado: <strong id="histTotal" style="color:var(--gold);font-family:var(--font-mono);">$0</strong></div>
+        <button class="btn-gold" style="font-size:12px;padding:7px 14px;" onclick="addHistItem()">+ Agregar arreglo/compra</button>
+      </div>
+      <div id="histVehBody" style="display:flex;flex-direction:column;gap:.6rem;"></div>
     </div>
   </div>
 </div>
@@ -2228,21 +2374,21 @@ footer{
     <div class="modal-body">
       <div class="field">
         <label>Tipo de vehículo</label>
-        <select id="clTipoVeh" onchange="onClTipoChange()" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;">
+        <select id="clTipoVeh" onchange="onClTipoChange()" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;">
           <option value="pesado">Móvil Pesado</option>
           <option value="liviano">Móvil Liviano</option>
         </select>
       </div>
       <div class="field">
         <label>Frecuencia</label>
-        <select id="clFreqVeh" onchange="onClTipoChange()" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;">
+        <select id="clFreqVeh" onchange="onClTipoChange()" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;">
           <option value="semanal">Semanal</option>
           <option value="mensual">Mensual</option>
         </select>
       </div>
       <div class="field">
         <label>Vehículo (patente)</label>
-        <select id="clPatente" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;"></select>
+        <select id="clPatente" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"></select>
       </div>
       <div id="clChecklistItems" style="margin-top:1rem;"></div>
       <button class="modal-btn" onclick="submitChecklist()">Guardar check-list</button>
@@ -2335,6 +2481,9 @@ function doRegister(){
 
   okEl.textContent='✓ Cuenta creada. Te enviamos un email de confirmación a '+email+'. Revisá tu bandeja de entrada.';
   okEl.style.display='block';
+  // Frase de bienvenida aleatoria
+  var fraseBienvenida = FRASES[Math.floor(Math.random()*FRASES.length)];
+  showToast('💼 "'+fraseBienvenida+'"','success');
   setTimeout(function(){
     loginSuccess({ email:email, name:name, company:company, plan:plan, role:'user' });
   }, 2000);
@@ -2520,7 +2669,7 @@ function showView(name){
 function setTab(el, tabId){
   document.querySelectorAll('.sidebar-item').forEach(function(i){ i.classList.remove('active'); });
   el.classList.add('active');
-  var tabs = ['dash-flota','dash-mantenimiento','dash-seguro','dash-vtv','dash-alertas','dash-checklist','dash-informes','dash-config'];
+  var tabs = ['dash-flota','dash-mantenimiento','dash-seguro','dash-vtv','dash-alertas','dash-checklist','dash-informes','dash-soporte','dash-config'];
   tabs.forEach(function(t){
     var el2 = document.getElementById(t);
     if(el2) el2.style.display = t===tabId ? 'block' : 'none';
@@ -2543,6 +2692,9 @@ function setTab(el, tabId){
   }
   if(tabId==='dash-flota'){
     cambiarPeriodoFlota();
+  }
+  if(tabId==='dash-soporte'){
+    renderTickets();
   }
   if(tabId==='dash-informes'){
     var ia = document.getElementById('infIaOption');
@@ -2612,8 +2764,18 @@ function animateCounter(id, from, to, duration, suffix){
 var currentPayMethod = 'transfer';
 
 function openPayment(plan, amount){
-  document.getElementById('payPlanName').textContent = plan;
-  document.getElementById('payAmount').textContent = amount;
+  var precioFinal = amount;
+  var periodoTxt = 'mes';
+  // Recalcular según período activo
+  var bases = {'Básico':19000,'Pro':39000,'Enterprise':79000};
+  if(_periodoAnual && bases[plan]){
+    precioFinal = Math.round(bases[plan]*12*0.85).toLocaleString('es-AR');
+    periodoTxt = 'año';
+  }
+  document.getElementById('payPlanName').textContent = plan + (_periodoAnual ? ' (anual)' : '');
+  document.getElementById('payAmount').textContent = precioFinal;
+  var perEl = document.getElementById('payPeriod');
+  if(perEl) perEl.textContent = 'ARS/'+periodoTxt;
   document.getElementById('payModal').classList.add('open');
   selectPayMethod('transfer');
 }
@@ -2714,13 +2876,13 @@ function genPrompt(title, fields, onOk){
     html += '<div style="margin-bottom:.85rem;">';
     html += '<label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">'+f.label+'</label>';
     if(f.type==='select'){
-      html += '<select id="gen_'+f.id+'" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;">';
+      html += '<select id="gen_'+f.id+'" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;">';
       (f.options||[]).forEach(function(o){ html += '<option value="'+o.v+'">'+o.t+'</option>'; });
       html += '</select>';
     } else if(f.type==='textarea'){
-      html += '<textarea id="gen_'+f.id+'" placeholder="'+(f.placeholder||'')+'" style="width:100%;min-height:70px;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;resize:vertical;"></textarea>';
+      html += '<textarea id="gen_'+f.id+'" placeholder="'+(f.placeholder||'')+'" style="width:100%;min-height:70px;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;resize:vertical;"></textarea>';
     } else {
-      html += '<input type="'+(f.type||'text')+'" id="gen_'+f.id+'" placeholder="'+(f.placeholder||'')+'" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;"/>';
+      html += '<input type="'+(f.type||'text')+'" id="gen_'+f.id+'" placeholder="'+(f.placeholder||'')+'" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>';
     }
     html += '</div>';
   });
@@ -2883,7 +3045,309 @@ function openVehDetail(patente){
   document.getElementById('vehDetailBody').innerHTML = html;
   document.getElementById('vehDetailModal').classList.add('open');
 }
+// ══════════════════════════════════════════════════════
+//  FRASES ROTATIVAS (motivacionales empresariales)
+// ══════════════════════════════════════════════════════
+var FRASES = [
+  "El éxito no consiste en trabajar más duro, sino en trabajar de forma más inteligente.",
+  "Una empresa ordenada es una empresa que crece.",
+  "Los datos que no se miden, no se pueden mejorar.",
+  "El control de hoy es la rentabilidad de mañana.",
+  "Cada vehículo parado es una oportunidad perdida.",
+  "Las mejores decisiones nacen de la mejor información.",
+  "Prevenir cuesta menos que reparar.",
+  "La tecnología no reemplaza tu trabajo, lo potencia.",
+  "Un líder no controla todo, controla lo que importa.",
+  "El crecimiento empieza por la organización."
+];
+var _fraseIdx = 0;
+function rotarFrase(){
+  var cont = document.getElementById('fraseRotativa');
+  var txt = document.getElementById('fraseRotativaTexto');
+  if(!cont || !txt) return;
+  cont.style.opacity = '0';
+  setTimeout(function(){
+    txt.textContent = '"'+FRASES[_fraseIdx]+'"';
+    cont.style.opacity = '1';
+    _fraseIdx = (_fraseIdx+1) % FRASES.length;
+  }, 600);
+}
+function iniciarFrasesRotativas(){
+  rotarFrase();
+  setInterval(rotarFrase, 6000);
+}
+
+// ══════════════════════════════════════════════════════
+//  CHATBOT GES — Asistente IA (respuestas predefinidas)
+// ══════════════════════════════════════════════════════
+var _gesAbierto = false;
+var _gesIniciado = false;
+
+var GES_BASE = {
+  saludo: "¡Hola! 👋 Soy Ges, tu asistente de GesFlota. Puedo explicarte cómo funciona la plataforma, los planes, o ayudarte con dudas. ¿En qué te ayudo?",
+  sugerencias: ["¿Qué es GesFlota?","Planes y precios","¿Cómo cargo mi flota?","Check-lists","Soporte"]
+};
+
+var GES_RESPUESTAS = [
+  { k:['que es','qué es','para que sirve','plataforma'], r:"GesFlota es una plataforma para gestionar tu flota de vehículos: controlás VTV, seguros, mantenimiento y check-lists desde un solo panel. Ideal para empresas de construcción e infraestructura que no se pueden permitir imprevistos. 🚛" },
+  { k:['plan','precio','cuesta','vale','cuanto','cuánto','tarifa'], r:"Tenemos 3 planes:\n\n• Básico — $19.000/mes: panel de flota, VTV, seguro, Google Sheet\n• Pro — $39.000/mes: + mantenimiento, notificaciones por email, informes\n• Enterprise — $79.000/mes: + app de check-list, alertas automáticas, IA, white-label\n\nCon pago anual tenés 15% de descuento. 💼" },
+  { k:['cargo','cargar','subir','flota','importar','excel'], r:"Podés cargar tu flota de 2 formas:\n\n1️⃣ Subiendo un Excel con la plantilla (botón 'Descargar plantilla')\n2️⃣ Generando un Google Sheet desde la plataforma\n\nImportante: cargá las patentes sin guiones (AF45632) y las obras sin guiones bajos (Obra Norte). 📊" },
+  { k:['check','checklist','check-list','control'], r:"Los check-lists te permiten registrar el estado de cada vehículo (semanal o mensual). En Enterprise viene la app incluida y podés compartirla por QR o link a tus operarios. En Básico y Pro es un add-on. ✅" },
+  { k:['mantenimiento','arreglo','compra','service','reparac'], r:"En el módulo de Mantenimiento (Pro y Enterprise) cargás arreglos, compras y services. Cada vehículo tiene un historial donde ves todos sus registros, podés agregar observaciones y modificar montos. 🔧" },
+  { k:['alerta','aviso','vencimiento','notificac','recordatorio'], r:"GesFlota te avisa antes de que venzan la VTV, el seguro o los mantenimientos. Configurás la anticipación (1 semana, 15 días o 1 mes) y en Enterprise podés programar alertas automáticas por email. 🔔" },
+  { k:['soporte','ayuda','problema','contacto','ticket'], r:"Para soporte podés abrir un ticket desde el panel (sección Soporte), eligiendo el tema: ventas, soporte técnico, capacitación o pagos. Te respondemos por email dentro de 24-48hs. 📨" },
+  { k:['pago','pagar','transferencia','mercado pago','factura'], r:"Podés pagar por transferencia bancaria o Mercado Pago. Los datos de transferencia aparecen dentro de tu panel una vez que iniciás sesión, por seguridad. Recordá: nunca pedimos pagos por WhatsApp. 💳" },
+  { k:['seguridad','datos','privacidad','seguro mis datos'], r:"Tus datos están aislados: cada empresa solo ve su información. Usamos encriptación y control de acceso. Vos sos el dueño de tus datos y podés exportarlos cuando quieras. 🔒" },
+  { k:['white','marca','logo','personaliz'], r:"En el plan Enterprise tenés white-label: podés reemplazar el nombre y logo por los de tu empresa, tanto en el panel como en los emails que se envían. 🏷️" },
+  { k:['ia','inteligencia','recomendac'], r:"En Enterprise, los informes pueden incluir recomendaciones por IA: analizan tus datos y sugieren acciones de mantenimiento preventivo, optimización de costos y priorización de vehículos. 🤖" },
+  { k:['gracias','genial','perfecto','buenisimo','buenísimo','dale'], r:"¡De nada! 😊 Cualquier otra duda, acá estoy. Y si querés probar GesFlota, podés empezar gratis." },
+  { k:['hola','buenas','buen dia','buen día','hey'], r:"¡Hola! 👋 ¿En qué te puedo ayudar? Puedo contarte sobre los planes, cómo cargar tu flota, los check-lists o lo que necesites." }
+];
+
+function toggleGes(){
+  _gesAbierto = !_gesAbierto;
+  document.getElementById('gesChat').style.display = _gesAbierto ? 'flex' : 'none';
+  document.getElementById('gesBtn').style.transform = _gesAbierto ? 'scale(0.9)' : 'scale(1)';
+  if(_gesAbierto && !_gesIniciado){
+    _gesIniciado = true;
+    gesAgregarMsg(GES_BASE.saludo, 'bot');
+    renderGesSugerencias(GES_BASE.sugerencias);
+  }
+}
+
+function gesAgregarMsg(texto, quien){
+  var cont = document.getElementById('gesMessages');
+  var div = document.createElement('div');
+  if(quien==='bot'){
+    div.style.cssText = 'align-self:flex-start;max-width:85%;background:var(--card2);border:1px solid var(--bdr);border-radius:12px 12px 12px 4px;padding:.7rem .85rem;font-size:13px;color:var(--white);line-height:1.5;white-space:pre-line;';
+  } else {
+    div.style.cssText = 'align-self:flex-end;max-width:85%;background:var(--gold);color:#0B0E14;border-radius:12px 12px 4px 12px;padding:.7rem .85rem;font-size:13px;line-height:1.5;';
+  }
+  div.textContent = texto;
+  cont.appendChild(div);
+  cont.scrollTop = cont.scrollHeight;
+}
+
+function renderGesSugerencias(sugs){
+  var cont = document.getElementById('gesSuggestions');
+  cont.innerHTML = '';
+  sugs.forEach(function(s){
+    var b = document.createElement('button');
+    b.textContent = s;
+    b.style.cssText = 'font-size:11px;padding:5px 10px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:12px;color:var(--gold);cursor:pointer;';
+    b.onclick = function(){ gesProcesarPregunta(s); };
+    cont.appendChild(b);
+  });
+}
+
+function gesEnviar(){
+  var input = document.getElementById('gesInput');
+  var texto = input.value.trim();
+  if(!texto) return;
+  input.value = '';
+  gesProcesarPregunta(texto);
+}
+
+function gesProcesarPregunta(texto){
+  gesAgregarMsg(texto, 'user');
+  document.getElementById('gesSuggestions').innerHTML = '';
+  // Buscar respuesta por coincidencia de palabras clave
+  var lower = texto.toLowerCase();
+  var encontrada = null;
+  for(var i=0;i<GES_RESPUESTAS.length;i++){
+    for(var j=0;j<GES_RESPUESTAS[i].k.length;j++){
+      if(lower.indexOf(GES_RESPUESTAS[i].k[j])>=0){ encontrada = GES_RESPUESTAS[i].r; break; }
+    }
+    if(encontrada) break;
+  }
+  if(!encontrada){
+    encontrada = "Buena pregunta. No estoy seguro de tener esa respuesta exacta, pero podés:\n\n• Abrir un ticket en la sección Soporte\n• Escribir a mercateckinfo@gmail.com\n\n¿Querés que te cuente sobre los planes, cómo cargar tu flota o los check-lists?";
+  }
+  // Simular que "piensa"
+  setTimeout(function(){
+    gesAgregarMsg(encontrada, 'bot');
+    renderGesSugerencias(GES_BASE.sugerencias);
+  }, 500);
+}
+
 function closeVehDetail(){ document.getElementById('vehDetailModal').classList.remove('open'); }
+
+// ══════════════════════════════════════════════════════
+//  SOPORTE — TICKETS
+// ══════════════════════════════════════════════════════
+function enviarTicket(){
+  var tema = document.getElementById('tkTema').value;
+  var asunto = document.getElementById('tkAsunto').value.trim();
+  var prioridad = document.getElementById('tkPrioridad').value;
+  var mensaje = document.getElementById('tkMensaje').value.trim();
+  if(!asunto || !mensaje){ showToast('Completá asunto y mensaje','error'); return; }
+
+  var ticket = {
+    id: 'TK-'+Date.now().toString().slice(-6),
+    tema: tema, asunto: asunto, prioridad: prioridad, mensaje: mensaje,
+    empresa: window._currentCompany || '',
+    email: (currentUser && currentUser.email) || '',
+    fecha: new Date().toISOString(),
+    estado: 'Enviado'
+  };
+  // Guardar en historial local (en prod: enviar a backend → email a MercaTeck)
+  var tickets = loadState('tickets') || [];
+  tickets.unshift(ticket);
+  saveState('tickets', tickets);
+
+  // En producción: acá se dispara el email a mercateckinfo@gmail.com vía backend
+  console.log('TICKET para enviar a mercateckinfo@gmail.com:', ticket);
+
+  // Limpiar form
+  document.getElementById('tkAsunto').value = '';
+  document.getElementById('tkMensaje').value = '';
+  renderTickets();
+  showToast('✓ Ticket '+ticket.id+' enviado. Te responderemos por email.','success');
+}
+
+function renderTickets(){
+  var cont = document.getElementById('ticketsList');
+  if(!cont) return;
+  var tickets = loadState('tickets') || [];
+  cont.innerHTML = '';
+  if(!tickets.length){
+    cont.innerHTML = '<div style="font-size:12px;color:var(--gray);text-align:center;padding:.75rem;">No enviaste tickets todavía.</div>';
+    return;
+  }
+  tickets.slice(0,5).forEach(function(t){
+    var fecha = new Date(t.fecha).toLocaleDateString('es-AR');
+    var div = document.createElement('div');
+    div.style.cssText = 'padding:.6rem .75rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);';
+    div.innerHTML = '<div style="display:flex;justify-content:space-between;gap:.5rem;">'
+      +'<span style="font-size:11px;font-family:var(--font-mono);color:var(--gold);">'+escapeHtml(t.id)+'</span>'
+      +'<span style="font-size:10px;color:var(--green);">'+escapeHtml(t.estado)+'</span></div>'
+      +'<div style="font-size:12px;color:var(--white);margin-top:2px;">'+escapeHtml(t.asunto)+'</div>'
+      +'<div style="font-size:11px;color:var(--gray);">'+escapeHtml(t.tema)+' · '+fecha+'</div>';
+    cont.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  HISTORIAL DE MANTENIMIENTO POR VEHÍCULO
+// ══════════════════════════════════════════════════════
+var _histVehActual = null;
+
+function _getHistorial(patente){
+  var key = 'historial_'+patente;
+  var data = loadState(key);
+  if(data) return data;
+  // Datos iniciales de ejemplo según patente (en prod vienen del Sheet)
+  var iniciales = {
+    'XA123BC':[{fecha:'26/06/2025',tipo:'Arreglo',desc:'Cambio de pastillas de freno',obs:['Se revisó disco también'],costo:45000}],
+    'WD012GH':[{fecha:'24/06/2025',tipo:'Compra',desc:'Filtros de aceite y aire',obs:[],costo:78000}]
+  };
+  return iniciales[patente] || [];
+}
+function _saveHistorial(patente, data){ saveState('historial_'+patente, data); }
+
+function verHistorialVehiculo(patente){
+  _histVehActual = patente;
+  document.getElementById('histVehPat').textContent = patente;
+  renderHistorial();
+  document.getElementById('histVehModal').classList.add('open');
+}
+function closeHistVeh(){ document.getElementById('histVehModal').classList.remove('open'); }
+
+function renderHistorial(){
+  var pat = _histVehActual;
+  var hist = _getHistorial(pat);
+  var cont = document.getElementById('histVehBody');
+  var total = 0;
+  cont.innerHTML = '';
+  if(!hist.length){
+    cont.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--gray);font-size:13px;border:1px dashed var(--bdr);border-radius:var(--r);">Sin registros. Agregá el primer arreglo o compra.</div>';
+  }
+  hist.forEach(function(item, idx){
+    total += parseFloat(item.costo)||0;
+    var div = document.createElement('div');
+    div.style.cssText = 'padding:.85rem;background:rgba(0,0,0,.2);border:1px solid var(--bdr);border-radius:var(--r);border-left:3px solid '+(item.tipo==='Compra'?'var(--gold)':'rgba(245,158,11,.6)')+';';
+    // Header del item
+    var head = document.createElement('div');
+    head.style.cssText='display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem;';
+    head.innerHTML = '<div style="flex:1;">'
+      +'<div style="font-size:11px;color:var(--gray);">'+escapeHtml(item.fecha)+' · '+escapeHtml(item.tipo)+'</div>'
+      +'<div style="font-size:13px;color:var(--white);font-weight:500;">'+escapeHtml(item.desc)+'</div></div>';
+    // Costo editable
+    var costoWrap = document.createElement('div');
+    costoWrap.style.cssText='text-align:right;white-space:nowrap;';
+    costoWrap.innerHTML = '<span style="font-family:var(--font-mono);color:var(--gold);font-size:14px;">$'+(parseFloat(item.costo)||0).toLocaleString('es-AR')+'</span>';
+    var btnEditCosto = document.createElement('button');
+    btnEditCosto.className='btn-edit-veh'; btnEditCosto.textContent='✏️'; btnEditCosto.title='Modificar monto';
+    btnEditCosto.style.cssText='margin-left:5px;font-size:11px;padding:2px 6px;';
+    btnEditCosto.onclick=(function(i){ return function(){ editarMonto(i); }; })(idx);
+    costoWrap.appendChild(btnEditCosto);
+    head.appendChild(costoWrap);
+    div.appendChild(head);
+    // Observaciones del item
+    if(item.obs && item.obs.length){
+      item.obs.forEach(function(o){
+        var od=document.createElement('div');
+        od.style.cssText='padding:3px 7px;margin-top:3px;background:rgba(0,0,0,.25);border-radius:4px;border-left:2px solid rgba(196,154,58,.5);font-size:11px;color:#E8D5A3;';
+        od.textContent='📝 '+o;
+        div.appendChild(od);
+      });
+    }
+    // Botón agregar obs a este item
+    var btnObs=document.createElement('button');
+    btnObs.className='btn-edit-veh'; btnObs.textContent='+ Obs.';
+    btnObs.style.cssText='margin-top:6px;font-size:11px;padding:3px 10px;';
+    btnObs.onclick=(function(i){ return function(){ addObsHist(i); }; })(idx);
+    div.appendChild(btnObs);
+    cont.appendChild(div);
+  });
+  document.getElementById('histTotal').textContent = '$'+total.toLocaleString('es-AR');
+}
+
+function addHistItem(){
+  genPrompt('Nuevo arreglo / compra — '+_histVehActual, [
+    {id:'tipo', label:'Tipo', type:'select', options:[{v:'Arreglo',t:'Arreglo'},{v:'Compra',t:'Compra'},{v:'Service',t:'Service'}]},
+    {id:'desc', label:'Descripción', type:'textarea', placeholder:'Detalle del trabajo...'},
+    {id:'costo', label:'Costo (solo números)', type:'number', placeholder:'45000'}
+  ], function(v){
+    if(!v.desc){ showToast('Agregá una descripción','error'); return; }
+    var hist=_getHistorial(_histVehActual);
+    var hoy=new Date();
+    hist.unshift({
+      fecha:('0'+hoy.getDate()).slice(-2)+'/'+('0'+(hoy.getMonth()+1)).slice(-2)+'/'+hoy.getFullYear(),
+      tipo:v.tipo, desc:v.desc, obs:[], costo:parseFloat(v.costo)||0
+    });
+    _saveHistorial(_histVehActual, hist);
+    renderHistorial();
+    showToast('✓ Registro agregado al historial','success');
+  });
+}
+
+function editarMonto(idx){
+  var hist=_getHistorial(_histVehActual);
+  genPrompt('Modificar monto', [
+    {id:'costo', label:'Nuevo costo (solo números)', type:'number', placeholder:String(hist[idx].costo)}
+  ], function(v){
+    if(v.costo===''||isNaN(parseFloat(v.costo))){ showToast('Ingresá un número válido','error'); return; }
+    hist[idx].costo = parseFloat(v.costo);
+    _saveHistorial(_histVehActual, hist);
+    renderHistorial();
+    showToast('✓ Monto actualizado','success');
+  });
+}
+
+function addObsHist(idx){
+  var hist=_getHistorial(_histVehActual);
+  genPrompt('Nueva observación', [
+    {id:'obs', label:'Observación', type:'textarea', placeholder:'Escribí la observación...'}
+  ], function(v){
+    if(!v.obs) return;
+    if(!hist[idx].obs) hist[idx].obs=[];
+    hist[idx].obs.push(v.obs);
+    _saveHistorial(_histVehActual, hist);
+    renderHistorial();
+    showToast('✓ Observación agregada','success');
+  });
+}
 
 // ── Selector de período en panel de flota (respeta alcance de semana configurado) ──
 function _formatDM(d){ return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2); }
@@ -3105,9 +3569,9 @@ function onClTipoChange(){
 
   // Km / Hs
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.5rem;">';
-  html += '<div><label style="font-size:12px;color:var(--gray);">Km</label><input type="number" id="clKm" style="width:100%;padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;"/></div>';
+  html += '<div><label style="font-size:12px;color:var(--gray);">Km</label><input type="number" id="clKm" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"/></div>';
   if(tipo==='pesado'){
-    html += '<div><label style="font-size:12px;color:var(--gray);">Hs</label><input type="number" id="clHs" style="width:100%;padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;"/></div>';
+    html += '<div><label style="font-size:12px;color:var(--gray);">Hs</label><input type="number" id="clHs" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"/></div>';
   }
   html += '</div>';
 
@@ -3131,7 +3595,7 @@ function onClTipoChange(){
   }
 
   // Observaciones
-  html += '<div style="margin-top:1rem;"><label style="font-size:12px;color:var(--gray);">Observaciones generales</label><textarea id="clObs" style="width:100%;min-height:60px;padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:13px;resize:vertical;"></textarea></div>';
+  html += '<div style="margin-top:1rem;"><label style="font-size:12px;color:var(--gray);">Observaciones generales</label><textarea id="clObs" style="width:100%;min-height:60px;padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;resize:vertical;"></textarea></div>';
 
   cont.innerHTML = html;
 }
@@ -3445,7 +3909,7 @@ function openDestinatarioForm(idx){
   var html = '';
   // Email
   html += '<div style="margin-bottom:.85rem;"><label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">Email destinatario</label>';
-  html += '<input type="email" id="gen_email" value="'+(d.email||'')+'" placeholder="persona@empresa.com" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;"/></div>';
+  html += '<input type="email" id="gen_email" value="'+(d.email||'')+'" placeholder="persona@empresa.com" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/></div>';
 
   // Tipos de alerta (checkboxes)
   html += '<div style="margin-bottom:.85rem;"><label style="font-size:12px;color:var(--gray);display:block;margin-bottom:6px;">¿Qué alertas recibe?</label><div style="display:flex;gap:.4rem;flex-wrap:wrap;">';
@@ -3457,7 +3921,7 @@ function openDestinatarioForm(idx){
 
   // Alcance
   html += '<div style="margin-bottom:.85rem;"><label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">Alcance</label>';
-  html += '<select id="gen_scope" onchange="onScopeChange()" style="width:100%;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;">';
+  html += '<select id="gen_scope" onchange="onScopeChange()" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;">';
   html += '<option value="todos"'+(d.scope==='todos'?' selected':'')+'>Todas las áreas / sectores</option>';
   html += '<option value="sector"'+(d.scope==='sector'?' selected':'')+'>Solo algunos sectores</option>';
   html += '<option value="patentes"'+(d.scope==='patentes'?' selected':'')+'>Solo algunas patentes</option>';
@@ -3483,7 +3947,7 @@ function openDestinatarioForm(idx){
 
   // Mensaje personalizado
   html += '<div style="margin-bottom:.25rem;"><label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">Mensaje personalizado (opcional)</label>';
-  html += '<textarea id="gen_mensaje" placeholder="Estimados, adjunto el estado..." style="width:100%;min-height:60px;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);color:var(--white);font-size:14px;resize:vertical;">'+(d.mensaje||'')+'</textarea></div>';
+  html += '<textarea id="gen_mensaje" placeholder="Estimados, adjunto el estado..." style="width:100%;min-height:60px;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;resize:vertical;">'+(d.mensaje||'')+'</textarea></div>';
 
   document.getElementById('genModalTitle').textContent = _editDestIdx>=0 ? 'Editar destinatario' : 'Nuevo destinatario';
   document.getElementById('genModalMsg').textContent = '';
@@ -3745,13 +4209,107 @@ function switchChecklistTab(tab){
   document.getElementById('tabLivianos').style.color = tab==='livianos' ? 'var(--gold)' : 'var(--gray)';
 }
 
+var _periodoAnual = false;
+function togglePeriodo(){
+  _periodoAnual = !_periodoAnual;
+  var knob = document.getElementById('periodoKnob');
+  var lblM = document.getElementById('lblMensual');
+  var lblA = document.getElementById('lblAnual');
+  if(_periodoAnual){
+    knob.style.left = '28px';
+    lblM.style.color = 'var(--gray)';
+    lblA.style.color = 'var(--gold)';
+  } else {
+    knob.style.left = '2px';
+    lblM.style.color = 'var(--gold)';
+    lblA.style.color = 'var(--gray)';
+  }
+  // Actualizar los 3 precios
+  [['precioBasico','periodoBasico'],['precioPro','periodoPro'],['precioEnt','periodoEnt']].forEach(function(par){
+    var elP = document.getElementById(par[0]);
+    var elPer = document.getElementById(par[1]);
+    if(!elP) return;
+    var base = parseInt(elP.getAttribute('data-precio'));
+    if(_periodoAnual){
+      // 15% off sobre el total anual (12 meses)
+      var anual = Math.round(base * 12 * 0.85);
+      elP.textContent = anual.toLocaleString('es-AR');
+      elPer.textContent = 'ARS / año';
+    } else {
+      elP.textContent = base.toLocaleString('es-AR');
+      elPer.textContent = 'ARS / mes';
+    }
+  });
+}
+
+function toggleTheme(){
+  var isLight = document.documentElement.getAttribute('data-theme')==='light';
+  setTheme(isLight ? 'dark' : 'light');
+}
+function setTheme(theme){
+  if(theme==='light'){
+    document.documentElement.setAttribute('data-theme','light');
+    document.body.setAttribute('data-theme','light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.body.removeAttribute('data-theme');
+  }
+  var icon = theme==='light' ? '☀️' : '🌙';
+  var t1=document.getElementById('themeToggle'); if(t1) t1.textContent=icon;
+  var t2=document.getElementById('themeToggle2'); if(t2) t2.textContent=icon;
+  try{ localStorage.setItem('gesflota_theme', theme); }catch(e){}
+}
+function loadTheme(){
+  var saved='dark';
+  try{ saved = localStorage.getItem('gesflota_theme')||'dark'; }catch(e){}
+  setTheme(saved);
+}
+
 window.addEventListener('load', function(){
   initHero();
-  // Cerrar modal al hacer click fuera
-  document.getElementById('payModal').addEventListener('click', function(e){
-    if(e.target===this) closePayment();
+  loadTheme();
+  iniciarFrasesRotativas();
+  // Cerrar CUALQUIER modal al hacer click en el fondo (overlay)
+  document.querySelectorAll('.modal-overlay').forEach(function(ov){
+    ov.addEventListener('click', function(e){
+      if(e.target===this) this.classList.remove('open');
+    });
+  });
+  // Cerrar el modal abierto con la tecla Escape
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){
+      document.querySelectorAll('.modal-overlay.open').forEach(function(m){
+        m.classList.remove('open');
+      });
+    }
   });
 });
 </script>
+<!-- CHATBOT GES — Asistente IA -->
+<div id="gesBtn" onclick="toggleGes()" style="position:fixed;bottom:24px;right:24px;width:60px;height:60px;border-radius:50%;background:var(--gold);box-shadow:0 4px 16px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9000;transition:transform .2s;font-size:26px;">
+  💬
+</div>
+
+<div id="gesChat" style="position:fixed;bottom:96px;right:24px;width:360px;max-width:calc(100vw - 48px);height:520px;max-height:calc(100vh - 140px);background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r2);box-shadow:0 12px 48px rgba(0,0,0,.4);display:none;flex-direction:column;z-index:9000;overflow:hidden;">
+  <!-- Header -->
+  <div style="padding:1rem 1.25rem;background:linear-gradient(135deg,var(--gold),var(--gold-lt));display:flex;align-items:center;gap:12px;">
+    <div style="width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;font-size:20px;">🤖</div>
+    <div style="flex:1;">
+      <div style="font-size:15px;font-weight:700;color:#0B0E14;">Ges</div>
+      <div style="font-size:11px;color:rgba(0,0,0,.6);">Tu asistente de IA · En línea</div>
+    </div>
+    <button onclick="toggleGes()" style="background:rgba(0,0,0,.15);border:none;width:28px;height:28px;border-radius:50%;color:#0B0E14;cursor:pointer;font-size:16px;">×</button>
+  </div>
+  <!-- Mensajes -->
+  <div id="gesMessages" style="flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.75rem;"></div>
+  <!-- Sugerencias rápidas -->
+  <div id="gesSuggestions" style="padding:0 1rem .5rem;display:flex;gap:.4rem;flex-wrap:wrap;"></div>
+  <!-- Input -->
+  <div style="padding:.85rem 1rem;border-top:1px solid var(--bdr);display:flex;gap:.5rem;">
+    <input type="text" id="gesInput" placeholder="Escribí tu pregunta..." onkeyup="if(event.key==='Enter')gesEnviar()" style="flex:1;padding:10px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;outline:none;"/>
+    <button onclick="gesEnviar()" style="background:var(--gold);border:none;border-radius:var(--r);width:40px;color:#0B0E14;cursor:pointer;font-size:16px;">➤</button>
+  </div>
+</div>
+
 </body>
 </html>
