@@ -2023,28 +2023,28 @@ footer{
 
     <div class="admin-grid">
       <div class="admin-stat">
-        <div class="admin-stat-val">12</div>
-        <div class="admin-stat-lbl">Empresas activas</div>
+        <div class="admin-stat-val" id="admEmpresas">—</div>
+        <div class="admin-stat-lbl">Empresas registradas</div>
       </div>
       <div class="admin-stat">
-        <div class="admin-stat-val" style="color:var(--green);">9</div>
+        <div class="admin-stat-val" style="color:var(--green);" id="admAlDia">—</div>
         <div class="admin-stat-lbl">Pagos al día</div>
       </div>
       <div class="admin-stat">
-        <div class="admin-stat-val" style="color:var(--red);">3</div>
+        <div class="admin-stat-val" style="color:var(--red);" id="admVencidos">—</div>
         <div class="admin-stat-lbl">Pagos vencidos</div>
       </div>
       <div class="admin-stat">
-        <div class="admin-stat-val" style="color:var(--gold);">$468K</div>
-        <div class="admin-stat-lbl">MRR (ARS)</div>
+        <div class="admin-stat-val" style="color:var(--gold);" id="admMrr">—</div>
+        <div class="admin-stat-lbl">MRR estimado (ARS)</div>
       </div>
       <div class="admin-stat">
-        <div class="admin-stat-val">847</div>
+        <div class="admin-stat-val" id="admVehiculos">—</div>
         <div class="admin-stat-lbl">Vehículos total</div>
       </div>
       <div class="admin-stat">
-        <div class="admin-stat-val" style="color:var(--amber);">2</div>
-        <div class="admin-stat-lbl">Prueba activa</div>
+        <div class="admin-stat-val" style="color:var(--amber);" id="admPrueba">—</div>
+        <div class="admin-stat-lbl">En prueba</div>
       </div>
     </div>
 
@@ -2055,46 +2055,9 @@ footer{
       </div>
       <div style="overflow-x:auto;">
         <table class="app-table">
-          <thead><tr><th>Empresa</th><th>Email</th><th>Plan</th><th>Vehículos</th><th>Próximo pago</th><th>Estado</th><th>Acciones</th></tr></thead>
-          <tbody>
-            <tr>
-              <td><strong>Constructora Demo S.A.</strong></td>
-              <td style="font-size:12px;color:var(--gray);">admin@empresademo.com</td>
-              <td><span class="badge badge-gold">Enterprise</span></td>
-              <td>68</td>
-              <td>01/07/2025</td>
-              <td><span class="badge badge-ok">Al día</span></td>
-              <td><button style="font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--bdr);background:transparent;color:var(--gray);cursor:pointer;" onclick="showView('dashboard')">Ver panel</button></td>
-            </tr>
-            <tr>
-              <td><strong>Constructora Norte S.R.L.</strong></td>
-              <td style="font-size:12px;color:var(--gray);">admin@constructoranorte.com</td>
-              <td><span class="badge badge-gold">Pro</span></td>
-              <td>24</td>
-              <td>15/07/2025</td>
-              <td><span class="badge badge-ok">Al día</span></td>
-              <td><button style="font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--bdr);background:transparent;color:var(--gray);cursor:pointer;">Ver panel</button></td>
-            </tr>
-            <tr>
-              <td><strong>Constructora Sur S.A.</strong></td>
-              <td style="font-size:12px;color:var(--gray);">flota@constructorasur.com</td>
-              <td><span class="badge badge-gold">Pro</span></td>
-              <td>31</td>
-              <td><span style="color:var(--red);">10/06/2025</span></td>
-              <td><span class="badge badge-red">Vencido</span></td>
-              <td>
-                <button style="font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid rgba(239,68,68,.25);background:rgba(239,68,68,.08);color:#F87171;cursor:pointer;" onclick="sendPaymentAlert('Constructora Sur S.A.')">⚠ Alertar</button>
-              </td>
-            </tr>
-            <tr>
-              <td><strong>Transporte Regional S.A.</strong></td>
-              <td style="font-size:12px;color:var(--gray);">admin@transporteregional.com</td>
-              <td><span class="badge" style="background:rgba(255,255,255,.06);color:var(--gray);border:1px solid var(--bdr);">Básico</span></td>
-              <td>12</td>
-              <td>20/07/2025</td>
-              <td><span class="badge badge-warn">Prueba</span></td>
-              <td><button style="font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--bdr);background:transparent;color:var(--gray);cursor:pointer;">Ver panel</button></td>
-            </tr>
+          <thead><tr><th>Empresa</th><th>Plan</th><th>Estado pago</th><th>Alta</th><th>Acciones</th></tr></thead>
+          <tbody id="admEmpresasBody">
+            <tr><td colspan="5" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargando empresas...</td></tr>
           </tbody>
         </table>
       </div>
@@ -2531,12 +2494,12 @@ function doRegister(){
   okEl.style.color='var(--gray)';
   okEl.textContent='Creando tu cuenta...';
 
-  // 1. Registrar en Supabase Auth (el trigger crea empresa + perfil automáticamente)
+  // 1. Registrar en Supabase Auth (el trigger crea empresa + perfil + consentimiento)
   sb.auth.signUp({
     email: email,
     password: pass,
     options: {
-      data: { empresa: company, nombre: name, apellido: '', plan: plan }
+      data: { empresa: company, nombre: name, apellido: '', plan: plan, version_terminos: '2025-06', user_agent: navigator.userAgent }
     }
   }).then(function(res){
     if(res.error){
@@ -2546,24 +2509,15 @@ function doRegister(){
       errEl.textContent = msg; errEl.style.display='block';
       return;
     }
-    // 2. Guardar la constancia de aceptación de términos (respaldo legal, fecha del servidor)
-    sb.from('consentimientos').insert({
-      email: email,
-      version_terminos: '2025-06',
-      aceptado: true,
-      user_agent: navigator.userAgent
-    }).then(function(){ /* registrado */ });
-
     okEl.style.color='var(--green)';
     okEl.textContent='✓ Cuenta creada con éxito. Iniciando sesión...';
     var fraseBienvenida = FRASES[Math.floor(Math.random()*FRASES.length)];
     showToast('💼 "'+fraseBienvenida+'"','success');
 
-    // 3. Iniciar sesión automáticamente
+    // Iniciar sesión automáticamente
     setTimeout(function(){
       sb.auth.signInWithPassword({ email:email, password:pass }).then(function(login){
         if(login.error){
-          // Si requiere confirmación de email
           okEl.textContent='✓ Cuenta creada. Revisá tu email para confirmar antes de ingresar.';
           return;
         }
@@ -2736,6 +2690,88 @@ function logout(){
   showView('landing');
 }
 
+// ══════════════════════════════════════════════════════
+//  PANEL SUPERADMIN — cargar empresas reales de Supabase
+// ══════════════════════════════════════════════════════
+var PLAN_PRECIO = { basico:19000, pro:39000, enterprise:79000 };
+
+function cargarPanelAdmin(){
+  if(!sb){ return; }
+  var body = document.getElementById('admEmpresasBody');
+  body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargando empresas...</td></tr>';
+
+  sb.from('empresas').select('*').order('creado_en',{ascending:false}).then(function(res){
+    if(res.error){
+      body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red);padding:1.5rem;">Error al cargar: '+escapeHtml(res.error.message)+'</td></tr>';
+      return;
+    }
+    var empresas = res.data || [];
+    // Stats
+    var alDia=0, vencidos=0, prueba=0, mrr=0;
+    empresas.forEach(function(e){
+      if(e.estado_pago==='al_dia') alDia++;
+      else if(e.estado_pago==='vencido' || e.estado_pago==='suspendido') vencidos++;
+      else if(e.estado_pago==='prueba') prueba++;
+      mrr += (PLAN_PRECIO[e.plan]||0);
+    });
+    document.getElementById('admEmpresas').textContent = empresas.length;
+    document.getElementById('admAlDia').textContent = alDia;
+    document.getElementById('admVencidos').textContent = vencidos;
+    document.getElementById('admPrueba').textContent = prueba;
+    document.getElementById('admMrr').textContent = '$'+(mrr/1000).toFixed(0)+'K';
+
+    // Vehículos totales (consulta aparte)
+    sb.from('vehiculos').select('id',{count:'exact',head:true}).then(function(v){
+      document.getElementById('admVehiculos').textContent = (v.count!==null && v.count!==undefined) ? v.count : 0;
+    });
+
+    // Tabla
+    if(!empresas.length){
+      body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:1.5rem;">No hay empresas registradas todavía.</td></tr>';
+      return;
+    }
+    body.innerHTML = '';
+    empresas.forEach(function(e){
+      var planBadge = e.plan==='enterprise' ? '<span class="badge badge-gold">Enterprise</span>'
+        : e.plan==='pro' ? '<span class="badge badge-gold">Pro</span>'
+        : '<span class="badge" style="background:rgba(255,255,255,.06);color:var(--gray);border:1px solid var(--bdr);">Básico</span>';
+      var estadoBadge = e.estado_pago==='al_dia' ? '<span class="badge badge-ok">Al día</span>'
+        : e.estado_pago==='vencido' ? '<span class="badge badge-red">Vencido</span>'
+        : e.estado_pago==='suspendido' ? '<span class="badge badge-red">Suspendido</span>'
+        : '<span class="badge badge-warn">Prueba</span>';
+      var alta = e.creado_en ? new Date(e.creado_en).toLocaleDateString('es-AR') : '—';
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td><strong>'+escapeHtml(e.nombre||'—')+'</strong></td>'
+        +'<td>'+planBadge+'</td>'
+        +'<td>'+estadoBadge+'</td>'
+        +'<td style="font-size:12px;color:var(--gray);">'+alta+'</td>'
+        +'<td><button class="adm-plan-btn" data-id="'+e.id+'" style="font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--bdr);background:transparent;color:var(--gold);cursor:pointer;">Cambiar plan</button></td>';
+      body.appendChild(tr);
+    });
+    // Listeners para cambiar plan
+    body.querySelectorAll('.adm-plan-btn').forEach(function(btn){
+      btn.onclick = function(){ cambiarPlanEmpresa(btn.getAttribute('data-id')); };
+    });
+  });
+}
+
+function cambiarPlanEmpresa(empresaId){
+  genPrompt('Cambiar plan de la empresa', [
+    {id:'plan', label:'Nuevo plan', type:'select', options:[
+      {v:'basico',t:'Básico'},{v:'pro',t:'Pro'},{v:'enterprise',t:'Enterprise'}
+    ]},
+    {id:'estado', label:'Estado de pago', type:'select', options:[
+      {v:'prueba',t:'Prueba'},{v:'al_dia',t:'Al día'},{v:'vencido',t:'Vencido'},{v:'suspendido',t:'Suspendido'}
+    ]}
+  ], function(v){
+    sb.from('empresas').update({ plan:v.plan, estado_pago:v.estado }).eq('id', empresaId).then(function(res){
+      if(res.error){ showToast('Error: '+res.error.message,'error'); return; }
+      showToast('✓ Plan actualizado','success');
+      cargarPanelAdmin();
+    });
+  });
+}
+
 function showForgot(){
   var email = (document.getElementById('loginEmail')||{}).value || '';
   if(!sb){ showToast('Ingresá tu email para recuperar tu contraseña.','warning'); return; }
@@ -2754,6 +2790,7 @@ function showView(name){
   var el = document.getElementById('view-'+name);
   if(el) el.classList.add('active');
   window.scrollTo(0,0);
+  if(name==='admin'){ cargarPanelAdmin(); }
 }
 
 // Dashboard tabs
@@ -2766,8 +2803,8 @@ function setTab(el, tabId){
     if(el2) el2.style.display = t===tabId ? 'block' : 'none';
   });
   if(tabId==='dash-checklist'){
-    var sb = document.getElementById('btnShareChecklist');
-    if(sb) sb.style.display = window._showChecklistShare ? 'inline-block' : 'none';
+    var shareBtn = document.getElementById('btnShareChecklist');
+    if(shareBtn) shareBtn.style.display = window._showChecklistShare ? 'inline-block' : 'none';
     var ob = document.getElementById('btnOpenChecklist');
     if(ob) ob.style.display = window._checklistIncluded ? 'inline-block' : 'none';
     loadChecklistRegistros();
