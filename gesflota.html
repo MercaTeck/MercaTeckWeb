@@ -6,6 +6,7 @@
 <title>GesFlota — Control de Flota | MercaTeck</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
@@ -2421,13 +2422,21 @@ footer{
 <script>
 // ══════════════════════════════════════════════════════
 //  SUPABASE CONFIG
-//  Reemplazá estos valores con los de tu proyecto Supabase
 // ══════════════════════════════════════════════════════
-var SUPABASE_URL  = 'TU_SUPABASE_URL';
-var SUPABASE_KEY  = 'TU_SUPABASE_ANON_KEY';
+var SUPABASE_URL  = 'https://fbdojuppvokdvvzsegoe.supabase.co';
+var SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiZG9qdXBwdm9rZHZ2enNlZ29lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NjkwNDgsImV4cCI6MjA5ODI0NTA0OH0.vTJNDqBbXmLdYdAXU-ZledHPQ5tn_vU6Cay9twkUqgU';
+
+// Inicializar cliente (la librería expone window.supabase)
+var sb = null;
+try {
+  if(window.supabase && window.supabase.createClient){
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('✓ Supabase conectado');
+  }
+} catch(e){ console.warn('Supabase no disponible:', e); }
 
 // ══════════════════════════════════════════════════════
-//  MOCK AUTH — reemplazar con Supabase real
+//  AUTH
 // ══════════════════════════════════════════════════════
 var currentUser = null;
 var isAdmin = false;
@@ -2446,9 +2455,54 @@ function doLogin(){
   var errEl = document.getElementById('loginError');
   errEl.style.display = 'none';
   if(!email||!pass){ errEl.textContent='Completá todos los campos.'; errEl.style.display='block'; return; }
-  var user = DEMO_USERS.find(function(u){ return u.email===email && u.pass===pass; });
-  if(!user){ errEl.textContent='Email o contraseña incorrectos.'; errEl.style.display='block'; return; }
-  loginSuccess(user);
+
+  // Fallback demo si Supabase no está disponible
+  if(!sb){
+    var user = DEMO_USERS.find(function(u){ return u.email===email && u.pass===pass; });
+    if(!user){ errEl.textContent='Email o contraseña incorrectos.'; errEl.style.display='block'; return; }
+    loginSuccess(user);
+    return;
+  }
+
+  errEl.style.display='none';
+  sb.auth.signInWithPassword({ email:email, password:pass }).then(function(res){
+    if(res.error){
+      var msg = res.error.message||'Error al iniciar sesión.';
+      if(msg.indexOf('Invalid login')>=0) msg='Email o contraseña incorrectos.';
+      if(msg.indexOf('Email not confirmed')>=0) msg='Confirmá tu email antes de ingresar.';
+      errEl.textContent = msg; errEl.style.display='block';
+      return;
+    }
+    cargarSesion(res.data.user);
+  });
+}
+
+// Lee el perfil y la empresa del usuario logueado y arma la sesión
+function cargarSesion(authUser){
+  if(!sb || !authUser){ return; }
+  // Traer perfil + empresa con un join
+  sb.from('perfiles')
+    .select('nombre, apellido, rol, empresa_id, empresas(nombre, plan, estado_pago)')
+    .eq('id', authUser.id)
+    .single()
+    .then(function(res){
+      if(res.error || !res.data){
+        showToast('No se pudo cargar tu perfil. Contactá soporte.','error');
+        console.warn('Error perfil:', res.error);
+        return;
+      }
+      var p = res.data;
+      var emp = p.empresas || {};
+      loginSuccess({
+        email: authUser.email,
+        name: (p.nombre||'')+' '+(p.apellido||''),
+        company: emp.nombre || 'Mi Empresa',
+        plan: emp.plan || 'basico',
+        role: (p.rol==='superadmin') ? 'admin' : 'user',
+        empresa_id: p.empresa_id,
+        rol_real: p.rol
+      });
+    });
 }
 
 function doRegister(){
@@ -2465,28 +2519,58 @@ function doRegister(){
   if(pass.length<8){ errEl.textContent='La contraseña debe tener al menos 8 caracteres.'; errEl.style.display='block'; return; }
   if(!terms){ errEl.textContent='Debés leer y aceptar los Términos y Condiciones para registrarte.'; errEl.style.display='block'; return; }
 
-  // Registrar constancia de aceptación (respaldo legal)
-  // En producción: guardar este objeto en Supabase junto al alta del usuario.
-  var consentRecord = {
-    empresa: company,
-    email: email,
-    plan: plan,
-    version_terminos: '2025-06',
-    aceptado: true,
-    fecha_hora: new Date().toISOString(),
-    user_agent: navigator.userAgent
-  };
-  try{ localStorage.setItem('gesflota_consent_'+email, JSON.stringify(consentRecord)); }catch(e){}
-  console.log('Constancia de aceptación de términos:', consentRecord);
+  // Si Supabase no está disponible, usar el flujo demo
+  if(!sb){
+    okEl.textContent='✓ Cuenta creada (modo demo).';
+    okEl.style.display='block';
+    setTimeout(function(){ loginSuccess({ email:email, name:name, company:company, plan:plan, role:'user' }); }, 1500);
+    return;
+  }
 
-  okEl.textContent='✓ Cuenta creada. Te enviamos un email de confirmación a '+email+'. Revisá tu bandeja de entrada.';
   okEl.style.display='block';
-  // Frase de bienvenida aleatoria
-  var fraseBienvenida = FRASES[Math.floor(Math.random()*FRASES.length)];
-  showToast('💼 "'+fraseBienvenida+'"','success');
-  setTimeout(function(){
-    loginSuccess({ email:email, name:name, company:company, plan:plan, role:'user' });
-  }, 2000);
+  okEl.style.color='var(--gray)';
+  okEl.textContent='Creando tu cuenta...';
+
+  // 1. Registrar en Supabase Auth (el trigger crea empresa + perfil automáticamente)
+  sb.auth.signUp({
+    email: email,
+    password: pass,
+    options: {
+      data: { empresa: company, nombre: name, apellido: '', plan: plan }
+    }
+  }).then(function(res){
+    if(res.error){
+      okEl.style.display='none';
+      var msg = res.error.message || 'No se pudo crear la cuenta.';
+      if(msg.indexOf('already registered')>=0) msg='Ese email ya está registrado. Probá iniciar sesión.';
+      errEl.textContent = msg; errEl.style.display='block';
+      return;
+    }
+    // 2. Guardar la constancia de aceptación de términos (respaldo legal, fecha del servidor)
+    sb.from('consentimientos').insert({
+      email: email,
+      version_terminos: '2025-06',
+      aceptado: true,
+      user_agent: navigator.userAgent
+    }).then(function(){ /* registrado */ });
+
+    okEl.style.color='var(--green)';
+    okEl.textContent='✓ Cuenta creada con éxito. Iniciando sesión...';
+    var fraseBienvenida = FRASES[Math.floor(Math.random()*FRASES.length)];
+    showToast('💼 "'+fraseBienvenida+'"','success');
+
+    // 3. Iniciar sesión automáticamente
+    setTimeout(function(){
+      sb.auth.signInWithPassword({ email:email, password:pass }).then(function(login){
+        if(login.error){
+          // Si requiere confirmación de email
+          okEl.textContent='✓ Cuenta creada. Revisá tu email para confirmar antes de ingresar.';
+          return;
+        }
+        cargarSesion(login.data.user);
+      });
+    }, 1200);
+  });
 }
 
 function openTerms(ev){ if(ev) ev.preventDefault(); document.getElementById('termsModal').classList.add('open'); }
@@ -2642,6 +2726,7 @@ function showAddonInfo(){
 }
 
 function logout(){
+  if(sb){ sb.auth.signOut(); }
   currentUser = null; isAdmin = false;
   document.getElementById('navActions').style.display = 'flex';
   document.getElementById('mobileMenu').style.display = 'flex';
@@ -2652,7 +2737,13 @@ function logout(){
 }
 
 function showForgot(){
-  showToast('Ingresá tu email para recuperar tu contraseña.','warning');
+  var email = (document.getElementById('loginEmail')||{}).value || '';
+  if(!sb){ showToast('Ingresá tu email para recuperar tu contraseña.','warning'); return; }
+  if(!email){ showToast('Escribí tu email arriba y volvé a tocar acá.','warning'); return; }
+  sb.auth.resetPasswordForEmail(email).then(function(res){
+    if(res.error){ showToast('No se pudo enviar el email.','error'); return; }
+    showToast('✓ Te enviamos un email para recuperar tu contraseña.','success');
+  });
 }
 
 // ══════════════════════════════════════════════════════
