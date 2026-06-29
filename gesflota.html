@@ -70,6 +70,9 @@ body[data-theme="light"] .hero{background:var(--black);}
 [data-theme="light"] .vboard-track,
 [data-theme="light"] .vbar-track{background:rgba(0,0,0,.07);}
 *{box-sizing:border-box;margin:0;padding:0;}
+/* Opciones de los dropdowns legibles en ambos temas */
+select option{ background:var(--card); color:var(--white); }
+[data-theme="light"] select option{ background:#FFFFFF; color:#1A1D24; }
 html{scroll-behavior:smooth;}
 body{font-family:var(--font);background:var(--black);color:var(--white);line-height:1.6;overflow-x:hidden;}
 a{color:inherit;text-decoration:none;}
@@ -484,9 +487,12 @@ footer{
 .alert-chip:hover{border-color:var(--gold-border);}
 .alert-chip input{accent-color:var(--gold);cursor:pointer;}
 .alert-chip:has(input:checked){border-color:var(--gold-border);background:var(--gold-dim);color:var(--gold);}
-.cl-check{display:inline-flex;align-items:center;cursor:pointer;padding:2px 6px;border-radius:6px;border:1px solid var(--bdr);font-size:14px;}
+.cl-check{display:inline-flex;align-items:center;cursor:pointer;padding:5px 9px;border-radius:6px;border:1.5px solid var(--bdr);font-size:14px;opacity:.4;transition:all .15s;}
 .cl-check input{display:none;}
-.cl-check:has(input:checked){border-color:var(--gold-border);background:var(--gold-dim);}
+.cl-check:has(input:checked){opacity:1;transform:scale(1.05);}
+.cl-check:has(input[value="bien"]:checked){border-color:var(--green);background:rgba(61,174,124,.18);}
+.cl-check:has(input[value="mal"]:checked){border-color:var(--red);background:rgba(229,86,78,.18);}
+.cl-check:has(input[value="na"]:checked){border-color:var(--gray);background:rgba(155,163,180,.18);}
 
 /* ══════════════════════════════════════════
    PAYMENT MODAL
@@ -499,15 +505,17 @@ footer{
 .modal-box{
   background:var(--card);border:1px solid var(--gold-border);
   border-radius:var(--r2);width:100%;max-width:480px;
-  box-shadow:0 0 60px rgba(196,154,58,.1);overflow:hidden;
+  box-shadow:0 0 60px rgba(196,154,58,.1);
+  max-height:90vh;display:flex;flex-direction:column;overflow:hidden;
 }
 .modal-hdr{
   padding:1rem 1.25rem;border-bottom:1px solid var(--bdr);
   background:var(--gold-dim);display:flex;justify-content:space-between;align-items:center;
+  flex-shrink:0;
 }
 .modal-hdr h3{font-size:16px;font-weight:700;color:var(--gold);}
 .modal-close{background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;line-height:1;}
-.modal-body{padding:1.5rem;}
+.modal-body{padding:1.5rem;overflow-y:auto;flex:1;}
 .pay-methods{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem;}
 .pay-method{
   padding:.85rem;border-radius:var(--r);border:1px solid var(--bdr);
@@ -1095,6 +1103,42 @@ footer{
 <!-- ══════════════════════════════════════
    LOGIN VIEW
 ══════════════════════════════════════════ -->
+<!-- VISTA OPERARIO (acceso por link/QR para cargar check-list) -->
+<div class="view" id="view-operario">
+  <div class="auth-view">
+    <div class="auth-box" id="operarioLoginBox">
+      <div class="auth-logo">
+        <div class="logo-text"><span>MERCA</span><span>TECK</span><span>.</span></div>
+        <div style="font-size:11px;color:var(--gray);letter-spacing:.1em;text-transform:uppercase;margin-top:4px;">Check-list de flota</div>
+      </div>
+      <h2 style="font-size:20px;color:var(--white);text-align:center;margin:1.5rem 0 .25rem;">Acceso de personal</h2>
+      <p style="font-size:13px;color:var(--gray);text-align:center;margin-bottom:1.5rem;" id="operarioEmpresaNombre">Ingresá con tu nombre y PIN</p>
+      <div class="field"><label>Nombre</label><input type="text" id="opNombre" placeholder="Tu nombre"/></div>
+      <div class="field"><label>PIN</label><input type="text" id="opPin" placeholder="Tu PIN de 6 dígitos" inputmode="numeric"/></div>
+      <div id="opError" style="display:none;font-size:13px;color:var(--red);margin-bottom:.75rem;"></div>
+      <button class="btn-gold" style="width:100%;padding:12px;" onclick="loginOperario()">Ingresar</button>
+      <p style="font-size:11px;color:var(--gray);text-align:center;margin-top:1rem;">Solo podés cargar check-lists. No accedés al panel de la empresa.</p>
+    </div>
+
+    <!-- Panel del operario (después del login) -->
+    <div class="auth-box" id="operarioPanelBox" style="display:none;max-width:560px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <div>
+          <div style="font-size:16px;color:var(--white);font-weight:600;" id="opSaludo">Hola</div>
+          <div style="font-size:12px;color:var(--gray);" id="opPuesto"></div>
+        </div>
+        <button class="btn-outline" style="font-size:12px;padding:6px 12px;" onclick="logoutOperario()">Salir</button>
+      </div>
+      <button class="btn-gold" style="width:100%;padding:12px;margin-bottom:1rem;" onclick="opNuevoChecklist()">📋 Cargar nuevo check-list</button>
+      <!-- Historial (solo jefe/supervisor) -->
+      <div id="opHistorialBox" style="display:none;">
+        <div style="font-size:13px;font-weight:600;color:var(--gold);margin:1rem 0 .5rem;">Últimos check-lists cargados</div>
+        <div id="opHistorial" style="display:flex;flex-direction:column;gap:.5rem;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="view" id="view-login">
   <div class="auth-view">
     <div class="auth-box">
@@ -1388,21 +1432,19 @@ footer{
 
         <!-- TAB: SEGURO -->
         <div id="dash-seguro" style="display:none;">
-          <h2 style="font-family:var(--font-display);font-size:28px;color:var(--white);margin-bottom:1.25rem;">Seguros</h2>
+          <h2 style="font-size:26px;color:var(--white);margin-bottom:1.25rem;font-weight:600;letter-spacing:-.02em;">Seguros</h2>
           <div class="app-stats" style="grid-template-columns:repeat(3,1fr);">
-            <div class="app-stat"><div class="app-stat-val green">62</div><div class="app-stat-lbl">Seguros vigentes</div></div>
-            <div class="app-stat"><div class="app-stat-val amber">4</div><div class="app-stat-lbl">Por vencer (30 días)</div></div>
-            <div class="app-stat"><div class="app-stat-val red">2</div><div class="app-stat-lbl">Vencidos</div></div>
+            <div class="app-stat"><div class="app-stat-val green" id="segVigentes">0</div><div class="app-stat-lbl">Seguros vigentes</div></div>
+            <div class="app-stat"><div class="app-stat-val amber" id="segPorVencer">0</div><div class="app-stat-lbl">Por vencer (30 días)</div></div>
+            <div class="app-stat"><div class="app-stat-val red" id="segVencidos">0</div><div class="app-stat-lbl">Vencidos</div></div>
           </div>
           <div class="app-card">
             <div class="app-card-hdr"><h3>Estado de seguros</h3></div>
             <div style="overflow-x:auto;">
               <table class="app-table">
-                <thead><tr><th>Patente</th><th>Tipo</th><th>Obra</th><th>Propiedad</th><th>Vence seguro</th><th>Estado</th><th></th></tr></thead>
-                <tbody>
-                  <tr><td><strong>VE345IJ</strong></td><td>Batea</td><td>Obra Este</td><td>Alquilado</td><td>10/06/2025</td><td><span class="badge badge-red">Vencido</span></td><td><button class="btn-edit-veh" onclick="openEditVeh('VE345IJ')">✏️</button></td></tr>
-                  <tr><td><strong>UF678KL</strong></td><td>Camioneta</td><td>Obra Sur</td><td>Alquilado</td><td>20/07/2025</td><td><span class="badge badge-warn">Por vencer</span></td><td><button class="btn-edit-veh" onclick="openEditVeh('UF678KL')">✏️</button></td></tr>
-                  <tr><td><strong>ZC789EF</strong></td><td>Camioneta</td><td>Obra Norte</td><td>Propio</td><td>15/12/2025</td><td><span class="badge badge-ok">Vigente</span></td><td><button class="btn-edit-veh" onclick="openEditVeh('ZC789EF')">✏️</button></td></tr>
+                <thead><tr><th>Patente</th><th>Obra</th><th>Propiedad</th><th>Vence seguro</th><th>Estado</th><th></th></tr></thead>
+                <tbody id="seguroBody">
+                  <tr><td colspan="6" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargá vehículos con fecha de seguro para ver el estado acá.</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1411,14 +1453,13 @@ footer{
 
         <!-- TAB: VTV -->
         <div id="dash-vtv" style="display:none;">
-          <h2 style="font-family:var(--font-display);font-size:28px;color:var(--white);margin-bottom:1.25rem;">Control VTV</h2>
+          <h2 style="font-size:26px;color:var(--white);margin-bottom:1.25rem;font-weight:600;letter-spacing:-.02em;">Control VTV</h2>
           <div class="app-card">
-            <div class="app-card-hdr"><h3>Vehículos con VTV por vencer</h3></div>
+            <div class="app-card-hdr"><h3>Vehículos con VTV por vencer o vencida</h3></div>
             <table class="app-table">
-              <thead><tr><th>Patente</th><th>Tipo</th><th>Obra</th><th>Estado VTV</th><th>Vence</th></tr></thead>
-              <tbody>
-                <tr><td><strong>VE345IJ</strong></td><td>Batea</td><td>Obra Este</td><td><span class="badge badge-warn">Se acerca venc.</span></td><td>15/07/2025</td></tr>
-                <tr><td><strong>QK890ST</strong></td><td>Camioneta</td><td>Obra Sur</td><td><span class="badge badge-red">Vencido</span></td><td>01/06/2025</td></tr>
+              <thead><tr><th>Patente</th><th>Obra</th><th>Estado VTV</th><th>Vence</th></tr></thead>
+              <tbody id="vtvBody">
+                <tr><td colspan="4" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargá vehículos con fecha de VTV para ver los vencimientos acá.</td></tr>
               </tbody>
             </table>
           </div>
@@ -1426,20 +1467,9 @@ footer{
 
         <!-- TAB: ALERTAS -->
         <div id="dash-alertas" style="display:none;">
-          <h2 style="font-family:var(--font-display);font-size:28px;color:var(--white);margin-bottom:1.25rem;">Alertas</h2>
-          <div style="display:flex;flex-direction:column;gap:.75rem;">
-            <div style="padding:1rem;border:1px solid rgba(239,68,68,.2);border-radius:var(--r2);background:rgba(239,68,68,.06);border-left:3px solid var(--red);">
-              <div style="font-size:13px;font-weight:600;color:#F87171;margin-bottom:3px;">🚨 WD012GH — Alerta de mantenimiento</div>
-              <div style="font-size:12px;color:var(--gray);">Obra Sur · El servicio está por vencer, debe llevarse esta semana sin falta.</div>
-            </div>
-            <div style="padding:1rem;border:1px solid rgba(245,158,11,.2);border-radius:var(--r2);background:rgba(245,158,11,.06);border-left:3px solid var(--amber);">
-              <div style="font-size:13px;font-weight:600;color:#FCD34D;margin-bottom:3px;">⚠️ VE345IJ — VTV por vencer</div>
-              <div style="font-size:12px;color:var(--gray);">Obra Este · VTV vence el 15/07/2025. Coordinar turno.</div>
-            </div>
-            <div style="padding:1rem;border:1px solid rgba(239,68,68,.2);border-radius:var(--r2);background:rgba(239,68,68,.06);border-left:3px solid var(--red);">
-              <div style="font-size:13px;font-weight:600;color:#F87171;margin-bottom:3px;">🚨 QK890ST — VTV vencida</div>
-              <div style="font-size:12px;color:var(--gray);">Obra Sur · VTV vencida desde el 01/06/2025. Acción inmediata requerida.</div>
-            </div>
+          <h2 style="font-size:26px;color:var(--white);margin-bottom:1.25rem;font-weight:600;letter-spacing:-.02em;">Alertas</h2>
+          <div id="alertasBody" style="display:flex;flex-direction:column;gap:.75rem;">
+            <div style="text-align:center;color:var(--gray);padding:2rem;border:1px dashed var(--bdr);border-radius:var(--r2);">No hay alertas activas. Cuando un vehículo tenga VTV, seguro o servicio próximo a vencer, vas a verlo acá.</div>
           </div>
         </div>
 
@@ -1965,6 +1995,30 @@ footer{
             <button class="btn-gold" style="font-size:13px;padding:9px 18px;" onclick="saveChecklistConfig()">Guardar configuración</button>
           </div>
 
+          <!-- Personal y accesos al check-list (cuando el checklist está habilitado) -->
+          <div class="app-card" id="personalCard" style="padding:1.5rem;margin-top:.75rem;display:none;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:.5rem;">
+              <div style="font-size:13px;font-weight:600;color:var(--gold);">👷 Personal y accesos al check-list</div>
+            </div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Dá de alta a tu personal para que carguen check-lists desde su celular (escaneando el QR o con el link), <strong>sin acceder al panel ni a la información sensible</strong>. El sistema genera un PIN para cada uno.</div>
+
+            <!-- Lista de personal -->
+            <div id="personalList" style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem;"></div>
+
+            <button class="btn-outline" style="font-size:13px;padding:10px 18px;width:100%;" onclick="openPersonalForm()">+ Agregar persona</button>
+
+            <!-- Link y QR de acceso -->
+            <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--bdr);">
+              <div style="font-size:12px;color:var(--gray);margin-bottom:.5rem;">🔗 Link de acceso al check-list para tu personal:</div>
+              <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+                <input type="text" id="personalChecklistLink" readonly value="" style="flex:1;min-width:200px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:12px;font-family:var(--font-mono);padding:8px 10px;outline:none;"/>
+                <button class="btn-outline" style="font-size:12px;padding:8px 14px;" onclick="copyPersonalLink()">Copiar</button>
+                <button class="btn-gold" style="font-size:12px;padding:8px 14px;" onclick="openPersonalQR()">Ver QR</button>
+              </div>
+              <div style="font-size:11px;color:var(--gray);margin-top:.5rem;">Compartí este link o el QR con tu personal. Entran con su nombre y PIN.</div>
+            </div>
+          </div>
+
           <!-- White-label (SOLO Enterprise) -->
           <div class="app-card" id="whiteLabelCard" style="padding:1.5rem;margin-top:.75rem;display:none;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:.5rem;">
@@ -2371,10 +2425,25 @@ footer{
     <div class="modal-body">
       <p id="genModalMsg" style="font-size:14px;color:var(--gray);margin-bottom:1rem;"></p>
       <div id="genModalInputs"></div>
-      <div style="display:flex;gap:.5rem;margin-top:1.25rem;">
-        <button class="btn-outline" style="flex:1;padding:11px;" onclick="closeGenModal()">Cancelar</button>
-        <button class="btn-gold" style="flex:1;padding:11px;" id="genModalOk" onclick="genModalConfirm()">Aceptar</button>
-      </div>
+    </div>
+    <div style="display:flex;gap:.5rem;padding:1rem 1.5rem;border-top:1px solid var(--bdr);flex-shrink:0;">
+      <button class="btn-outline" style="flex:1;padding:11px;" onclick="closeGenModal()">Cancelar</button>
+      <button class="btn-gold" style="flex:1;padding:11px;" id="genModalOk" onclick="genModalConfirm()">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL QR PERSONAL -->
+<div class="modal-overlay" id="personalQRModal">
+  <div class="modal-box" style="max-width:360px;">
+    <div class="modal-hdr">
+      <h3>📲 QR de acceso al check-list</h3>
+      <button class="modal-close" onclick="closePersonalQR()">×</button>
+    </div>
+    <div class="modal-body" style="text-align:center;">
+      <p style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Tu personal escanea este QR, ingresa su nombre y PIN, y carga el check-list.</p>
+      <div id="personalQRCode" style="display:inline-block;padding:12px;background:#fff;border-radius:var(--r);"></div>
+      <p style="font-size:11px;color:var(--gray);margin-top:1rem;word-break:break-all;" id="personalQRLink"></p>
     </div>
   </div>
 </div>
@@ -2800,9 +2869,10 @@ function cargarPanelAdmin(){
 function toggleAddonChecklist(empresaId, estaActivo){
   var nuevoEstado = !estaActivo;
   var accion = nuevoEstado ? 'activar' : 'desactivar';
-  genModalConfirm('Add-on Check-list', '¿Querés '+accion+' el módulo de Check-list para esta empresa?', function(){
+  genConfirm('Add-on Check-list', '¿Querés '+accion+' el módulo de Check-list para esta empresa?', function(){
+    if(!sb){ showToast('Sin conexión a la base','error'); return; }
     sb.from('empresas').update({ addon_checklist: nuevoEstado }).eq('id', empresaId).then(function(res){
-      if(res.error){ showToast('Error: '+res.error.message,'error'); return; }
+      if(res.error){ showToast('Error: '+res.error.message,'error'); console.warn(res.error); return; }
       showToast('✓ Check-list '+(nuevoEstado?'activado':'desactivado')+' para la empresa','success');
       cargarPanelAdmin();
     });
@@ -2871,6 +2941,10 @@ function setTab(el, tabId){
     loadFirma();
     loadChecklistConfig();
     loadWhiteLabel();
+    loadPersonal();
+    // Mostrar sección de personal solo si el checklist está habilitado
+    var pc = document.getElementById('personalCard');
+    if(pc) pc.style.display = window._checklistIncluded ? 'block' : 'none';
   }
   if(tabId==='dash-flota'){
     cambiarPeriodoFlota();
@@ -3011,31 +3085,138 @@ function showToast(msg, type){
 //  GESTIÓN DE DATOS (conexión, plantillas, carga)
 // ══════════════════════════════════════════════════════
 function generarGoogleSheet(){
-  genPrompt('Generar Google Sheet', [
-    {id:'gmail', label:'¿En qué Gmail querés crear el Sheet?', type:'email', placeholder:'tuempresa@gmail.com'}
-  ], function(vals){
-    if(!vals.gmail) return;
-    showToast('📊 Generando Google Sheet en '+vals.gmail+'... Te pediremos autorización.','warning');
-    setTimeout(function(){
-      var b=document.getElementById('dataSourceBanner'); if(b) b.style.display='none';
-      showToast('✓ Google Sheet creado (Hoja 1: Flota · Hoja 2: Mantenimiento). Sincronización automática activa.','success');
-    }, 1800);
+  genModalConfirm('Generar Google Sheet', 'La integración con Google Sheets estará disponible próximamente. Por ahora, la carga de datos se hace subiendo un archivo Excel con la plantilla. ¿Querés descargar la plantilla de Flota?', function(){
+    downloadTemplate('flota');
   });
 }
 
 function syncManual(){
-  showToast('🔄 Sincronizando datos con tu Google Sheet...','warning');
-  setTimeout(function(){ showToast('✓ Datos actualizados desde el Sheet','success'); }, 1400);
+  showToast('La sincronización con Google Sheets estará disponible próximamente. Por ahora usá la carga por Excel.','warning');
 }
 
 function handleExcelUpload(input, tipo){
   var file = input.files[0];
   if(!file) return;
+  if(typeof XLSX==='undefined'){ showToast('No se pudo cargar el lector de Excel. Reintentá.','error'); return; }
   showToast('📁 Procesando '+file.name+'...','warning');
-  setTimeout(function(){
-    document.getElementById('dataSourceBanner').style.display='none';
-    showToast('✓ Excel cargado. Te creamos un Google Sheet en tu Drive para mantener la sincronización.','success');
-  }, 1800);
+
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      var data = new Uint8Array(e.target.result);
+      var wb = XLSX.read(data, {type:'array'});
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+
+      // Buscar la fila de encabezados (la que tiene "Patente")
+      var headerIdx = -1;
+      for(var i=0;i<rows.length;i++){
+        var rowStr = rows[i].join('|').toLowerCase();
+        if(rowStr.indexOf('patente')>=0){ headerIdx = i; break; }
+      }
+      if(headerIdx<0){ showToast('No encontré la columna "Patente" en el Excel. Usá la plantilla.','error'); return; }
+
+      var headers = rows[headerIdx].map(function(h){ return String(h).toLowerCase().trim(); });
+      var dataRows = rows.slice(headerIdx+1).filter(function(r){
+        return r.some(function(c){ return String(c).trim()!==''; });
+      });
+
+      if(tipo==='flota') procesarFilasFlota(headers, dataRows);
+      else procesarFilasMantenimiento(headers, dataRows);
+
+    }catch(err){
+      console.error(err);
+      showToast('Error al leer el Excel: '+err.message,'error');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  input.value=''; // permitir resubir el mismo archivo
+}
+
+function _col(headers, row, nombres){
+  // Busca el valor de la primera columna cuyo encabezado coincida con alguno de "nombres"
+  for(var n=0;n<nombres.length;n++){
+    var idx = headers.indexOf(nombres[n]);
+    if(idx>=0 && row[idx]!==undefined) return String(row[idx]).trim();
+  }
+  return '';
+}
+function _fechaISO(str){
+  // dd/mm/aaaa -> aaaa-mm-dd (para guardar en Supabase)
+  if(!str) return null;
+  str = String(str).trim();
+  var p = str.split(/[\/\-]/);
+  if(p.length!==3) return null;
+  // Si viene aaaa-mm-dd ya
+  if(p[0].length===4) return p[0]+'-'+('0'+p[1]).slice(-2)+'-'+('0'+p[2]).slice(-2);
+  return p[2]+'-'+('0'+p[1]).slice(-2)+'-'+('0'+p[0]).slice(-2);
+}
+
+function procesarFilasFlota(headers, dataRows){
+  var nuevos = [];
+  dataRows.forEach(function(row){
+    var pat = _col(headers,row,['patente']).replace(/[\.\-\s]/g,'').toUpperCase();
+    if(!pat) return;
+    nuevos.push({
+      empresa_id: window._empresaId,
+      id_interno: _col(headers,row,['interno','n interno','id']),
+      patente: pat,
+      tipo: _col(headers,row,['categoria','categoría','tipo de vehiculo','tipo']),
+      obra: _col(headers,row,['sector/area','sector','obra','area','área']),
+      propiedad: (_col(headers,row,['propiedad']).toLowerCase().indexOf('alquil')>=0)?'alquilado':'propio',
+      control_por: (_col(headers,row,['control por','control']).toLowerCase().indexOf('hora')>=0)?'horas':'km',
+      valor_actual: parseInt(_col(headers,row,['valor km/hs','valor','km','kilometraje']))||0,
+      vtv_vence: _fechaISO(_col(headers,row,['vtv','vtv (fecha)','vencimiento vtv'])),
+      seguro_vence: _fechaISO(_col(headers,row,['seguro','seguro (fecha)','vencimiento seguro']))
+    });
+  });
+
+  if(!nuevos.length){ showToast('No encontré filas válidas con patente.','error'); return; }
+
+  if(sb && window._empresaId){
+    sb.from('vehiculos').upsert(nuevos, {onConflict:'empresa_id,patente'}).then(function(res){
+      if(res.error){ showToast('Error al guardar: '+res.error.message,'error'); return; }
+      var b=document.getElementById('dataSourceBanner'); if(b) b.style.display='none';
+      showToast('✓ '+nuevos.length+' vehículos cargados desde el Excel.','success');
+      cargarVehiculos();
+    });
+  } else {
+    // Sin Supabase: cargar en la tabla visual
+    var b=document.getElementById('dataSourceBanner'); if(b) b.style.display='none';
+    nuevos.forEach(function(v){
+      addVehRow({ id:v.id_interno, patente:v.patente, tipo:v.tipo, obra:v.obra, prop:v.propiedad==='alquilado'?'Alquilado':'Propio',
+        ctrl:v.control_por, actual:v.valor_actual, vtvf:_fechaAMostrar(v.vtv_vence), segf:_fechaAMostrar(v.seguro_vence) });
+    });
+    showToast('✓ '+nuevos.length+' vehículos cargados.','success');
+  }
+}
+
+function procesarFilasMantenimiento(headers, dataRows){
+  var nuevos = [];
+  dataRows.forEach(function(row){
+    var pat = _col(headers,row,['patente']).replace(/[\.\-\s]/g,'').toUpperCase();
+    if(!pat) return;
+    nuevos.push({
+      empresa_id: window._empresaId,
+      patente: pat,
+      vehiculo_tipo: _col(headers,row,['vehiculo','vehículo','tipo de vehiculo']),
+      sector: _col(headers,row,['sector/area','sector','obra']),
+      tipo: _col(headers,row,['tipo']),
+      descripcion: _col(headers,row,['descripcion de la tarea','descripcion','descripción','tarea']),
+      costo: parseFloat(_col(headers,row,['costo']))||0,
+      fecha: _fechaISO(_col(headers,row,['fecha']))
+    });
+  });
+  if(!nuevos.length){ showToast('No encontré filas válidas con patente.','error'); return; }
+
+  if(sb && window._empresaId){
+    sb.from('mantenimiento').insert(nuevos).then(function(res){
+      if(res.error){ showToast('Error al guardar: '+res.error.message,'error'); return; }
+      showToast('✓ '+nuevos.length+' registros de mantenimiento cargados.','success');
+    });
+  } else {
+    showToast('✓ '+nuevos.length+' registros procesados.','success');
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -3159,7 +3340,46 @@ function downloadTemplate(tipo){
 // ══════════════════════════════════════════════════════
 function openEditVeh(patente){
   document.getElementById('editVehPat').textContent = patente;
+  window._editVehPat = patente;
+  // Cargar los valores actuales de la fila
+  var row = document.querySelector('#flotaBody tr[data-pat="'+patente+'"]');
+  if(row){
+    var vtvf = row.getAttribute('data-vtvf')||'';
+    var segf = row.getAttribute('data-segf')||'';
+    var prop = (row.getAttribute('data-prop')||'Propio').toLowerCase();
+    // Fechas en formato dd/mm/aaaa -> aaaa-mm-dd para el input date
+    var vEl = document.getElementById('editVtvFecha');
+    var sEl = document.getElementById('editSeguro');
+    if(vEl) vEl.value = _ddmmToISO(vtvf);
+    if(sEl) sEl.value = _ddmmToISO(segf);
+    var pEl = document.getElementById('editPropiedad');
+    if(pEl){ pEl.value = (prop==='alquilado')?'alquilado':'propio'; }
+    toggleAlquiler();
+  }
   document.getElementById('editVehModal').classList.add('open');
+}
+function _ddmmToISO(str){
+  if(!str) return '';
+  var p = String(str).split('/');
+  if(p.length!==3) return '';
+  return p[2]+'-'+('0'+p[1]).slice(-2)+'-'+('0'+p[0]).slice(-2);
+}
+function _isoToDDMM(str){
+  if(!str) return '';
+  var p = String(str).split('-');
+  if(p.length!==3) return '';
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+// Calcula el estado (ok/acerca/venc) desde una fecha de vencimiento
+function _estadoDesdefecha(fechaISO){
+  if(!fechaISO) return '';
+  var d = new Date(fechaISO+'T00:00:00');
+  if(isNaN(d)) return '';
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  var dias = Math.round((d-hoy)/(1000*60*60*24));
+  if(dias<0) return 'venc';
+  if(dias<=30) return 'acerca';
+  return 'ok';
 }
 
 // ── Detalle de vehículo (ojito): vencimientos, días restantes, km/hs, checklists ──
@@ -3353,6 +3573,250 @@ function gesProcesarPregunta(texto){
 }
 
 function closeVehDetail(){ document.getElementById('vehDetailModal').classList.remove('open'); }
+
+// ══════════════════════════════════════════════════════
+//  PERSONAL Y ACCESOS AL CHECK-LIST
+// ══════════════════════════════════════════════════════
+var _personal = [];
+
+function _genPin(){
+  // PIN de 6 dígitos
+  return String(Math.floor(100000 + Math.random()*900000));
+}
+
+function getChecklistBaseUrl(){
+  // El link apunta a la URL actual (donde está publicado el HTML)
+  // Por ahora GitHub; cuando esté el dominio, será mercateck.com.ar
+  var base = window.location.origin + window.location.pathname;
+  return base;
+}
+
+function actualizarLinkPersonal(){
+  var inp = document.getElementById('personalChecklistLink');
+  if(!inp) return;
+  if(!window._empresaId){ inp.value = 'Disponible al iniciar sesión'; return; }
+  inp.value = getChecklistBaseUrl() + '?cl=' + window._empresaId;
+}
+
+function loadPersonal(){
+  actualizarLinkPersonal();
+  if(!sb || !window._empresaId){ renderPersonal(); return; }
+  sb.from('usuarios_empresa').select('*').eq('empresa_id', window._empresaId).order('creado_en',{ascending:true}).then(function(res){
+    if(res.error){ console.warn('Error personal:', res.error); return; }
+    _personal = res.data || [];
+    renderPersonal();
+  });
+}
+
+function renderPersonal(){
+  var cont = document.getElementById('personalList');
+  if(!cont) return;
+  cont.innerHTML = '';
+  if(!_personal.length){
+    cont.innerHTML = '<div style="font-size:12px;color:var(--gray);text-align:center;padding:.75rem;border:1px dashed var(--bdr);border-radius:var(--r);">Todavía no agregaste personal.</div>';
+    return;
+  }
+  var puestoLabel = {jefe:'Jefe',supervisor:'Supervisor',operario:'Operario',chofer:'Chofer'};
+  _personal.forEach(function(p){
+    var div = document.createElement('div');
+    div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.7rem .85rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);flex-wrap:wrap;';
+    div.innerHTML = '<div style="flex:1;min-width:120px;">'
+      +'<div style="font-size:13px;color:var(--white);font-weight:500;">'+escapeHtml(p.nombre)+'</div>'
+      +'<div style="font-size:11px;color:var(--gray);">'+escapeHtml(puestoLabel[p.puesto]||p.puesto)+'</div></div>'
+      +'<div style="text-align:center;">'
+      +'<div style="font-size:10px;color:var(--gray);">PIN</div>'
+      +'<div style="font-size:15px;font-family:var(--font-mono);color:var(--gold);font-weight:700;letter-spacing:1px;">'+escapeHtml(p.pin)+'</div></div>';
+    var acciones = document.createElement('div');
+    acciones.style.cssText='display:flex;gap:4px;';
+    var btnCopy = document.createElement('button');
+    btnCopy.className='btn-edit-veh'; btnCopy.textContent='📋'; btnCopy.title='Copiar PIN';
+    btnCopy.style.cssText='font-size:11px;padding:4px 8px;';
+    btnCopy.onclick=(function(pin){ return function(){ navigator.clipboard.writeText(pin).then(function(){ showToast('PIN copiado','success'); }); }; })(p.pin);
+    var btnDel = document.createElement('button');
+    btnDel.className='btn-edit-veh'; btnDel.textContent='🗑️'; btnDel.title='Dar de baja';
+    btnDel.style.cssText='font-size:11px;padding:4px 8px;';
+    btnDel.onclick=(function(id,nombre){ return function(){ bajaPersonal(id,nombre); }; })(p.id, p.nombre);
+    acciones.appendChild(btnCopy); acciones.appendChild(btnDel);
+    div.appendChild(acciones);
+    cont.appendChild(div);
+  });
+}
+
+function openPersonalForm(){
+  genPrompt('Agregar persona', [
+    {id:'nombre', label:'Nombre completo', placeholder:'Juan Pérez'},
+    {id:'puesto', label:'Puesto', type:'select', options:[
+      {v:'operario',t:'Operario'},{v:'chofer',t:'Chofer'},{v:'supervisor',t:'Supervisor'},{v:'jefe',t:'Jefe'}
+    ]}
+  ], function(v){
+    if(!v.nombre){ showToast('Ingresá el nombre','error'); return; }
+    var pin = _genPin();
+    if(sb && window._empresaId){
+      sb.from('usuarios_empresa').insert({
+        empresa_id: window._empresaId,
+        nombre: v.nombre,
+        puesto: v.puesto,
+        pin: pin
+      }).then(function(res){
+        if(res.error){
+          if((res.error.message||'').indexOf('duplicate')>=0){ showToast('Ese PIN ya existe, probá de nuevo','error'); }
+          else showToast('Error: '+res.error.message,'error');
+          return;
+        }
+        showToast('✓ '+v.nombre+' agregado. PIN: '+pin,'success');
+        loadPersonal();
+      });
+    } else {
+      _personal.push({ id:'local_'+Date.now(), nombre:v.nombre, puesto:v.puesto, pin:pin });
+      renderPersonal();
+      showToast('✓ '+v.nombre+' agregado. PIN: '+pin,'success');
+    }
+  });
+}
+
+function bajaPersonal(id, nombre){
+  genConfirm('Dar de baja', '¿Dar de baja a '+nombre+'? No podrá cargar más check-lists.', function(){
+    if(sb && String(id).indexOf('local_')<0){
+      sb.from('usuarios_empresa').delete().eq('id', id).then(function(res){
+        if(res.error){ showToast('Error: '+res.error.message,'error'); return; }
+        showToast('✓ '+nombre+' dado de baja','success');
+        loadPersonal();
+      });
+    } else {
+      _personal = _personal.filter(function(p){ return p.id!==id; });
+      renderPersonal();
+      showToast('✓ '+nombre+' dado de baja','success');
+    }
+  });
+}
+
+function copyPersonalLink(){
+  var inp = document.getElementById('personalChecklistLink');
+  navigator.clipboard.writeText(inp.value).then(function(){ showToast('✓ Link copiado','success'); })
+    .catch(function(){ showToast('Link: '+inp.value,'warning'); });
+}
+
+function openPersonalQR(){
+  var link = document.getElementById('personalChecklistLink').value;
+  document.getElementById('personalQRLink').textContent = link;
+  var qrEl = document.getElementById('personalQRCode');
+  qrEl.innerHTML = '';
+  if(typeof QRCode !== 'undefined'){
+    try{ new QRCode(qrEl, { text: link, width:200, height:200, colorDark:'#0B0E14', colorLight:'#ffffff' }); }
+    catch(e){ _qrFallback(qrEl, link); }
+  } else { _qrFallback(qrEl, link); }
+  document.getElementById('personalQRModal').classList.add('open');
+}
+function _qrFallback(el, link){
+  var img = document.createElement('img');
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(link);
+  img.style.cssText='width:200px;height:200px;';
+  el.appendChild(img);
+}
+function closePersonalQR(){ document.getElementById('personalQRModal').classList.remove('open'); }
+
+// ══════════════════════════════════════════════════════
+//  ACCESO DEL OPERARIO (login por PIN desde el link/QR)
+// ══════════════════════════════════════════════════════
+var _opActual = null;
+
+function detectarLinkChecklist(){
+  var params = new URLSearchParams(window.location.search);
+  var clEmpresa = params.get('cl');
+  if(clEmpresa){
+    window._opEmpresaId = clEmpresa;
+    showView('operario');
+    return true;
+  }
+  return false;
+}
+
+function loginOperario(){
+  var nombre = document.getElementById('opNombre').value.trim();
+  var pin = document.getElementById('opPin').value.trim();
+  var err = document.getElementById('opError');
+  err.style.display='none';
+  if(!nombre || !pin){ err.textContent='Completá nombre y PIN.'; err.style.display='block'; return; }
+  if(!sb){ err.textContent='Sin conexión. Reintentá.'; err.style.display='block'; return; }
+
+  sb.rpc('validar_acceso_checklist', {
+    p_empresa_id: window._opEmpresaId,
+    p_nombre: nombre,
+    p_pin: pin
+  }).then(function(res){
+    if(res.error || !res.data || !res.data.length){
+      err.textContent='Nombre o PIN incorrecto.'; err.style.display='block';
+      return;
+    }
+    _opActual = { nombre:nombre, pin:pin, puesto:res.data[0].puesto };
+    mostrarPanelOperario();
+  });
+}
+
+function mostrarPanelOperario(){
+  document.getElementById('operarioLoginBox').style.display='none';
+  document.getElementById('operarioPanelBox').style.display='block';
+  var puestoLabel = {jefe:'Jefe',supervisor:'Supervisor',operario:'Operario',chofer:'Chofer'};
+  document.getElementById('opSaludo').textContent = 'Hola, '+_opActual.nombre;
+  document.getElementById('opPuesto').textContent = puestoLabel[_opActual.puesto]||_opActual.puesto;
+  // Jefe y supervisor ven historial
+  var verHist = (_opActual.puesto==='jefe' || _opActual.puesto==='supervisor');
+  document.getElementById('opHistorialBox').style.display = verHist ? 'block' : 'none';
+  if(verHist) cargarHistorialOperario();
+}
+
+function logoutOperario(){
+  _opActual = null;
+  document.getElementById('operarioLoginBox').style.display='block';
+  document.getElementById('operarioPanelBox').style.display='none';
+  document.getElementById('opNombre').value='';
+  document.getElementById('opPin').value='';
+}
+
+function opNuevoChecklist(){
+  // Cargar vehículos de la empresa vía función segura y abrir el formulario
+  if(!sb){ showToast('Sin conexión','error'); return; }
+  sb.rpc('vehiculos_para_checklist', {
+    p_empresa_id: window._opEmpresaId,
+    p_nombre: _opActual.nombre,
+    p_pin: _opActual.pin
+  }).then(function(res){
+    if(res.error){ showToast('Error al cargar vehículos','error'); return; }
+    window._opVehiculos = res.data || [];
+    abrirChecklistOperario();
+  });
+}
+
+function cargarHistorialOperario(){
+  var cont = document.getElementById('opHistorial');
+  cont.innerHTML = '<div style="font-size:12px;color:var(--gray);">Cargando...</div>';
+  // El historial usa la sesión anon; mostramos lo que devuelva (RLS permite ver de su empresa vía función)
+  sb.rpc('vehiculos_para_checklist', {
+    p_empresa_id: window._opEmpresaId, p_nombre:_opActual.nombre, p_pin:_opActual.pin
+  }).then(function(res){
+    // Para el historial real necesitaríamos otra función; por ahora mostramos resumen
+    cont.innerHTML = '<div style="font-size:12px;color:var(--gray);padding:.5rem;">El detalle de check-lists cargados se ve desde el panel del administrador.</div>';
+  });
+}
+
+function closeVehDetail2(){}
+
+// Formulario de checklist para el operario (reusa el modal existente)
+function abrirChecklistOperario(){
+  // Llenar el select de patentes con los vehículos de la empresa
+  var sel = document.getElementById('clPatente');
+  if(sel && window._opVehiculos){
+    sel.innerHTML = '';
+    window._opVehiculos.forEach(function(v){
+      var o = document.createElement('option');
+      o.value = v.patente; o.textContent = v.patente + (v.obra?(' · '+v.obra):'');
+      sel.appendChild(o);
+    });
+  }
+  window._opModoCarga = true; // marca que es carga de operario
+  document.getElementById('checklistFormModal').classList.add('open');
+  onClTipoChange();
+}
 
 // ══════════════════════════════════════════════════════
 //  SOPORTE — TICKETS
@@ -3610,8 +4074,63 @@ function toggleAlquiler(){
   document.getElementById('alquilerFields').style.display = val==='alquilado' ? 'block' : 'none';
 }
 function saveVehEdit(){
-  closeEditVeh();
-  showToast('✓ Vehículo actualizado y sincronizado con Google Sheets','success');
+  var patente = window._editVehPat;
+  if(!patente){ closeEditVeh(); return; }
+  var vtvISO = document.getElementById('editVtvFecha').value || null;
+  var segISO = document.getElementById('editSeguro').value || null;
+  var prop = document.getElementById('editPropiedad').value;
+
+  // Recalcular estados desde las fechas
+  var vtvEstado = _estadoDesdefecha(vtvISO);
+  var segEstado = _estadoDesdefecha(segISO);
+
+  // Actualizar en Supabase
+  if(sb && window._empresaId){
+    sb.from('vehiculos').update({
+      vtv_vence: vtvISO,
+      seguro_vence: segISO,
+      vtv_estado: vtvEstado,
+      seguro_estado: segEstado,
+      propiedad: prop
+    }).eq('empresa_id', window._empresaId).eq('patente', patente).then(function(res){
+      if(res.error){ showToast('Error al guardar: '+res.error.message,'error'); return; }
+      _actualizarFilaFlota(patente, vtvISO, segISO, prop);
+      closeEditVeh();
+      showToast('✓ Vehículo actualizado','success');
+    });
+  } else {
+    _actualizarFilaFlota(patente, vtvISO, segISO, prop);
+    closeEditVeh();
+    showToast('✓ Vehículo actualizado','success');
+  }
+}
+
+// Actualiza la fila visual de la tabla con los nuevos datos y estados
+function _actualizarFilaFlota(patente, vtvISO, segISO, prop){
+  var row = document.querySelector('#flotaBody tr[data-pat="'+patente+'"]');
+  if(!row) return;
+  var vtvEstado = _estadoDesdefecha(vtvISO);
+  var segEstado = _estadoDesdefecha(segISO);
+  row.setAttribute('data-vtvf', _isoToDDMM(vtvISO));
+  row.setAttribute('data-segf', _isoToDDMM(segISO));
+  row.setAttribute('data-vtv', vtvEstado);
+  row.setAttribute('data-seguro', segEstado);
+  row.setAttribute('data-prop', prop==='alquilado'?'Alquilado':'Propio');
+  var cells = row.querySelectorAll('td');
+  // Columna VTV (índice 5), Seguro (6), Propiedad (7)
+  if(cells[5]) cells[5].innerHTML = _badgeEstado(vtvEstado, 'vtv');
+  if(cells[6]) cells[6].innerHTML = _badgeEstado(segEstado, 'seguro');
+  if(cells[7]){
+    cells[7].innerHTML = prop==='alquilado'
+      ? '<span class="badge" style="background:rgba(59,130,246,.12);color:#60A5FA;border:1px solid rgba(59,130,246,.2);">Alquilado</span>'
+      : '<span class="badge" style="background:rgba(196,154,58,.12);color:var(--gold);border:1px solid var(--gold-border);">Propio</span>';
+  }
+}
+function _badgeEstado(estado, tipo){
+  if(estado==='venc') return '<span class="badge badge-red">Vencido</span>';
+  if(estado==='acerca') return '<span class="badge badge-warn">Por vencer</span>';
+  if(estado==='ok') return '<span class="badge badge-ok">'+(tipo==='vtv'?'OK':'Vig.')+'</span>';
+  return '<span class="badge" style="background:rgba(255,255,255,.06);color:var(--gray);">—</span>';
 }
 
 function openNewVeh(){
@@ -3690,7 +4209,60 @@ function cargarVehiculos(){
     if(!vehiculos.length && tbody){
       tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--gray);padding:2rem;">No hay vehículos cargados. Tocá "+ Cargar vehículo" o subí un Excel.</td></tr>';
     }
+    // Derivar paneles de VTV, seguro y alertas de los vehículos reales
+    actualizarPanelesDerivados(vehiculos);
   });
+}
+
+// Genera los paneles de VTV, seguro y alertas a partir de los vehículos
+function actualizarPanelesDerivados(vehiculos){
+  var vtvBody = document.getElementById('vtvBody');
+  var segBody = document.getElementById('seguroBody');
+  var alertBody = document.getElementById('alertasBody');
+  var vtvRows='', segRows='', alertas=[];
+  var segVig=0, segPv=0, segVen=0;
+
+  vehiculos.forEach(function(v){
+    var vtvEst = v.vtv_estado || _estadoDesdefecha(v.vtv_vence);
+    var segEst = v.seguro_estado || _estadoDesdefecha(v.seguro_vence);
+    var obra = escapeHtml(v.obra||'—');
+    var pat = escapeHtml(v.patente);
+    // VTV: mostrar solo los que vencen o están vencidos
+    if(vtvEst==='venc' || vtvEst==='acerca'){
+      vtvRows += '<tr><td><strong>'+pat+'</strong></td><td>'+obra+'</td><td>'+_badgeEstado(vtvEst,'vtv')+'</td><td>'+_fechaAMostrar(v.vtv_vence)+'</td></tr>';
+    }
+    // Seguro: todos con su estado
+    if(segEst){
+      if(segEst==='ok') segVig++; else if(segEst==='acerca') segPv++; else if(segEst==='venc') segVen++;
+      var propTxt = v.propiedad==='alquilado'?'Alquilado':'Propio';
+      segRows += '<tr><td><strong>'+pat+'</strong></td><td>'+obra+'</td><td>'+propTxt+'</td><td>'+_fechaAMostrar(v.seguro_vence)+'</td><td>'+_badgeEstado(segEst,'seguro')+'</td><td><button class="btn-edit-veh" onclick="openEditVeh(\''+pat+'\')">✏️</button></td></tr>';
+    }
+    // Alertas
+    if(vtvEst==='venc') alertas.push({c:'red',t:'🚨 '+pat+' — VTV vencida',d:obra+' · VTV vencida el '+_fechaAMostrar(v.vtv_vence)+'. Acción inmediata.'});
+    else if(vtvEst==='acerca') alertas.push({c:'amber',t:'⚠️ '+pat+' — VTV por vencer',d:obra+' · VTV vence el '+_fechaAMostrar(v.vtv_vence)+'.'});
+    if(segEst==='venc') alertas.push({c:'red',t:'🚨 '+pat+' — Seguro vencido',d:obra+' · Seguro vencido el '+_fechaAMostrar(v.seguro_vence)+'.'});
+    else if(segEst==='acerca') alertas.push({c:'amber',t:'⚠️ '+pat+' — Seguro por vencer',d:obra+' · Seguro vence el '+_fechaAMostrar(v.seguro_vence)+'.'});
+  });
+
+  if(vtvBody) vtvBody.innerHTML = vtvRows || '<tr><td colspan="4" style="text-align:center;color:var(--gray);padding:1.5rem;">No hay VTV próximas a vencer. 👍</td></tr>';
+  if(segBody) segBody.innerHTML = segRows || '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargá vehículos con fecha de seguro para ver el estado acá.</td></tr>';
+  var sv=document.getElementById('segVigentes'); if(sv) sv.textContent=segVig;
+  var sp=document.getElementById('segPorVencer'); if(sp) sp.textContent=segPv;
+  var sve=document.getElementById('segVencidos'); if(sve) sve.textContent=segVen;
+
+  if(alertBody){
+    if(!alertas.length){
+      alertBody.innerHTML = '<div style="text-align:center;color:var(--gray);padding:2rem;border:1px dashed var(--bdr);border-radius:var(--r2);">No hay alertas activas. Todo en orden. 👍</div>';
+    } else {
+      var col = {red:['rgba(229,86,78,.2)','rgba(229,86,78,.06)','var(--red)','#F87171'],amber:['rgba(217,154,60,.2)','rgba(217,154,60,.06)','var(--amber)','#FCD34D']};
+      alertBody.innerHTML = alertas.map(function(a){
+        var c=col[a.c];
+        return '<div style="padding:1rem;border:1px solid '+c[0]+';border-radius:var(--r2);background:'+c[1]+';border-left:3px solid '+c[2]+';">'
+          +'<div style="font-size:13px;font-weight:600;color:'+c[3]+';margin-bottom:3px;">'+a.t+'</div>'
+          +'<div style="font-size:12px;color:var(--gray);">'+a.d+'</div></div>';
+      }).join('');
+    }
+  }
 }
 
 function addVehRow(v){
@@ -3824,11 +4396,18 @@ function onClTipoChange(){
         +'<div style="display:flex;gap:5px;">'
         +'<label class="cl-check"><input type="radio" name="'+nm+'" value="bien" checked/> ✅</label>'
         +'<label class="cl-check"><input type="radio" name="'+nm+'" value="mal"/> ❌</label>'
-        +'<label class="cl-check"><input type="radio" name="'+nm+'" value="na"/> —</label>'
+        +'<label class="cl-check" title="No aplica"><input type="radio" name="'+nm+'" value="na"/> N/A</label>'
         +'</div></div>';
     });
     return h;
   }
+
+  // Leyenda de referencia
+  html += '<div style="display:flex;gap:1rem;flex-wrap:wrap;padding:.6rem .85rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);margin-bottom:.85rem;font-size:11px;color:var(--gray);">'
+    +'<span>✅ = En buen estado</span>'
+    +'<span>❌ = Con problema</span>'
+    +'<span>N/A = No aplica</span>'
+    +'</div>';
 
   // Km / Hs
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.5rem;">';
@@ -3874,9 +4453,29 @@ function submitChecklist(){
   var patente = document.getElementById('clPatente').value;
   var tipo = document.getElementById('clTipoVeh').value;
   var freq = document.getElementById('clFreqVeh').value;
-  var fecha = new Date().toISOString().slice(0,10);
+  var _h = new Date();
+  var fecha = _h.getFullYear()+'-'+('0'+(_h.getMonth()+1)).slice(-2)+'-'+('0'+_h.getDate()).slice(-2);
 
-  // Guardar en Supabase
+  // Si es un operario cargando desde el link/QR, usar la función segura
+  if(window._opModoCarga && _opActual && window._opEmpresaId){
+    if(!sb){ showToast('Sin conexión','error'); return; }
+    sb.rpc('guardar_checklist_operario', {
+      p_empresa_id: window._opEmpresaId,
+      p_nombre: _opActual.nombre,
+      p_pin: _opActual.pin,
+      p_patente: patente,
+      p_tipo_movil: tipo,
+      p_frecuencia: freq,
+      p_items: {}
+    }).then(function(res){
+      if(res.error){ showToast('Error al guardar: '+res.error.message,'error'); return; }
+      closeChecklistForm();
+      showToast('✓ Check-list de '+patente+' cargado correctamente. ¡Gracias!','success');
+    });
+    return;
+  }
+
+  // Guardar normal (admin de flota)
   if(sb && window._empresaId){
     sb.from('checklists').insert({
       empresa_id: window._empresaId,
@@ -4091,24 +4690,25 @@ function buildIaBlock(filtered, tipoNombre, tipo){
 //  FILTROS DE FLOTA
 // ══════════════════════════════════════════════════════
 function filterFlota(){
-  var q     = (document.getElementById('flotaSearch').value||'').toUpperCase();
-  var obra  = document.getElementById('flotaObra').value;
-  var vtv   = document.getElementById('flotaVtv').value;
-  var seg   = document.getElementById('flotaSeguro').value;
-  var prop  = document.getElementById('flotaProp').value;
-  var chk   = document.getElementById('flotaCheck').value;
-  var rows  = document.querySelectorAll('#flotaBody tr');
-  rows.forEach(function(r){
-    var pat = (r.getAttribute('data-pat')||'').toUpperCase();
-    var ok = true;
-    if(q && pat.indexOf(q)<0) ok = false;
-    if(obra && r.getAttribute('data-obra')!==obra) ok = false;
-    if(vtv && r.getAttribute('data-vtv')!==vtv) ok = false;
-    if(seg && r.getAttribute('data-seguro')!==seg) ok = false;
-    if(prop && r.getAttribute('data-prop')!==prop) ok = false;
-    if(chk && r.getAttribute('data-check')!==chk) ok = false;
-    r.style.display = ok ? '' : 'none';
-  });
+  try{
+    var qEl=document.getElementById('flotaSearch');
+    var q = qEl ? (qEl.value||'').toUpperCase() : '';
+    var g=function(id){ var el=document.getElementById(id); return el?el.value:''; };
+    var obra=g('flotaObra'), vtv=g('flotaVtv'), seg=g('flotaSeguro'), prop=g('flotaProp'), chk=g('flotaCheck');
+    var rows = document.querySelectorAll('#flotaBody tr');
+    rows.forEach(function(r){
+      if(!r.getAttribute('data-pat')){ return; } // saltar fila de "vacío"
+      var pat = (r.getAttribute('data-pat')||'').toUpperCase();
+      var ok = true;
+      if(q && pat.indexOf(q)<0) ok = false;
+      if(obra && r.getAttribute('data-obra')!==obra) ok = false;
+      if(vtv && r.getAttribute('data-vtv')!==vtv) ok = false;
+      if(seg && r.getAttribute('data-seguro')!==seg) ok = false;
+      if(prop && r.getAttribute('data-prop')!==prop) ok = false;
+      if(chk && r.getAttribute('data-check')!==chk) ok = false;
+      r.style.display = ok ? '' : 'none';
+    });
+  }catch(e){ console.warn('filterFlota:', e); }
 }
 
 // ══════════════════════════════════════════════════════
@@ -4143,6 +4743,13 @@ function saveState(key, data){
     else if(key==='weekScope')   update.week_scope = (data && data.scope) ? data.scope : 'completa';
     else if(key==='checklistConfig') update.checklist_config = data;
     else if(key==='firma')       update.firma = data;
+    else if(key==='whiteLabel'){
+      // White-label se guarda junto a la firma (ambos son branding)
+      var firmaActual = _configCache['firma'] || {};
+      firmaActual.whiteLabel = data;
+      _configCache['firma'] = firmaActual;
+      update.firma = firmaActual;
+    }
     // Las que no mapean a columna propia, no se guardan en config (ej: destinatarios, tickets tienen su tabla)
     if(Object.keys(update).length){
       update.actualizado_en = new Date().toISOString();
@@ -4169,7 +4776,11 @@ function cargarConfiguracion(){
     if(c.freq_config)      _configCache['freqConfig'] = c.freq_config;
     if(c.week_scope)       _configCache['weekScope'] = { scope: c.week_scope };
     if(c.checklist_config) _configCache['checklistConfig'] = c.checklist_config;
-    if(c.firma)            _configCache['firma'] = c.firma;
+    if(c.firma){
+      _configCache['firma'] = c.firma;
+      // White-label viene anidado dentro de firma
+      if(c.firma.whiteLabel) _configCache['whiteLabel'] = c.firma.whiteLabel;
+    }
   });
 }
 
@@ -4588,6 +5199,7 @@ function loadTheme(){
 window.addEventListener('load', function(){
   initHero();
   loadTheme();
+  detectarLinkChecklist();
   iniciarFrasesRotativas();
   // Cerrar CUALQUIER modal al hacer click en el fondo (overlay)
   document.querySelectorAll('.modal-overlay').forEach(function(ov){
