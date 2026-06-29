@@ -2055,9 +2055,9 @@ footer{
       </div>
       <div style="overflow-x:auto;">
         <table class="app-table">
-          <thead><tr><th>Empresa</th><th>Plan</th><th>Estado pago</th><th>Alta</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Empresa</th><th>Plan</th><th>Estado pago</th><th>Check-list</th><th>Alta</th><th>Acciones</th></tr></thead>
           <tbody id="admEmpresasBody">
-            <tr><td colspan="5" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargando empresas...</td></tr>
+            <tr><td colspan="6" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargando empresas...</td></tr>
           </tbody>
         </table>
       </div>
@@ -2445,7 +2445,7 @@ function cargarSesion(authUser){
   if(!sb || !authUser){ return; }
   // Traer perfil + empresa con un join
   sb.from('perfiles')
-    .select('nombre, apellido, rol, empresa_id, empresas(nombre, plan, estado_pago)')
+    .select('nombre, apellido, rol, empresa_id, empresas(nombre, plan, estado_pago, addon_checklist)')
     .eq('id', authUser.id)
     .single()
     .then(function(res){
@@ -2463,7 +2463,8 @@ function cargarSesion(authUser){
         plan: emp.plan || 'basico',
         role: (p.rol==='superadmin') ? 'admin' : 'user',
         empresa_id: p.empresa_id,
-        rol_real: p.rol
+        rol_real: p.rol,
+        addon_checklist: emp.addon_checklist===true
       });
     });
 }
@@ -2548,6 +2549,8 @@ function loginSuccess(user){
   currentUser = user;
   isAdmin = user.role === 'admin';
   window._currentCompany = (user.company||user.email||'demo').replace(/[^a-zA-Z0-9]/g,'_');
+  window._empresaId = user.empresa_id || null;
+  window._addonChecklist = user.addon_checklist===true;
   document.getElementById('navUserName').textContent = user.name || user.email;
   document.getElementById('navActions').style.display = 'none';
   document.getElementById('mobileMenu').style.display = 'none';
@@ -2562,6 +2565,12 @@ function loginSuccess(user){
     showView('admin');
   } else {
     showView('dashboard');
+    // Cargar datos reales de la empresa desde Supabase
+    if(sb && window._empresaId){
+      cargarConfiguracion();
+      cargarVehiculos();
+      loadChecklistRegistros();
+    }
   }
 }
 
@@ -2652,6 +2661,25 @@ function applyPlanRestrictions(plan){
     if(clCfg) clCfg.style.display = 'block';
     if(wlCard) wlCard.style.display = 'block';
   }
+
+  // ══ ADD-ON CHECK-LIST ══
+  // Si la empresa compró el add-on (Básico/Pro), se habilita el checklist
+  // igual que en Enterprise, pero sin las otras features Enterprise.
+  if(plan!=='enterprise' && window._addonChecklist===true){
+    window._checklistIncluded = true;
+    window._showChecklistShare = true;
+    if(clItem){
+      // Desbloquear el item del sidebar
+      clItem.setAttribute('onclick','setTab(this,\'dash-checklist\')');
+      clItem.style.opacity='1';
+      var lock = clItem.querySelector('.lock-icon');
+      if(lock) lock.remove();
+      var badge2 = clItem.querySelector('span');
+      if(badge2){ badge2.textContent='ACTIVO'; badge2.style.background='var(--green)'; }
+    }
+    // Habilitar la config de checklist también
+    if(clCfg) clCfg.style.display = 'block';
+  }
 }
 
 function addLock(item){
@@ -2698,11 +2726,11 @@ var PLAN_PRECIO = { basico:19000, pro:39000, enterprise:79000 };
 function cargarPanelAdmin(){
   if(!sb){ return; }
   var body = document.getElementById('admEmpresasBody');
-  body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargando empresas...</td></tr>';
+  body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargando empresas...</td></tr>';
 
   sb.from('empresas').select('*').order('creado_en',{ascending:false}).then(function(res){
     if(res.error){
-      body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red);padding:1.5rem;">Error al cargar: '+escapeHtml(res.error.message)+'</td></tr>';
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--red);padding:1.5rem;">Error al cargar: '+escapeHtml(res.error.message)+'</td></tr>';
       return;
     }
     var empresas = res.data || [];
@@ -2727,7 +2755,7 @@ function cargarPanelAdmin(){
 
     // Tabla
     if(!empresas.length){
-      body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:1.5rem;">No hay empresas registradas todavía.</td></tr>';
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:1.5rem;">No hay empresas registradas todavía.</td></tr>';
       return;
     }
     body.innerHTML = '';
@@ -2740,10 +2768,20 @@ function cargarPanelAdmin(){
         : e.estado_pago==='suspendido' ? '<span class="badge badge-red">Suspendido</span>'
         : '<span class="badge badge-warn">Prueba</span>';
       var alta = e.creado_en ? new Date(e.creado_en).toLocaleDateString('es-AR') : '—';
+      // Add-on checklist: incluido si Enterprise, o activado manualmente
+      var clIncluido = (e.plan==='enterprise');
+      var clActivo = clIncluido || e.addon_checklist===true;
+      var clBadge;
+      if(clIncluido){
+        clBadge = '<span class="badge badge-ok" title="Incluido en Enterprise">Incluido</span>';
+      } else {
+        clBadge = '<button class="adm-cl-btn" data-id="'+e.id+'" data-on="'+(e.addon_checklist===true?'1':'0')+'" style="font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid '+(clActivo?'var(--green)':'var(--bdr)')+';background:'+(clActivo?'rgba(61,174,124,.1)':'transparent')+';color:'+(clActivo?'var(--green)':'var(--gray)')+';cursor:pointer;">'+(clActivo?'✓ Activo':'Activar')+'</button>';
+      }
       var tr = document.createElement('tr');
       tr.innerHTML = '<td><strong>'+escapeHtml(e.nombre||'—')+'</strong></td>'
         +'<td>'+planBadge+'</td>'
         +'<td>'+estadoBadge+'</td>'
+        +'<td>'+clBadge+'</td>'
         +'<td style="font-size:12px;color:var(--gray);">'+alta+'</td>'
         +'<td><button class="adm-plan-btn" data-id="'+e.id+'" style="font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--bdr);background:transparent;color:var(--gold);cursor:pointer;">Cambiar plan</button></td>';
       body.appendChild(tr);
@@ -2751,6 +2789,22 @@ function cargarPanelAdmin(){
     // Listeners para cambiar plan
     body.querySelectorAll('.adm-plan-btn').forEach(function(btn){
       btn.onclick = function(){ cambiarPlanEmpresa(btn.getAttribute('data-id')); };
+    });
+    // Listeners para toggle de add-on checklist
+    body.querySelectorAll('.adm-cl-btn').forEach(function(btn){
+      btn.onclick = function(){ toggleAddonChecklist(btn.getAttribute('data-id'), btn.getAttribute('data-on')==='1'); };
+    });
+  });
+}
+
+function toggleAddonChecklist(empresaId, estaActivo){
+  var nuevoEstado = !estaActivo;
+  var accion = nuevoEstado ? 'activar' : 'desactivar';
+  genModalConfirm('Add-on Check-list', '¿Querés '+accion+' el módulo de Check-list para esta empresa?', function(){
+    sb.from('empresas').update({ addon_checklist: nuevoEstado }).eq('id', empresaId).then(function(res){
+      if(res.error){ showToast('Error: '+res.error.message,'error'); return; }
+      showToast('✓ Check-list '+(nuevoEstado?'activado':'desactivado')+' para la empresa','success');
+      cargarPanelAdmin();
     });
   });
 }
@@ -3319,9 +3373,9 @@ function enviarTicket(){
     estado: 'Enviado'
   };
   // Guardar en historial local (en prod: enviar a backend → email a MercaTeck)
-  var tickets = loadState('tickets') || [];
+  var tickets = loadStateLocal('tickets') || [];
   tickets.unshift(ticket);
-  saveState('tickets', tickets);
+  saveStateLocal('tickets', tickets);
 
   // En producción: acá se dispara el email a mercateckinfo@gmail.com vía backend
   console.log('TICKET para enviar a mercateckinfo@gmail.com:', ticket);
@@ -3336,7 +3390,7 @@ function enviarTicket(){
 function renderTickets(){
   var cont = document.getElementById('ticketsList');
   if(!cont) return;
-  var tickets = loadState('tickets') || [];
+  var tickets = loadStateLocal('tickets') || [];
   cont.innerHTML = '';
   if(!tickets.length){
     cont.innerHTML = '<div style="font-size:12px;color:var(--gray);text-align:center;padding:.75rem;">No enviaste tickets todavía.</div>';
@@ -3361,17 +3415,33 @@ function renderTickets(){
 var _histVehActual = null;
 
 function _getHistorial(patente){
+  // Cache local
+  if(_histCache[patente]) return _histCache[patente];
   var key = 'historial_'+patente;
-  var data = loadState(key);
-  if(data) return data;
-  // Datos iniciales de ejemplo según patente (en prod vienen del Sheet)
+  var data = loadStateLocal(key);
+  if(data){ _histCache[patente]=data; return data; }
+  // Datos iniciales de ejemplo (solo si no hay nada guardado)
   var iniciales = {
     'XA123BC':[{fecha:'26/06/2025',tipo:'Arreglo',desc:'Cambio de pastillas de freno',obs:['Se revisó disco también'],costo:45000}],
     'WD012GH':[{fecha:'24/06/2025',tipo:'Compra',desc:'Filtros de aceite y aire',obs:[],costo:78000}]
   };
   return iniciales[patente] || [];
 }
-function _saveHistorial(patente, data){ saveState('historial_'+patente, data); }
+var _histCache = {};
+function _saveHistorial(patente, data){
+  _histCache[patente] = data;
+  // Cache local aislado por empresa
+  saveStateLocal('historial_'+patente, data);
+  // Nota: la migración completa de mantenimiento a tabla relacional
+  // se hace en una fase posterior (estructura anidada con observaciones).
+}
+// Helpers que usan SOLO localStorage (para historial, que no va en tabla configuracion)
+function saveStateLocal(key, data){
+  try{ localStorage.setItem('gesflota_'+( window._currentCompany||'demo')+'_'+key, JSON.stringify(data)); }catch(e){}
+}
+function loadStateLocal(key){
+  try{ var v = localStorage.getItem('gesflota_'+( window._currentCompany||'demo')+'_'+key); return v ? JSON.parse(v) : null; }catch(e){ return null; }
+}
 
 function verHistorialVehiculo(patente){
   _histVehActual = patente;
@@ -3558,14 +3628,76 @@ function openNewVeh(){
     if(!v.patente||!v.id){ showToast('Completá al menos ID y patente','error'); return; }
     // Normalizar (sin guiones ni puntos)
     var pat = (v.patente||'').replace(/[\.\-\s]/g,'').toUpperCase();
-    addVehRow({ id:v.id, patente:pat, tipo:v.tipo, obra:v.obra, prop:v.prop });
-    showToast('✓ Vehículo '+pat+' cargado y sincronizado','success');
+    var obra = (v.obra||'').trim();
+
+    // Guardar en Supabase si está disponible
+    if(sb && window._empresaId){
+      sb.from('vehiculos').insert({
+        empresa_id: window._empresaId,
+        id_interno: v.id,
+        patente: pat,
+        tipo: v.tipo,
+        obra: obra,
+        propiedad: (v.prop||'Propio').toLowerCase()
+      }).then(function(res){
+        if(res.error){
+          if((res.error.message||'').indexOf('duplicate')>=0) showToast('Esa patente ya está cargada','error');
+          else showToast('Error al guardar: '+res.error.message,'error');
+          return;
+        }
+        addVehRow({ id:v.id, patente:pat, tipo:v.tipo, obra:obra, prop:v.prop });
+        showToast('✓ Vehículo '+pat+' cargado y guardado','success');
+      });
+    } else {
+      addVehRow({ id:v.id, patente:pat, tipo:v.tipo, obra:obra, prop:v.prop });
+      showToast('✓ Vehículo '+pat+' cargado','success');
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  VEHÍCULOS — leer/escribir en Supabase
+// ══════════════════════════════════════════════════════
+function _fechaAMostrar(iso){
+  if(!iso) return '';
+  var d = new Date(iso);
+  if(isNaN(d)) return '';
+  return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear();
+}
+
+function cargarVehiculos(){
+  if(!sb || !window._empresaId) return;
+  var tbody = document.getElementById('flotaBody');
+  sb.from('vehiculos').select('*').eq('empresa_id', window._empresaId).order('creado_en',{ascending:true}).then(function(res){
+    if(res.error){ console.warn('Error cargando vehículos:', res.error); return; }
+    var vehiculos = res.data || [];
+    // Limpiar tabla (los datos demo) y cargar los reales
+    if(tbody) tbody.innerHTML = '';
+    vehiculos.forEach(function(veh){
+      addVehRow({
+        id: veh.id_interno || '',
+        patente: veh.patente,
+        tipo: veh.tipo || '',
+        obra: veh.obra || '',
+        prop: veh.propiedad==='alquilado' ? 'Alquilado' : 'Propio',
+        vtvf: _fechaAMostrar(veh.vtv_vence),
+        segf: _fechaAMostrar(veh.seguro_vence),
+        ctrl: veh.control_por || 'km',
+        actual: veh.valor_actual || 0,
+        prox: veh.prox_servicio || 0
+      });
+    });
+    if(!vehiculos.length && tbody){
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--gray);padding:2rem;">No hay vehículos cargados. Tocá "+ Cargar vehículo" o subí un Excel.</td></tr>';
+    }
   });
 }
 
 function addVehRow(v){
   var tbody = document.getElementById('flotaBody');
   if(!tbody) return;
+  // Si hay un mensaje de "vacío", limpiarlo
+  if(tbody.children.length===1 && tbody.querySelector('td[colspan]')) tbody.innerHTML='';
   var tr = document.createElement('tr');
   tr.setAttribute('data-pat', v.patente);
   tr.setAttribute('data-obra', v.obra||'');
@@ -3681,12 +3813,15 @@ function onClTipoChange(){
   var html = '';
 
   function renderSection(titulo, items){
-    var h = '<div style="font-size:12px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin:1rem 0 .5rem;">'+titulo+'</div>';
+    var h = '<div style="display:flex;align-items:center;gap:8px;margin:1.25rem 0 .6rem;">'
+      +'<span style="width:3px;height:14px;background:var(--gold);border-radius:2px;"></span>'
+      +'<span style="font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;">'+titulo+'</span>'
+      +'</div>';
     items.forEach(function(it, i){
       var nm = (titulo+'_'+i).replace(/\s/g,'');
-      h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-bottom:1px solid var(--bdr);">'
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:var(--r);margin-bottom:3px;background:var(--input-bg);">'
         +'<span style="font-size:13px;color:var(--white);">'+it+'</span>'
-        +'<div style="display:flex;gap:4px;">'
+        +'<div style="display:flex;gap:5px;">'
         +'<label class="cl-check"><input type="radio" name="'+nm+'" value="bien" checked/> ✅</label>'
         +'<label class="cl-check"><input type="radio" name="'+nm+'" value="mal"/> ❌</label>'
         +'<label class="cl-check"><input type="radio" name="'+nm+'" value="na"/> —</label>'
@@ -3733,30 +3868,42 @@ function toggleClSection(id, show){
   if(el) el.style.display = show ? 'block' : 'none';
 }
 
+var _checklistCache = [];
+
 function submitChecklist(){
   var patente = document.getElementById('clPatente').value;
   var tipo = document.getElementById('clTipoVeh').value;
   var freq = document.getElementById('clFreqVeh').value;
   var fecha = new Date().toISOString().slice(0,10);
-  // Guardar registro AISLADO por empresa
-  var key = 'checklist_'+( window._currentCompany||'demo');
-  var registros = loadState(key) || [];
-  registros.push({ patente:patente, tipo:tipo, freq:freq, fecha:fecha, estado:'realizado' });
-  saveState(key, registros);
-  closeChecklistForm();
-  showToast('✓ Check-list '+freq+' de '+patente+' cargado ('+fecha+'). Sincronizado.','success');
-  marcarChecklistRealizado(patente, freq, fecha);
+
+  // Guardar en Supabase
+  if(sb && window._empresaId){
+    sb.from('checklists').insert({
+      empresa_id: window._empresaId,
+      patente: patente,
+      tipo_movil: tipo,
+      frecuencia: freq,
+      fecha: fecha
+    }).then(function(res){
+      if(res.error){ showToast('Error al guardar: '+res.error.message,'error'); return; }
+      _checklistCache.push({ patente:patente, freq:freq, fecha:fecha, estado:'realizado' });
+      closeChecklistForm();
+      showToast('✓ Check-list '+freq+' de '+patente+' cargado ('+fecha+'). Guardado.','success');
+      marcarChecklistRealizado(patente, freq, fecha);
+    });
+  } else {
+    _checklistCache.push({ patente:patente, freq:freq, fecha:fecha, estado:'realizado' });
+    closeChecklistForm();
+    showToast('✓ Check-list '+freq+' de '+patente+' cargado ('+fecha+').','success');
+    marcarChecklistRealizado(patente, freq, fecha);
+  }
 }
 
 function getChecklistCount(patente, freq){
-  var key = 'checklist_'+( window._currentCompany||'demo');
-  var registros = loadState(key) || [];
-  return registros.filter(function(r){ return r.patente===patente && (!freq || r.freq===freq); }).length;
+  return _checklistCache.filter(function(r){ return r.patente===patente && (!freq || r.freq===freq); }).length;
 }
 function getChecklistFecha(patente, freq){
-  var key = 'checklist_'+( window._currentCompany||'demo');
-  var registros = loadState(key) || [];
-  var matches = registros.filter(function(r){ return r.patente===patente && (!freq || r.freq===freq); });
+  var matches = _checklistCache.filter(function(r){ return r.patente===patente && (!freq || r.freq===freq); });
   return matches.length ? matches[matches.length-1].fecha : null;
 }
 
@@ -3766,7 +3913,6 @@ function marcarChecklistRealizado(patente, freq, fecha){
       r.setAttribute('data-check','ok');
       var cells = r.querySelectorAll('td');
       if(cells[8]){
-        // Tilde clickeable que muestra la fecha de carga
         cells[8].innerHTML = '<span class="badge badge-ok" style="cursor:pointer;" title="Cargado el '+(fecha||'—')+'" onclick="showToast(\'Check-list cargado el '+(fecha||'—')+'\',\'success\')">✓</span>';
       }
     }
@@ -3774,11 +3920,18 @@ function marcarChecklistRealizado(patente, freq, fecha){
 }
 
 function loadChecklistRegistros(){
-  var key = 'checklist_'+( window._currentCompany||'demo');
-  var registros = loadState(key) || [];
-  registros.forEach(function(reg){
-    if(reg.estado==='realizado') marcarChecklistRealizado(reg.patente, reg.freq, reg.fecha);
-  });
+  // Cargar desde Supabase
+  if(sb && window._empresaId){
+    sb.from('checklists').select('patente, frecuencia, fecha').eq('empresa_id', window._empresaId).then(function(res){
+      if(res.error){ console.warn('Error checklists:', res.error); return; }
+      _checklistCache = (res.data||[]).map(function(c){
+        return { patente:c.patente, freq:c.frecuencia, fecha:c.fecha, estado:'realizado' };
+      });
+      _checklistCache.forEach(function(reg){ marcarChecklistRealizado(reg.patente, reg.freq, reg.fecha); });
+    });
+  } else {
+    _checklistCache.forEach(function(reg){ marcarChecklistRealizado(reg.patente, reg.freq, reg.fecha); });
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -3974,11 +4127,50 @@ function escapeHtml(s){
 // ══════════════════════════════════════════════════════
 //  PERSISTENCIA (localStorage — en prod sería Supabase)
 // ══════════════════════════════════════════════════════
+// Estado local en memoria (cache de la config de la empresa)
+var _configCache = {};
+
 function saveState(key, data){
+  // 1. Cache local rápido (localStorage)
   try{ localStorage.setItem('gesflota_'+( window._currentCompany||'demo')+'_'+key, JSON.stringify(data)); }catch(e){}
+  // 2. Guardar en Supabase (tabla configuracion, columnas JSON)
+  if(sb && window._empresaId){
+    _configCache[key] = data;
+    // Mapear cada key a su columna en la tabla configuracion
+    var update = {};
+    if(key==='alertConfig')      update.alert_config = data;
+    else if(key==='freqConfig')  update.freq_config = data;
+    else if(key==='weekScope')   update.week_scope = (data && data.scope) ? data.scope : 'completa';
+    else if(key==='checklistConfig') update.checklist_config = data;
+    else if(key==='firma')       update.firma = data;
+    // Las que no mapean a columna propia, no se guardan en config (ej: destinatarios, tickets tienen su tabla)
+    if(Object.keys(update).length){
+      update.actualizado_en = new Date().toISOString();
+      sb.from('configuracion').update(update).eq('empresa_id', window._empresaId).then(function(res){
+        if(res.error) console.warn('Error guardando config:', res.error.message);
+      });
+    }
+  }
 }
 function loadState(key){
+  // Primero del cache de Supabase si existe
+  if(_configCache.hasOwnProperty(key)) return _configCache[key];
+  // Fallback localStorage
   try{ var v = localStorage.getItem('gesflota_'+( window._currentCompany||'demo')+'_'+key); return v ? JSON.parse(v) : null; }catch(e){ return null; }
+}
+
+// Cargar toda la configuración de la empresa desde Supabase al iniciar sesión
+function cargarConfiguracion(){
+  if(!sb || !window._empresaId) return;
+  sb.from('configuracion').select('*').eq('empresa_id', window._empresaId).single().then(function(res){
+    if(res.error || !res.data) return;
+    var c = res.data;
+    if(c.alert_config)     _configCache['alertConfig'] = c.alert_config;
+    if(c.freq_config)      _configCache['freqConfig'] = c.freq_config;
+    if(c.week_scope)       _configCache['weekScope'] = { scope: c.week_scope };
+    if(c.checklist_config) _configCache['checklistConfig'] = c.checklist_config;
+    if(c.firma)            _configCache['firma'] = c.firma;
+  });
 }
 
 // ══════════════════════════════════════════════════════
@@ -4104,7 +4296,7 @@ function saveDestinatario(){
   };
   if(_editDestIdx>=0) _destinatarios[_editDestIdx] = dest;
   else _destinatarios.push(dest);
-  saveState('destinatarios', _destinatarios);
+  saveStateLocal('destinatarios', _destinatarios);
   renderDestinatarios();
   showToast('✓ Destinatario guardado','success');
 }
@@ -4148,7 +4340,7 @@ function renderDestinatarios(){
 function deleteDestinatario(i){
   genConfirm('Eliminar destinatario', '¿Eliminar a '+_destinatarios[i].email+'?', function(){
     _destinatarios.splice(i,1);
-    saveState('destinatarios', _destinatarios);
+    saveStateLocal('destinatarios', _destinatarios);
     renderDestinatarios();
     showToast('Destinatario eliminado','success');
   });
@@ -4160,7 +4352,7 @@ function sendToDestinatario(i){
 }
 
 function loadDestinatarios(){
-  var saved = loadState('destinatarios');
+  var saved = loadStateLocal('destinatarios');
   _destinatarios = saved || [];
   renderDestinatarios();
 }
