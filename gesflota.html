@@ -1129,6 +1129,7 @@ footer{
         </div>
         <button class="btn-outline" style="font-size:12px;padding:6px 12px;" onclick="logoutOperario()">Salir</button>
       </div>
+      <div id="opBienvenida" style="display:none;padding:.85rem 1rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);margin-bottom:1rem;font-size:13px;color:var(--cream);line-height:1.5;"></div>
       <button class="btn-gold" style="width:100%;padding:12px;margin-bottom:1rem;" onclick="opNuevoChecklist()">📋 Cargar nuevo check-list</button>
       <!-- Historial (solo jefe/supervisor) -->
       <div id="opHistorialBox" style="display:none;">
@@ -1353,6 +1354,17 @@ footer{
                 <option value="">Check-list: todos</option>
                 <option value="ok">Al día</option>
                 <option value="pend">Pendiente / Sin cargar</option>
+              </select>
+              <select id="flotaOperario" onchange="filterPorOperario()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+                <option value="">Check-list por operario: todos</option>
+              </select>
+              <select id="flotaPuesto" onchange="filterPorPuesto()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+                <option value="">Por puesto: todos</option>
+                <option value="jefe">Jefes</option>
+                <option value="supervisor">Supervisores</option>
+                <option value="operario">Operarios</option>
+                <option value="chofer">Choferes</option>
+                <option value="mantenimiento">Mantenimiento</option>
               </select>
             </div>
             <div style="overflow-x:auto;">
@@ -1995,6 +2007,28 @@ footer{
             <button class="btn-gold" style="font-size:13px;padding:9px 18px;" onclick="saveChecklistConfig()">Guardar configuración</button>
           </div>
 
+          <!-- Constructor de check-lists por puesto -->
+          <div class="app-card" id="checklistBuilderCard" style="padding:1.5rem;margin-top:.75rem;display:none;">
+            <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:.5rem;">🧩 Armá el check-list de cada puesto</div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Cada puesto puede tener su propio check-list. Por ejemplo: el operario revisa el estado del vehículo, mantenimiento carga arreglos y servicios. Elegí el puesto y armá su lista de ítems.</div>
+
+            <div class="field">
+              <label>Puesto a configurar</label>
+              <select id="clbPuesto" onchange="loadChecklistBuilder()">
+                <option value="operario">Operario</option>
+                <option value="chofer">Chofer</option>
+                <option value="mantenimiento">Mantenimiento</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="jefe">Jefe</option>
+              </select>
+            </div>
+
+            <div id="clbItems" style="display:flex;flex-direction:column;gap:.5rem;margin:1rem 0;"></div>
+
+            <button class="btn-outline" style="font-size:13px;padding:9px 16px;width:100%;margin-bottom:.5rem;" onclick="addChecklistItem()">+ Agregar ítem</button>
+            <button class="btn-gold" style="font-size:13px;padding:10px 16px;width:100%;" onclick="saveChecklistBuilder()">Guardar check-list de este puesto</button>
+          </div>
+
           <!-- Personal y accesos al check-list (cuando el checklist está habilitado) -->
           <div class="app-card" id="personalCard" style="padding:1.5rem;margin-top:.75rem;display:none;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:.5rem;">
@@ -2390,27 +2424,27 @@ footer{
       <button class="modal-close" onclick="closeChecklistForm()">×</button>
     </div>
     <div class="modal-body">
+      <!-- Mensaje de bienvenida / motivación -->
+      <div id="clBienvenida" style="display:none;padding:.85rem 1rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);margin-bottom:1rem;font-size:13px;color:var(--cream);line-height:1.5;"></div>
+
       <div class="field">
-        <label>Tipo de vehículo</label>
-        <select id="clTipoVeh" onchange="onClTipoChange()" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;">
-          <option value="pesado">Móvil Pesado</option>
-          <option value="liviano">Móvil Liviano</option>
-        </select>
+        <label>¿Qué vehículo estás revisando?</label>
+        <select id="clPatente" onchange="onClVehiculoChange()" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"></select>
       </div>
-      <div class="field">
-        <label>Frecuencia</label>
-        <select id="clFreqVeh" onchange="onClTipoChange()" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;">
-          <option value="semanal">Semanal</option>
-          <option value="mensual">Mensual</option>
-        </select>
+      <!-- Tipo detectado automáticamente (oculto, se setea solo) -->
+      <input type="hidden" id="clTipoVeh" value="liviano"/>
+      <input type="hidden" id="clFreqVeh" value="semanal"/>
+      <div id="clTipoDetectado" style="display:none;font-size:12px;color:var(--gray);margin:-.5rem 0 .75rem;"></div>
+
+      <!-- Dominio del semi (aparece solo si el vehículo lo requiere) -->
+      <div class="field" id="clSemiDominioField" style="display:none;">
+        <label>Dominio del semirremolque</label>
+        <input type="text" id="clSemiDominio" placeholder="Patente del semi" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
       </div>
-      <div class="field">
-        <label>Vehículo (patente)</label>
-        <select id="clPatente" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"></select>
-      </div>
+
       <div id="clChecklistItems" style="margin-top:1rem;"></div>
       <button class="modal-btn" onclick="submitChecklist()">Guardar check-list</button>
-      <div style="font-size:12px;color:var(--gray);text-align:center;margin-top:.75rem;">Se sincroniza con tu panel y tu Google Sheet</div>
+      <div style="font-size:12px;color:var(--gray);text-align:center;margin-top:.75rem;">Se guarda en el panel de tu empresa</div>
     </div>
   </div>
 </div>
@@ -2942,12 +2976,18 @@ function setTab(el, tabId){
     loadChecklistConfig();
     loadWhiteLabel();
     loadPersonal();
-    // Mostrar sección de personal solo si el checklist está habilitado
+    // Mostrar sección de personal y constructor solo si el checklist está habilitado
     var pc = document.getElementById('personalCard');
     if(pc) pc.style.display = window._checklistIncluded ? 'block' : 'none';
+    var cb = document.getElementById('checklistBuilderCard');
+    if(cb){
+      cb.style.display = window._checklistIncluded ? 'block' : 'none';
+      if(window._checklistIncluded) loadChecklistBuilder();
+    }
   }
   if(tabId==='dash-flota'){
     cambiarPeriodoFlota();
+    cargarOperariosFiltro();
   }
   if(tabId==='dash-soporte'){
     renderTickets();
@@ -3486,25 +3526,64 @@ var _gesAbierto = false;
 var _gesIniciado = false;
 
 var GES_BASE = {
-  saludo: "¡Hola! 👋 Soy Ges, tu asistente de GesFlota. Puedo explicarte cómo funciona la plataforma, los planes, o ayudarte con dudas. ¿En qué te ayudo?",
-  sugerencias: ["¿Qué es GesFlota?","Planes y precios","¿Cómo cargo mi flota?","Check-lists","Soporte"]
+  saludo: "¡Hola! 👋 Soy Ges, tu asistente de GesFlota. Te puedo explicar cómo usar la plataforma en el día a día, resolver dudas o ayudarte si algo no funciona. ¿En qué te ayudo?",
+  sugerencias: ["¿Qué es GesFlota?","Planes y precios","¿Cómo cargo mi flota?","Check-lists","Tengo un problema"]
 };
 
+// Cada respuesta tiene palabras clave (k) y la respuesta (r).
+// El motor elige la que MÁS coincidencias tenga, no la primera.
 var GES_RESPUESTAS = [
-  { k:['que es','qué es','para que sirve','plataforma'], r:"GesFlota es una plataforma para gestionar tu flota de vehículos: controlás VTV, seguros, mantenimiento y check-lists desde un solo panel. Ideal para empresas de construcción e infraestructura que no se pueden permitir imprevistos. 🚛" },
-  { k:['plan','precio','cuesta','vale','cuanto','cuánto','tarifa'], r:"Tenemos 3 planes:\n\n• Básico — $19.000/mes: panel de flota, VTV, seguro, Google Sheet\n• Pro — $39.000/mes: + mantenimiento, notificaciones por email, informes\n• Enterprise — $79.000/mes: + app de check-list, alertas automáticas, IA, white-label\n\nCon pago anual tenés 15% de descuento. 💼" },
-  { k:['cargo','cargar','subir','flota','importar','excel'], r:"Podés cargar tu flota de 2 formas:\n\n1️⃣ Subiendo un Excel con la plantilla (botón 'Descargar plantilla')\n2️⃣ Generando un Google Sheet desde la plataforma\n\nImportante: cargá las patentes sin guiones (AF45632) y las obras sin guiones bajos (Obra Norte). 📊" },
-  { k:['check','checklist','check-list','control'], r:"Los check-lists te permiten registrar el estado de cada vehículo (semanal o mensual). En Enterprise viene la app incluida y podés compartirla por QR o link a tus operarios. En Básico y Pro es un add-on. ✅" },
-  { k:['mantenimiento','arreglo','compra','service','reparac'], r:"En el módulo de Mantenimiento (Pro y Enterprise) cargás arreglos, compras y services. Cada vehículo tiene un historial donde ves todos sus registros, podés agregar observaciones y modificar montos. 🔧" },
-  { k:['alerta','aviso','vencimiento','notificac','recordatorio'], r:"GesFlota te avisa antes de que venzan la VTV, el seguro o los mantenimientos. Configurás la anticipación (1 semana, 15 días o 1 mes) y en Enterprise podés programar alertas automáticas por email. 🔔" },
-  { k:['soporte','ayuda','problema','contacto','ticket'], r:"Para soporte podés abrir un ticket desde el panel (sección Soporte), eligiendo el tema: ventas, soporte técnico, capacitación o pagos. Te respondemos por email dentro de 24-48hs. 📨" },
-  { k:['pago','pagar','transferencia','mercado pago','factura'], r:"Podés pagar por transferencia bancaria o Mercado Pago. Los datos de transferencia aparecen dentro de tu panel una vez que iniciás sesión, por seguridad. Recordá: nunca pedimos pagos por WhatsApp. 💳" },
-  { k:['seguridad','datos','privacidad','seguro mis datos'], r:"Tus datos están aislados: cada empresa solo ve su información. Usamos encriptación y control de acceso. Vos sos el dueño de tus datos y podés exportarlos cuando quieras. 🔒" },
-  { k:['white','marca','logo','personaliz'], r:"En el plan Enterprise tenés white-label: podés reemplazar el nombre y logo por los de tu empresa, tanto en el panel como en los emails que se envían. 🏷️" },
-  { k:['ia','inteligencia','recomendac'], r:"En Enterprise, los informes pueden incluir recomendaciones por IA: analizan tus datos y sugieren acciones de mantenimiento preventivo, optimización de costos y priorización de vehículos. 🤖" },
-  { k:['gracias','genial','perfecto','buenisimo','buenísimo','dale'], r:"¡De nada! 😊 Cualquier otra duda, acá estoy. Y si querés probar GesFlota, podés empezar gratis." },
-  { k:['hola','buenas','buen dia','buen día','hey'], r:"¡Hola! 👋 ¿En qué te puedo ayudar? Puedo contarte sobre los planes, cómo cargar tu flota, los check-lists o lo que necesites." }
+  // ── Qué es / general ──
+  { k:['que es','qué es','para que sirve','para qué sirve','plataforma','de que se trata','información','que hace'], r:"GesFlota es una plataforma para gestionar tu flota de vehículos desde un solo lugar: controlás VTV, seguros, mantenimiento y check-lists. Está pensada para empresas de construcción e infraestructura que necesitan tener todo bajo control y evitar imprevistos. 🚛" },
+  // ── Planes ──
+  { k:['plan','precio','cuesta','vale','cuanto','cuánto','tarifa','valor','mensual','anual'], r:"Tenemos 3 planes (ARS/mes):\n\n• Básico $19.000 — panel de flota, VTV, seguro\n• Pro $39.000 — + mantenimiento, notificaciones por email, informes\n• Enterprise $79.000 — + app de check-list, alertas automáticas, IA, white-label\n\nCon pago anual ahorrás 15%. 💼" },
+  { k:['diferencia','comparar','cual elijo','cuál elijo','que plan','qué plan','recomendas','recomendás'], r:"Te oriento rápido:\n\n• Si tenés pocos vehículos y querés orden básico → Básico\n• Si necesitás cargar mantenimiento y recibir avisos → Pro\n• Si querés check-list para operarios, alertas automáticas y marca propia → Enterprise\n\nEl check-list también se puede activar como add-on en Básico y Pro. 👍" },
+  // ── Cargar flota ──
+  { k:['cargo','cargar','subir','flota','importar','excel','planilla','agregar vehiculo','agregar vehículo','sumar vehiculo'], r:"Para cargar tu flota tenés 2 formas:\n\n1️⃣ Cargar vehículos de a uno con el botón '+ Cargar vehículo'\n2️⃣ Subir un Excel con la plantilla (botón 'Descargar plantilla', lo completás y lo subís)\n\nTip: cargá las patentes sin guiones (AF45632). Para máquinas sin patente (autoelevador) usá el N° interno. 📊" },
+  { k:['patente','dominio','sin guion','sin guión','formato patente'], r:"Cargá las patentes sin guiones ni espacios (ej: AF45632 o AB123CD). Si el vehículo no tiene patente, como un autoelevador, podés identificarlo por su N° interno. 🔢" },
+  // ── Check-lists ──
+  { k:['check','checklist','check-list','control de vehiculo','revision','revisión'], r:"El check-list te permite registrar el estado de cada vehículo. Lo podés cargar vos desde el panel, o tu personal desde el celular escaneando un QR o con un link. Viene incluido en Enterprise y como add-on en Básico/Pro. ✅" },
+  { k:['qr','link','operario','chofer','personal','pin','acceso personal'], r:"Tu personal carga check-lists sin entrar a tu panel: en Configuración → 'Personal y accesos', das de alta a cada persona (nombre + puesto) y el sistema genera un PIN. Les pasás el QR o el link, ellos entran con su nombre y PIN, y solo pueden cargar check-lists. No ven tus datos ni costos. 🔐" },
+  { k:['frecuencia','cada cuanto','cada cuánto','cuantas veces','cuántas veces'], r:"Cuando das de alta a una persona, configurás cada cuánto debe cargar el check-list (diario, 2 o 3 veces por semana, semanal o mensual). Después en el panel de flota ves si cada vehículo tiene el check-list al día o pendiente. 📅" },
+  { k:['armar checklist','configurar checklist','items','ítems','tipo de checklist','checklist por puesto'], r:"En Configuración → 'Armá el check-list de cada puesto' podés crear listas distintas: por ejemplo el operario revisa el estado del vehículo y mantenimiento carga arreglos. Cada ítem puede tener distintas respuestas (bien/mal/NA, mercadería, documentación, sí/no, texto libre). 🧩" },
+  // ── Mantenimiento ──
+  { k:['mantenimiento','arreglo','compra','service','reparac','taller','repuesto'], r:"En Mantenimiento (Pro y Enterprise) cargás arreglos, compras y services. Cada vehículo tiene su historial con el botón '📋 Historial', donde ves todos los registros, agregás observaciones y modificás montos si se suma un gasto nuevo. 🔧" },
+  // ── Alertas / VTV / Seguro ──
+  { k:['alerta','aviso','vencimiento','notificac','recordatorio','vence'], r:"GesFlota te avisa antes de que venzan la VTV, el seguro o un mantenimiento. La anticipación la configurás vos (7, 15 o 30 días). En Enterprise podés programar alertas automáticas por email a quien quieras. 🔔" },
+  { k:['vtv','rto','verificacion tecnica','verificación técnica'], r:"Cargá la fecha de VTV de cada vehículo (con el lápiz ✏️ en la fila). El sistema calcula solo si está vigente, por vencer o vencida, y lo muestra en el panel de VTV y en Alertas. 🗓️" },
+  { k:['seguro','poliza','póliza','aseguradora'], r:"Cargá la fecha de vencimiento del seguro de cada vehículo. El panel de Seguros te muestra cuántos están vigentes, por vencer o vencidos, y te avisa con anticipación. 🛡️" },
+  // ── Informes ──
+  { k:['informe','reporte','exportar','pdf','descargar informe','word'], r:"En Informes (Pro y Enterprise) generás reportes de tu flota, vencimientos y check-lists. Los podés exportar a Excel y PDF. En Enterprise, los informes pueden incluir recomendaciones por IA. 📈" },
+  // ── Pagos ──
+  { k:['pago','pagar','transferencia','mercado pago','factura','abonar','cobro'], r:"Podés pagar por transferencia o Mercado Pago. Por seguridad, los datos de pago aparecen dentro de tu panel ya logueado. ⚠️ Importante: MercaTeck nunca pide pagos por WhatsApp ni por fuera de la plataforma. 💳" },
+  // ── Seguridad / datos ──
+  { k:['seguridad','aislamiento','privacidad','mis datos seguros','proteccion','protección','hackeo','backup','respaldo'], r:"Cada empresa ve solo su propia información: los datos están aislados a nivel de base de datos. Usamos control de acceso y respaldos. Vos sos el dueño de tus datos y los podés exportar cuando quieras. 🔒" },
+  // ── White-label / IA ──
+  { k:['white','marca propia','logo','personalizar','marca blanca'], r:"En Enterprise tenés white-label: reemplazás el nombre y logo por los de tu empresa, en el panel y en los emails. 🏷️" },
+  { k:['ia','inteligencia artificial','recomendacion','recomendación','sugerencia'], r:"En Enterprise, los informes pueden incluir recomendaciones por IA: analizan tus datos y sugieren mantenimiento preventivo, optimización de costos y qué vehículos priorizar. 🤖" },
+  // ── Tema claro / uso de la interfaz ──
+  { k:['tema','oscuro','claro','modo noche','color de fondo'], r:"Podés cambiar entre tema claro y oscuro con el botón 🌙/☀️ arriba a la derecha. Tu preferencia queda guardada para la próxima vez. 🎨" },
+  { k:['como uso','cómo uso','empezar','primeros pasos','arrancar','tutorial','como funciona el panel'], r:"Para arrancar:\n\n1️⃣ Cargá tu flota (botón '+ Cargar vehículo' o subiendo un Excel)\n2️⃣ Completá las fechas de VTV y seguro de cada uno\n3️⃣ Si tenés check-list, configurá tu personal en Configuración\n4️⃣ Mirá el panel: te muestra vencimientos, alertas y estado de cada vehículo\n\n¿Querés que profundice en alguno? 🚀" },
+  // ── Soporte ──
+  { k:['soporte','contacto','hablar con alguien','atencion','atención','telefono','teléfono','mail','email'], r:"Para soporte, abrí un ticket desde el panel (sección Soporte) eligiendo el tema: ventas, soporte técnico, capacitación o pagos. Te responden por email a mercateckinfo@gmail.com dentro de 24-48hs hábiles. 📨" },
+  // ── Cancelar / baja ──
+  { k:['cancelar','baja','dar de baja','dejar de usar','suspender mi cuenta'], r:"Podés cancelar cuando quieras, sin permanencia. Escribinos un ticket desde Soporte (tema Pagos) y lo gestionamos. Tus datos los podés exportar antes de irte. 👋" },
+  // ── Saludos / cortesía ──
+  { k:['gracias','genial','perfecto','buenisimo','buenísimo','dale','barbaro','bárbaro','joya'], r:"¡De nada! 😊 Cualquier otra cosa, acá estoy. Si querés probar GesFlota, podés empezar gratis." },
+  { k:['hola','buenas','buen dia','buen día','hey','que tal','qué tal','holaa'], r:"¡Hola! 👋 ¿En qué te puedo ayudar? Te puedo contar de los planes, cómo cargar tu flota, los check-lists, o ayudarte si algo no te funciona." }
 ];
+
+// Respuestas a PROBLEMAS / ERRORES comunes (uso cotidiano)
+var GES_PROBLEMAS = [
+  { k:['no puedo entrar','no me deja entrar','no inicia sesion','no inicia sesión','error login','no puedo ingresar','olvide mi contraseña','olvidé mi contraseña','recuperar contraseña'], r:"Si no podés entrar:\n\n• Verificá que el email y la contraseña sean correctos\n• Si olvidaste la contraseña, tocá 'Olvidé mi contraseña' en el login y te llega un email para recuperarla\n• Si registraste la cuenta recién, revisá que hayas confirmado el email\n\nSi sigue sin andar, escribinos por Soporte. 🔑" },
+  { k:['no aparece','no se carga','no se ve','no figura','no me aparece','cargue y no','no se guardo','no se guardó','desaparecio','desapareció'], r:"Si cargaste algo y no aparece:\n\n• Refrescá la página (a veces queda mostrando datos viejos)\n• Verificá que estés en la empresa correcta\n• Si subiste un Excel, revisá que tenga la columna 'Patente' y el formato de la plantilla\n\nSi el problema sigue, contame qué cargaste exactamente y te ayudo. 🔄" },
+  { k:['no me llega el qr','no funciona el qr','qr no funciona','no anda el qr','no funciona el link','el operario no puede','no carga el checklist','no puede cargar','problema con el qr','problema con el link'], r:"Si tu personal no puede cargar el check-list:\n\n• Confirmá que diste de alta a la persona en Configuración → Personal\n• Verificá que esté usando el nombre y PIN exactos\n• El link debe abrirse en el navegador del celular (no dentro de otra app)\n\n¿Querés que te explique cómo generar el acceso paso a paso? 📲" },
+  { k:['no me funciona','no anda','no sirve','esta roto','está roto','error','falla','problema','bug','se traba','se cierra'], r:"Lamento el inconveniente. Para ayudarte mejor:\n\n• Contame qué estabas haciendo cuando pasó\n• Probá refrescar la página\n• Si es algo visual, fijate de tener el navegador actualizado\n\nSi es algo puntual, abrí un ticket en Soporte describiendo el problema y lo resolvemos. 🛠️" },
+  { k:['fecha mal','fecha incorrecta','dia equivocado','día equivocado','aparece otra fecha'], r:"Si una fecha aparece distinta, verificá que la hayas cargado en formato día/mes/año. Si editaste la VTV o el seguro, el sistema recalcula el estado automáticamente al guardar. Si ves algo raro, refrescá la página. 🗓️" }
+];
+
+// Temas de DATOS PRIVADOS — el bot NO los revela
+var GES_PRIVADO_KW = ['mi contraseña','contraseña de','datos de la empresa','dato personal','telefono de','teléfono de','direccion de','dirección de','cuit de','dni de','email de','cuanto factura','cuánto factura','cuanto gana','cuánto gana','datos de otra','otra empresa','informacion privada','información privada','quien es el dueño','quién es el dueño','cuantos clientes','cuántos clientes','facturacion de','facturación de'];
 
 function toggleGes(){
   _gesAbierto = !_gesAbierto;
@@ -3553,26 +3632,201 @@ function gesEnviar(){
 function gesProcesarPregunta(texto){
   gesAgregarMsg(texto, 'user');
   document.getElementById('gesSuggestions').innerHTML = '';
-  // Buscar respuesta por coincidencia de palabras clave
-  var lower = texto.toLowerCase();
-  var encontrada = null;
-  for(var i=0;i<GES_RESPUESTAS.length;i++){
-    for(var j=0;j<GES_RESPUESTAS[i].k.length;j++){
-      if(lower.indexOf(GES_RESPUESTAS[i].k[j])>=0){ encontrada = GES_RESPUESTAS[i].r; break; }
+  var lower = ' '+texto.toLowerCase()+' ';
+  var respuesta = null;
+
+  // 1. PRIMERO: ¿pregunta por datos privados? → respuesta de protección
+  for(var d=0; d<GES_PRIVADO_KW.length; d++){
+    if(lower.indexOf(GES_PRIVADO_KW[d])>=0){
+      respuesta = "Esa información es privada y no la puedo compartir. 🔒 En GesFlota, los datos de cada empresa (contraseñas, datos personales, facturación, etc.) son confidenciales y están aislados: ni yo ni otras empresas tenemos acceso a ellos. Si necesitás tus propios datos, los ves dentro de tu panel ya logueado. Si es una consulta de seguridad, escribinos por Soporte.";
+      break;
     }
-    if(encontrada) break;
   }
-  if(!encontrada){
-    encontrada = "Buena pregunta. No estoy seguro de tener esa respuesta exacta, pero podés:\n\n• Abrir un ticket en la sección Soporte\n• Escribir a mercateckinfo@gmail.com\n\n¿Querés que te cuente sobre los planes, cómo cargar tu flota o los check-lists?";
+
+  // 2. Buscar la MEJOR coincidencia por puntaje (cuántas keywords matchean)
+  if(!respuesta){
+    var mejor = null, mejorScore = 0;
+    function evaluar(lista){
+      lista.forEach(function(item){
+        var score = 0;
+        item.k.forEach(function(kw){
+          if(lower.indexOf(kw)>=0){
+            // palabras más largas valen más (más específicas)
+            score += kw.length;
+          }
+        });
+        if(score > mejorScore){ mejorScore = score; mejor = item.r; }
+      });
+    }
+    evaluar(GES_PROBLEMAS);   // problemas tienen prioridad si coinciden fuerte
+    evaluar(GES_RESPUESTAS);
+    if(mejor && mejorScore >= 3){ respuesta = mejor; }
   }
-  // Simular que "piensa"
+
+  // 3. Fallback útil si no encontró nada
+  if(!respuesta){
+    respuesta = "No estoy seguro de haber entendido. 🤔 Te puedo ayudar con:\n\n• Cómo cargar tu flota y check-lists\n• Planes y precios\n• VTV, seguros y alertas\n• Problemas al entrar o cargar datos\n\nProbá reformular tu pregunta, o si es algo puntual, abrí un ticket en Soporte y te ayudamos. ✍️";
+  }
+
   setTimeout(function(){
-    gesAgregarMsg(encontrada, 'bot');
+    gesAgregarMsg(respuesta, 'bot');
     renderGesSugerencias(GES_BASE.sugerencias);
-  }, 500);
+  }, 450);
 }
 
 function closeVehDetail(){ document.getElementById('vehDetailModal').classList.remove('open'); }
+
+// ══════════════════════════════════════════════════════
+//  MODO OFFLINE — guardar check-lists sin señal y sincronizar
+// ══════════════════════════════════════════════════════
+function _colaOffline(){
+  try{ return JSON.parse(localStorage.getItem('gesflota_cola_offline')||'[]'); }catch(e){ return []; }
+}
+function _guardarColaOffline(cola){
+  try{ localStorage.setItem('gesflota_cola_offline', JSON.stringify(cola)); }catch(e){}
+}
+
+function encolarChecklistOffline(payload){
+  var cola = _colaOffline();
+  cola.push(payload);
+  _guardarColaOffline(cola);
+}
+
+function sincronizarOffline(){
+  if(!sb || !navigator.onLine) return;
+  var cola = _colaOffline();
+  if(!cola.length) return;
+  var pendientes = [];
+  var procesadas = 0;
+  cola.forEach(function(item){
+    sb.rpc('guardar_checklist_operario', item).then(function(res){
+      procesadas++;
+      if(res.error){ pendientes.push(item); }
+      if(procesadas===cola.length){
+        _guardarColaOffline(pendientes);
+        if(cola.length-pendientes.length > 0){
+          showToast('✓ '+(cola.length-pendientes.length)+' check-list(s) sincronizado(s)','success');
+        }
+      }
+    });
+  });
+}
+
+// Sincronizar automáticamente cuando vuelve la conexión
+window.addEventListener('online', function(){
+  showToast('Conexión recuperada. Sincronizando...','success');
+  sincronizarOffline();
+});
+
+function hayPendientesOffline(){
+  return _colaOffline().length;
+}
+
+// ══════════════════════════════════════════════════════
+//  CONSTRUCTOR DE CHECK-LISTS POR PUESTO
+// ══════════════════════════════════════════════════════
+// Tipos de respuesta disponibles para cada ítem
+var TIPOS_RESPUESTA = {
+  estado:      { label:'Estado (Bien / Mal / N/A)', opciones:['Bien','Mal','N/A'] },
+  mercaderia:  { label:'Mercadería (Buen estado / Mal estado / No tenía / N/A)', opciones:['Buen estado','Mal estado','No tenía','N/A'] },
+  documentacion:{ label:'Documentación (Corresponde / No corresponde)', opciones:['Corresponde','No corresponde'] },
+  siNo:        { label:'Sí / No', opciones:['Sí','No'] },
+  texto:       { label:'Texto libre', opciones:[] }
+};
+
+// Ítems por defecto según puesto (plantilla inicial editable)
+var CHECKLIST_DEFAULTS = {
+  operario: [
+    {texto:'Estado general del vehículo', tipo:'estado'},
+    {texto:'Niveles (aceite, agua, líquido de frenos)', tipo:'estado'},
+    {texto:'Luces y señalización', tipo:'estado'},
+    {texto:'Neumáticos', tipo:'estado'},
+    {texto:'Documentación del vehículo', tipo:'documentacion'}
+  ],
+  chofer: [
+    {texto:'Estado general del vehículo', tipo:'estado'},
+    {texto:'Mercadería / carga', tipo:'mercaderia'},
+    {texto:'Documentación interna de la empresa', tipo:'documentacion'},
+    {texto:'Combustible suficiente', tipo:'siNo'}
+  ],
+  mantenimiento: [
+    {texto:'Tipo de intervención (arreglo / servicio)', tipo:'texto'},
+    {texto:'Repuestos utilizados', tipo:'texto'},
+    {texto:'Estado tras la intervención', tipo:'estado'},
+    {texto:'Requiere seguimiento', tipo:'siNo'}
+  ],
+  supervisor: [
+    {texto:'Verificación general de la unidad', tipo:'estado'},
+    {texto:'Documentación al día', tipo:'documentacion'}
+  ],
+  jefe: [
+    {texto:'Verificación general', tipo:'estado'}
+  ]
+};
+
+var _clbItems = [];
+
+function loadChecklistBuilder(){
+  var puesto = document.getElementById('clbPuesto').value;
+  var cfg = loadState('checklistConfig') || {};
+  // Si ya hay config guardada para ese puesto, usarla; si no, la plantilla por defecto
+  if(cfg[puesto] && cfg[puesto].length){
+    _clbItems = JSON.parse(JSON.stringify(cfg[puesto]));
+  } else {
+    _clbItems = JSON.parse(JSON.stringify(CHECKLIST_DEFAULTS[puesto]||[]));
+  }
+  renderChecklistBuilder();
+}
+
+function renderChecklistBuilder(){
+  var cont = document.getElementById('clbItems');
+  if(!cont) return;
+  cont.innerHTML = '';
+  if(!_clbItems.length){
+    cont.innerHTML = '<div style="font-size:12px;color:var(--gray);text-align:center;padding:.75rem;border:1px dashed var(--bdr);border-radius:var(--r);">Sin ítems. Agregá el primero.</div>';
+    return;
+  }
+  _clbItems.forEach(function(item, idx){
+    var div = document.createElement('div');
+    div.style.cssText = 'display:flex;gap:.5rem;align-items:center;padding:.5rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);';
+    // Texto del ítem
+    var inp = document.createElement('input');
+    inp.type='text'; inp.value=item.texto; inp.placeholder='Descripción del ítem';
+    inp.style.cssText='flex:1;min-width:100px;background:transparent;border:none;color:var(--white);font-size:13px;outline:none;';
+    inp.oninput=(function(i){ return function(e){ _clbItems[i].texto=e.target.value; }; })(idx);
+    // Tipo de respuesta
+    var selT = document.createElement('select');
+    selT.style.cssText='background:var(--card);border:1px solid var(--bdr);color:var(--white);font-size:11px;border-radius:5px;padding:4px;max-width:130px;';
+    Object.keys(TIPOS_RESPUESTA).forEach(function(k){
+      var o=document.createElement('option'); o.value=k; o.textContent=TIPOS_RESPUESTA[k].label.split(' (')[0];
+      if(item.tipo===k) o.selected=true;
+      selT.appendChild(o);
+    });
+    selT.onchange=(function(i){ return function(e){ _clbItems[i].tipo=e.target.value; }; })(idx);
+    // Botón borrar
+    var del = document.createElement('button');
+    del.className='btn-edit-veh'; del.textContent='🗑️'; del.style.cssText='font-size:11px;padding:4px 7px;';
+    del.onclick=(function(i){ return function(){ _clbItems.splice(i,1); renderChecklistBuilder(); }; })(idx);
+    div.appendChild(inp); div.appendChild(selT); div.appendChild(del);
+    cont.appendChild(div);
+  });
+}
+
+function addChecklistItem(){
+  _clbItems.push({texto:'', tipo:'estado'});
+  renderChecklistBuilder();
+}
+
+function saveChecklistBuilder(){
+  var puesto = document.getElementById('clbPuesto').value;
+  // Filtrar ítems vacíos
+  var items = _clbItems.filter(function(it){ return it.texto && it.texto.trim(); });
+  if(!items.length){ showToast('Agregá al menos un ítem con descripción','error'); return; }
+  var cfg = loadState('checklistConfig') || {};
+  cfg[puesto] = items;
+  saveState('checklistConfig', cfg);
+  showToast('✓ Check-list de '+puesto+' guardado ('+items.length+' ítems)','success');
+}
 
 // ══════════════════════════════════════════════════════
 //  PERSONAL Y ACCESOS AL CHECK-LIST
@@ -3616,13 +3870,14 @@ function renderPersonal(){
     cont.innerHTML = '<div style="font-size:12px;color:var(--gray);text-align:center;padding:.75rem;border:1px dashed var(--bdr);border-radius:var(--r);">Todavía no agregaste personal.</div>';
     return;
   }
-  var puestoLabel = {jefe:'Jefe',supervisor:'Supervisor',operario:'Operario',chofer:'Chofer'};
+  var puestoLabel = {jefe:'Jefe',supervisor:'Supervisor',operario:'Operario',chofer:'Chofer',mantenimiento:'Mantenimiento'};
+  var freqLabel = {diario:'Diario','3sem':'3x semana','2sem':'2x semana',semanal:'Semanal',mensual:'Mensual'};
   _personal.forEach(function(p){
     var div = document.createElement('div');
     div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.7rem .85rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);flex-wrap:wrap;';
     div.innerHTML = '<div style="flex:1;min-width:120px;">'
       +'<div style="font-size:13px;color:var(--white);font-weight:500;">'+escapeHtml(p.nombre)+'</div>'
-      +'<div style="font-size:11px;color:var(--gray);">'+escapeHtml(puestoLabel[p.puesto]||p.puesto)+'</div></div>'
+      +'<div style="font-size:11px;color:var(--gray);">'+escapeHtml(puestoLabel[p.puesto]||p.puesto)+' · '+escapeHtml(freqLabel[p.frecuencia]||'Semanal')+'</div></div>'
       +'<div style="text-align:center;">'
       +'<div style="font-size:10px;color:var(--gray);">PIN</div>'
       +'<div style="font-size:15px;font-family:var(--font-mono);color:var(--gold);font-weight:700;letter-spacing:1px;">'+escapeHtml(p.pin)+'</div></div>';
@@ -3646,7 +3901,14 @@ function openPersonalForm(){
   genPrompt('Agregar persona', [
     {id:'nombre', label:'Nombre completo', placeholder:'Juan Pérez'},
     {id:'puesto', label:'Puesto', type:'select', options:[
-      {v:'operario',t:'Operario'},{v:'chofer',t:'Chofer'},{v:'supervisor',t:'Supervisor'},{v:'jefe',t:'Jefe'}
+      {v:'operario',t:'Operario'},{v:'chofer',t:'Chofer'},{v:'mantenimiento',t:'Mantenimiento'},{v:'supervisor',t:'Supervisor'},{v:'jefe',t:'Jefe'}
+    ]},
+    {id:'frecuencia', label:'¿Cada cuánto debe cargar el check-list?', type:'select', options:[
+      {v:'diario',t:'Todos los días'},
+      {v:'3sem',t:'3 veces por semana'},
+      {v:'2sem',t:'2 veces por semana'},
+      {v:'semanal',t:'1 vez por semana'},
+      {v:'mensual',t:'1 vez por mes'}
     ]}
   ], function(v){
     if(!v.nombre){ showToast('Ingresá el nombre','error'); return; }
@@ -3656,6 +3918,7 @@ function openPersonalForm(){
         empresa_id: window._empresaId,
         nombre: v.nombre,
         puesto: v.puesto,
+        frecuencia: v.frecuencia,
         pin: pin
       }).then(function(res){
         if(res.error){
@@ -3667,7 +3930,7 @@ function openPersonalForm(){
         loadPersonal();
       });
     } else {
-      _personal.push({ id:'local_'+Date.now(), nombre:v.nombre, puesto:v.puesto, pin:pin });
+      _personal.push({ id:'local_'+Date.now(), nombre:v.nombre, puesto:v.puesto, frecuencia:v.frecuencia, pin:pin });
       renderPersonal();
       showToast('✓ '+v.nombre+' agregado. PIN: '+pin,'success');
     }
@@ -3748,7 +4011,7 @@ function loginOperario(){
       err.textContent='Nombre o PIN incorrecto.'; err.style.display='block';
       return;
     }
-    _opActual = { nombre:nombre, pin:pin, puesto:res.data[0].puesto };
+    _opActual = { nombre:nombre, pin:pin, puesto:res.data[0].puesto, frecuencia:res.data[0].frecuencia||'semanal' };
     mostrarPanelOperario();
   });
 }
@@ -3756,13 +4019,29 @@ function loginOperario(){
 function mostrarPanelOperario(){
   document.getElementById('operarioLoginBox').style.display='none';
   document.getElementById('operarioPanelBox').style.display='block';
-  var puestoLabel = {jefe:'Jefe',supervisor:'Supervisor',operario:'Operario',chofer:'Chofer'};
+  var puestoLabel = {jefe:'Jefe',supervisor:'Supervisor',operario:'Operario',chofer:'Chofer',mantenimiento:'Mantenimiento'};
   document.getElementById('opSaludo').textContent = 'Hola, '+_opActual.nombre;
   document.getElementById('opPuesto').textContent = puestoLabel[_opActual.puesto]||_opActual.puesto;
+  // Mensaje de bienvenida motivacional
+  var msgs = [
+    'Tu control de hoy mantiene a todo el equipo seguro. ¡Gracias por tu compromiso! 💪',
+    'Cada check-list que cargás previene un problema. Tu trabajo importa. 🛡️',
+    'Un vehículo revisado es un viaje más seguro. ¡Gracias por cuidarlos! 🚛',
+    'Tu atención al detalle hace la diferencia. ¡A cargar el check-list! ✅',
+    'Revisar bien hoy evita parar mañana. ¡Contamos con vos! 🔧'
+  ];
+  var bienv = document.getElementById('opBienvenida');
+  if(bienv){ bienv.textContent = msgs[Math.floor(Math.random()*msgs.length)]; bienv.style.display='block'; }
   // Jefe y supervisor ven historial
   var verHist = (_opActual.puesto==='jefe' || _opActual.puesto==='supervisor');
   document.getElementById('opHistorialBox').style.display = verHist ? 'block' : 'none';
   if(verHist) cargarHistorialOperario();
+  // Intentar sincronizar check-lists que quedaron offline
+  if(hayPendientesOffline()){
+    var bienv2 = document.getElementById('opBienvenida');
+    if(bienv2) bienv2.textContent += ' (Tenés '+hayPendientesOffline()+' check-list sin sincronizar, se enviarán con señal)';
+    sincronizarOffline();
+  }
 }
 
 function logoutOperario(){
@@ -3790,12 +4069,32 @@ function opNuevoChecklist(){
 function cargarHistorialOperario(){
   var cont = document.getElementById('opHistorial');
   cont.innerHTML = '<div style="font-size:12px;color:var(--gray);">Cargando...</div>';
-  // El historial usa la sesión anon; mostramos lo que devuelva (RLS permite ver de su empresa vía función)
-  sb.rpc('vehiculos_para_checklist', {
-    p_empresa_id: window._opEmpresaId, p_nombre:_opActual.nombre, p_pin:_opActual.pin
+  if(!sb){ cont.innerHTML='<div style="font-size:12px;color:var(--gray);">Sin conexión.</div>'; return; }
+  sb.rpc('historial_checklist_empresa', {
+    p_empresa_id: window._opEmpresaId,
+    p_nombre: _opActual.nombre,
+    p_pin: _opActual.pin
   }).then(function(res){
-    // Para el historial real necesitaríamos otra función; por ahora mostramos resumen
-    cont.innerHTML = '<div style="font-size:12px;color:var(--gray);padding:.5rem;">El detalle de check-lists cargados se ve desde el panel del administrador.</div>';
+    if(res.error){
+      cont.innerHTML = '<div style="font-size:12px;color:var(--gray);">No se pudo cargar el historial.</div>';
+      return;
+    }
+    var hist = res.data || [];
+    if(!hist.length){
+      cont.innerHTML = '<div style="font-size:12px;color:var(--gray);padding:.5rem;">Todavía no se cargaron check-lists.</div>';
+      return;
+    }
+    cont.innerHTML = '';
+    hist.forEach(function(h){
+      var fecha = h.fecha ? new Date(h.fecha+'T00:00:00').toLocaleDateString('es-AR') : '—';
+      var div = document.createElement('div');
+      div.style.cssText='padding:.6rem .75rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);';
+      div.innerHTML = '<div style="display:flex;justify-content:space-between;gap:.5rem;">'
+        +'<span style="font-size:13px;color:var(--white);font-weight:600;font-family:var(--font-mono);">'+escapeHtml(h.patente||'—')+'</span>'
+        +'<span style="font-size:11px;color:var(--gray);">'+fecha+'</span></div>'
+        +'<div style="font-size:11px;color:var(--gray);margin-top:2px;">Cargó: '+escapeHtml(h.operario||'—')+'</div>';
+      cont.appendChild(div);
+    });
   });
 }
 
@@ -4190,6 +4489,7 @@ function cargarVehiculos(){
   sb.from('vehiculos').select('*').eq('empresa_id', window._empresaId).order('creado_en',{ascending:true}).then(function(res){
     if(res.error){ console.warn('Error cargando vehículos:', res.error); return; }
     var vehiculos = res.data || [];
+    window._vehCacheChecklist = vehiculos; // para detección de tipo en checklist del admin
     // Limpiar tabla (los datos demo) y cargar los reales
     if(tbody) tbody.innerHTML = '';
     vehiculos.forEach(function(veh){
@@ -4215,6 +4515,108 @@ function cargarVehiculos(){
 }
 
 // Genera los paneles de VTV, seguro y alertas a partir de los vehículos
+// Filtro: ver check-lists cargados por un operario específico
+function cargarOperariosFiltro(){
+  if(!sb || !window._empresaId) return;
+  sb.from('checklists').select('operario').eq('empresa_id', window._empresaId).then(function(res){
+    if(res.error || !res.data) return;
+    var operarios = {};
+    res.data.forEach(function(c){ if(c.operario) operarios[c.operario]=true; });
+    var sel = document.getElementById('flotaOperario');
+    if(!sel) return;
+    sel.innerHTML = '<option value="">Check-list por operario: todos</option>';
+    Object.keys(operarios).forEach(function(op){
+      var o = document.createElement('option'); o.value=op; o.textContent=op;
+      sel.appendChild(o);
+    });
+  });
+}
+
+function filterPorOperario(){
+  var sel = document.getElementById('flotaOperario');
+  var op = sel ? sel.value : '';
+  var info = document.getElementById('operarioInfo');
+  if(!op){
+    document.querySelectorAll('#flotaBody tr').forEach(function(r){ if(r.getAttribute('data-pat')) r.style.display=''; });
+    if(info) info.style.display='none';
+    return;
+  }
+  if(!sb || !window._empresaId) return;
+  sb.from('checklists').select('patente, fecha').eq('empresa_id', window._empresaId).eq('operario', op).then(function(res){
+    if(res.error){ return; }
+    var conteo = {};
+    (res.data||[]).forEach(function(c){ conteo[c.patente] = (conteo[c.patente]||0)+1; });
+    if(!info){
+      info = document.createElement('div');
+      info.id = 'operarioInfo';
+      info.style.cssText = 'padding:.85rem 1rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);margin-bottom:1rem;font-size:13px;color:var(--cream);';
+      var tabla = document.getElementById('flotaTable');
+      if(tabla && tabla.parentNode) tabla.parentNode.insertBefore(info, tabla);
+    }
+    info.style.display='block';
+    var lineas = Object.keys(conteo).map(function(pat){
+      return '<strong>'+escapeHtml(pat)+'</strong>: '+conteo[pat]+(conteo[pat]===1?' vez':' veces');
+    });
+    info.innerHTML = '📋 Check-lists cargados por <strong>'+escapeHtml(op)+'</strong>:<br>'
+      + (lineas.length ? lineas.join(' · ') : 'Sin cargas registradas');
+  });
+}
+
+function filterPorPuesto(){
+  var sel = document.getElementById('flotaPuesto');
+  var puesto = sel ? sel.value : '';
+  var info = document.getElementById('operarioInfo');
+  if(!puesto){
+    if(info) info.style.display='none';
+    return;
+  }
+  if(!sb || !window._empresaId) return;
+  // 1. Traer el personal de ese puesto
+  sb.from('usuarios_empresa').select('nombre').eq('empresa_id', window._empresaId).eq('puesto', puesto).then(function(resP){
+    if(resP.error){ return; }
+    var nombres = (resP.data||[]).map(function(p){ return p.nombre.toLowerCase(); });
+    if(!nombres.length){
+      _mostrarInfoOperario('No hay personal con el puesto seleccionado.');
+      return;
+    }
+    // 2. Traer los checklists y filtrar por esos nombres
+    sb.from('checklists').select('patente, operario, fecha').eq('empresa_id', window._empresaId).then(function(resC){
+      if(resC.error){ return; }
+      var delPuesto = (resC.data||[]).filter(function(c){ return c.operario && nombres.indexOf(c.operario.toLowerCase())>=0; });
+      var puestoLabel = {jefe:'Jefes',supervisor:'Supervisores',operario:'Operarios',chofer:'Choferes',mantenimiento:'Mantenimiento'};
+      if(!delPuesto.length){
+        _mostrarInfoOperario('El personal de '+(puestoLabel[puesto]||puesto)+' todavía no cargó check-lists.');
+        return;
+      }
+      // Contar por persona
+      var porPersona = {};
+      delPuesto.forEach(function(c){
+        if(!porPersona[c.operario]) porPersona[c.operario]={};
+        porPersona[c.operario][c.patente]=(porPersona[c.operario][c.patente]||0)+1;
+      });
+      var html = '📋 Check-lists de <strong>'+(puestoLabel[puesto]||puesto)+'</strong>:<br>';
+      Object.keys(porPersona).forEach(function(persona){
+        var pats = Object.keys(porPersona[persona]).map(function(p){ return escapeHtml(p)+' ('+porPersona[persona][p]+')'; });
+        html += '<div style="margin-top:4px;"><strong>'+escapeHtml(persona)+'</strong>: '+pats.join(', ')+'</div>';
+      });
+      _mostrarInfoOperario(html);
+    });
+  });
+}
+
+function _mostrarInfoOperario(html){
+  var info = document.getElementById('operarioInfo');
+  if(!info){
+    info = document.createElement('div');
+    info.id = 'operarioInfo';
+    info.style.cssText = 'padding:.85rem 1rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);margin-bottom:1rem;font-size:13px;color:var(--cream);';
+    var tabla = document.getElementById('flotaTable');
+    if(tabla && tabla.parentNode) tabla.parentNode.insertBefore(info, tabla);
+  }
+  info.style.display='block';
+  info.innerHTML = html;
+}
+
 function actualizarPanelesDerivados(vehiculos){
   var vtvBody = document.getElementById('vtvBody');
   var segBody = document.getElementById('seguroBody');
@@ -4368,21 +4770,91 @@ var CHECKLIST_ITEMS = {
 };
 
 function openChecklistForm(){
+  window._opModoCarga = false; // es el admin, no un operario
   var sel = document.getElementById('clPatente');
   sel.innerHTML = '';
   getPatentesDisponibles().forEach(function(p){
     var o = document.createElement('option'); o.value=p; o.textContent=p; sel.appendChild(o);
   });
-  onClTipoChange();
+  onClVehiculoChange();
   document.getElementById('checklistFormModal').classList.add('open');
 }
 function closeChecklistForm(){ document.getElementById('checklistFormModal').classList.remove('open'); }
+
+function onClVehiculoChange(){
+  // Detectar el tipo del vehículo seleccionado por su patente/ID
+  var sel = document.getElementById('clPatente');
+  var pat = sel ? sel.value : '';
+  var vehiculos = window._opVehiculos || window._vehCacheChecklist || [];
+  var veh = null;
+  for(var i=0;i<vehiculos.length;i++){
+    if(vehiculos[i].patente===pat){ veh = vehiculos[i]; break; }
+  }
+  // Mapear tipo de vehículo a pesado/liviano
+  var tipoMovil = 'liviano';
+  var tipoTxt = '';
+  if(veh && veh.tipo){
+    var t = veh.tipo.toLowerCase();
+    if(t.indexOf('camión')>=0 || t.indexOf('camion')>=0 || t.indexOf('batea')>=0 || t.indexOf('semi')>=0 || t.indexOf('máquina')>=0 || t.indexOf('maquina')>=0 || t.indexOf('autoelevador')>=0){
+      tipoMovil = 'pesado';
+    }
+    tipoTxt = veh.tipo;
+  }
+  document.getElementById('clTipoVeh').value = tipoMovil;
+  // Mostrar tipo detectado
+  var detEl = document.getElementById('clTipoDetectado');
+  if(detEl){
+    detEl.style.display = tipoTxt ? 'block' : 'none';
+    detEl.textContent = tipoTxt ? ('Tipo detectado: '+tipoTxt+' ('+(tipoMovil==='pesado'?'móvil pesado':'móvil liviano')+')') : '';
+  }
+  // Mostrar campo de dominio del semi si es camión/batea/semi
+  var semiField = document.getElementById('clSemiDominioField');
+  if(semiField){
+    var esSemi = veh && veh.tipo && (veh.tipo.toLowerCase().indexOf('semi')>=0 || veh.tipo.toLowerCase().indexOf('batea')>=0);
+    semiField.style.display = esSemi ? 'block' : 'none';
+  }
+  onClTipoChange();
+}
 
 function onClTipoChange(){
   var tipo = document.getElementById('clTipoVeh').value;     // pesado | liviano
   var freq = document.getElementById('clFreqVeh').value;     // semanal | mensual
   var cont = document.getElementById('clChecklistItems');
   var html = '';
+
+  // Si el operario tiene un puesto con checklist configurado a medida, usar esos ítems
+  var puestoActual = (_opActual && _opActual.puesto) ? _opActual.puesto : null;
+  var cfgPuesto = null;
+  if(puestoActual){
+    var cfg = loadState('checklistConfig') || {};
+    if(cfg[puestoActual] && cfg[puestoActual].length) cfgPuesto = cfg[puestoActual];
+  }
+
+  if(cfgPuesto){
+    // Render del checklist a medida según los ítems configurados para el puesto
+    html += '<div style="font-size:12px;color:var(--gray);margin-bottom:.85rem;">Check-list configurado para tu puesto.</div>';
+    cfgPuesto.forEach(function(item, i){
+      var nm = 'item_'+i;
+      var opts = (TIPOS_RESPUESTA[item.tipo]||TIPOS_RESPUESTA.estado).opciones;
+      html += '<div style="padding:9px 12px;border-radius:var(--r);margin-bottom:5px;background:var(--input-bg);">'
+        +'<div style="font-size:13px;color:var(--white);margin-bottom:6px;">'+escapeHtml(item.texto)+'</div>';
+      if(opts.length){
+        html += '<div style="display:flex;gap:5px;flex-wrap:wrap;">';
+        opts.forEach(function(op, j){
+          html += '<label class="cl-check" style="opacity:1;"><input type="radio" name="'+nm+'" value="'+escapeHtml(op)+'" '+(j===0?'checked':'')+'/> '+escapeHtml(op)+'</label>';
+        });
+        html += '</div>';
+      } else {
+        // Texto libre
+        html += '<input type="text" name="'+nm+'" placeholder="Escribí..." style="width:100%;padding:7px;background:var(--card);border:1px solid var(--bdr);border-radius:5px;color:var(--white);font-size:13px;"/>';
+      }
+      html += '</div>';
+    });
+    // Observaciones + botón guardar
+    html += '<div style="margin-top:1rem;"><label style="font-size:12px;color:var(--gray);">Observaciones</label><textarea id="clObs" style="width:100%;min-height:60px;padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;resize:vertical;"></textarea></div>';
+    cont.innerHTML = html;
+    return;
+  }
 
   function renderSection(titulo, items){
     var h = '<div style="display:flex;align-items:center;gap:8px;margin:1.25rem 0 .6rem;">'
@@ -4452,25 +4924,43 @@ var _checklistCache = [];
 function submitChecklist(){
   var patente = document.getElementById('clPatente').value;
   var tipo = document.getElementById('clTipoVeh').value;
-  var freq = document.getElementById('clFreqVeh').value;
+  // La frecuencia viene de la config del operario (no de la pantalla)
+  var freq = (_opActual && _opActual.frecuencia) ? _opActual.frecuencia : document.getElementById('clFreqVeh').value;
+  // Si hay dominio de semi, agregarlo al identificador
+  var semiEl = document.getElementById('clSemiDominio');
+  var semiDom = (semiEl && semiEl.value.trim()) ? semiEl.value.trim().toUpperCase() : '';
+  var idVehiculo = semiDom ? (patente+' + semi '+semiDom) : patente;
   var _h = new Date();
   var fecha = _h.getFullYear()+'-'+('0'+(_h.getMonth()+1)).slice(-2)+'-'+('0'+_h.getDate()).slice(-2);
 
   // Si es un operario cargando desde el link/QR, usar la función segura
   if(window._opModoCarga && _opActual && window._opEmpresaId){
-    if(!sb){ showToast('Sin conexión','error'); return; }
-    sb.rpc('guardar_checklist_operario', {
+    var payload = {
       p_empresa_id: window._opEmpresaId,
       p_nombre: _opActual.nombre,
       p_pin: _opActual.pin,
-      p_patente: patente,
+      p_patente: idVehiculo,
       p_tipo_movil: tipo,
       p_frecuencia: freq,
       p_items: {}
-    }).then(function(res){
-      if(res.error){ showToast('Error al guardar: '+res.error.message,'error'); return; }
+    };
+    // Sin señal: guardar offline y avisar
+    if(!sb || !navigator.onLine){
+      encolarChecklistOffline(payload);
       closeChecklistForm();
-      showToast('✓ Check-list de '+patente+' cargado correctamente. ¡Gracias!','success');
+      showToast('📴 Sin señal. El check-list de '+idVehiculo+' se guardó y se enviará cuando vuelva la conexión.','warning');
+      return;
+    }
+    sb.rpc('guardar_checklist_operario', payload).then(function(res){
+      if(res.error){
+        // Si falla por red, guardar offline
+        encolarChecklistOffline(payload);
+        closeChecklistForm();
+        showToast('📴 Guardado sin conexión. Se enviará al recuperar señal.','warning');
+        return;
+      }
+      closeChecklistForm();
+      showToast('✓ Check-list de '+idVehiculo+' cargado correctamente. ¡Gracias!','success');
     });
     return;
   }
