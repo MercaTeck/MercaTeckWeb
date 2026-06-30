@@ -119,7 +119,6 @@ nav{
 .btn-outline:hover{background:rgba(255,255,255,.04);border-color:var(--gray-soft);}
 .btn-gold{padding:8px 18px;border-radius:var(--r);border:none;background:var(--gold);color:#0B0E14;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
 .btn-gold:hover{background:var(--gold-lt);}
-.nav-mobile{display:none;}
 
 /* ══════════════════════════════════════════
    HERO
@@ -570,7 +569,8 @@ footer{
   .pay-grid{grid-template-columns:1fr;}
   .footer-grid{grid-template-columns:1fr;}
   .nav-links{display:none;}
-  .nav-mobile{display:flex;align-items:center;gap:.5rem;margin-left:auto;}
+  #navActions{display:flex;gap:.4rem;}
+  #navActions button, #navActions a{padding:7px 10px !important;font-size:13px;}
   .app-sidebar{display:none;}
   .app-main{padding-left:0;}
   .app-stats{grid-template-columns:repeat(2,1fr);}
@@ -601,18 +601,18 @@ footer{
       <a href="#seguridad" onclick="showView('landing')">Seguridad</a>
     </div>
     <div class="nav-actions" id="navActions">
-      <a href="https://mercateck.github.io/MercaTeckWeb/" target="_blank" class="btn-outline" style="padding:8px 12px;text-decoration:none;" title="Ir al sitio de MercaTeck">🌐 MercaTeck</a>
-      <a href="https://instagram.com/mercateck_" target="_blank" class="btn-outline" style="padding:8px 12px;text-decoration:none;" title="Instagram">📷</a>
+      <a href="https://instagram.com/mercateck_" target="_blank" class="btn-outline" style="padding:8px 10px;text-decoration:none;display:inline-flex;align-items:center;" title="Instagram">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+      </a>
       <button class="btn-outline" id="themeToggle" onclick="toggleTheme()" title="Cambiar tema" style="padding:8px 12px;">🌙</button>
+      <button class="btn-outline" onclick="showView('login')">Ingresar</button>
+      <button class="btn-gold" onclick="showView('register')">Registrarse</button>
     </div>
     <div class="nav-actions" id="navApp" style="display:none;">
       <span style="font-size:13px;color:var(--gray)" id="navUserName"></span>
       <button class="btn-outline" id="themeToggle2" onclick="toggleTheme()" title="Cambiar tema" style="padding:8px 12px;">🌙</button>
       <button class="btn-outline" id="navAdminBtn" style="display:none;" onclick="showView('admin')">Admin</button>
       <button class="btn-outline" onclick="logout()">Salir</button>
-    </div>
-    <div class="nav-mobile" id="mobileMenu">
-      <button class="btn-outline" onclick="toggleTheme()" style="padding:8px 12px;">🌙</button>
     </div>
   </div>
 </nav>
@@ -2676,7 +2676,6 @@ function loginSuccess(user){
   window._addonChecklist = user.addon_checklist===true;
   document.getElementById('navUserName').textContent = user.name || user.email;
   document.getElementById('navActions').style.display = 'none';
-  document.getElementById('mobileMenu').style.display = 'none';
   document.getElementById('navApp').style.display = 'flex';
   if(isAdmin) document.getElementById('navAdminBtn').style.display = 'inline-flex';
   document.getElementById('landingLinks').style.display = 'none';
@@ -2834,7 +2833,6 @@ function logout(){
   if(sb){ sb.auth.signOut(); }
   currentUser = null; isAdmin = false;
   document.getElementById('navActions').style.display = 'flex';
-  document.getElementById('mobileMenu').style.display = 'flex';
   document.getElementById('navApp').style.display = 'none';
   document.getElementById('navAdminBtn').style.display = 'none';
   document.getElementById('landingLinks').style.display = 'flex';
@@ -4065,6 +4063,12 @@ function detectarLinkChecklist(){
   var clEmpresa = params.get('cl');
   if(clEmpresa){
     window._opEmpresaId = clEmpresa;
+    // Ocultar el navbar del sitio (ingreso/registro) — el operario solo ve el check-list
+    var nav = document.querySelector('nav');
+    if(nav) nav.style.display = 'none';
+    // Ocultar el chatbot también
+    var gesBtn = document.getElementById('gesBtn');
+    if(gesBtn) gesBtn.style.display = 'none';
     showView('operario');
     return true;
   }
