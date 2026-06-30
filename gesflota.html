@@ -73,6 +73,11 @@ body[data-theme="light"] .hero{background:var(--black);}
 /* Opciones de los dropdowns legibles en ambos temas */
 select option{ background:var(--card); color:var(--white); }
 [data-theme="light"] select option{ background:#FFFFFF; color:#1A1D24; }
+/* Constructor de checklist */
+.clb-modo-btn{flex:1;min-width:140px;padding:12px;border-radius:var(--r);border:1.5px solid var(--bdr);background:var(--input-bg);color:var(--gray);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;}
+.clb-modo-btn.clb-modo-activo{border-color:var(--gold);background:var(--gold-dim);color:var(--gold);}
+.clb-tipo-btn{padding:6px 10px;border-radius:6px;border:1px solid var(--bdr);background:var(--card);color:var(--gray);font-size:11px;cursor:pointer;transition:all .12s;white-space:nowrap;}
+.clb-tipo-btn.activo{border-color:var(--gold);background:var(--gold-dim);color:var(--gold);font-weight:600;}
 html{scroll-behavior:smooth;}
 body{font-family:var(--font);background:var(--black);color:var(--white);line-height:1.6;overflow-x:hidden;}
 a{color:inherit;text-decoration:none;}
@@ -596,9 +601,9 @@ footer{
       <a href="#seguridad" onclick="showView('landing')">Seguridad</a>
     </div>
     <div class="nav-actions" id="navActions">
+      <a href="https://mercateck.github.io/MercaTeckWeb/" target="_blank" class="btn-outline" style="padding:8px 12px;text-decoration:none;" title="Ir al sitio de MercaTeck">🌐 MercaTeck</a>
+      <a href="https://instagram.com/mercateck_" target="_blank" class="btn-outline" style="padding:8px 12px;text-decoration:none;" title="Instagram">📷</a>
       <button class="btn-outline" id="themeToggle" onclick="toggleTheme()" title="Cambiar tema" style="padding:8px 12px;">🌙</button>
-      <button class="btn-outline" onclick="showView('login')">Ingresar</button>
-      <button class="btn-gold" onclick="showView('register')">Registrarse</button>
     </div>
     <div class="nav-actions" id="navApp" style="display:none;">
       <span style="font-size:13px;color:var(--gray)" id="navUserName"></span>
@@ -607,7 +612,7 @@ footer{
       <button class="btn-outline" onclick="logout()">Salir</button>
     </div>
     <div class="nav-mobile" id="mobileMenu">
-      <button class="btn-outline" onclick="showView('login')">Ingresar</button>
+      <button class="btn-outline" onclick="toggleTheme()" style="padding:8px 12px;">🌙</button>
     </div>
   </div>
 </nav>
@@ -2009,10 +2014,18 @@ footer{
 
           <!-- Constructor de check-lists por puesto -->
           <div class="app-card" id="checklistBuilderCard" style="padding:1.5rem;margin-top:.75rem;display:none;">
-            <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:.5rem;">🧩 Armá el check-list de cada puesto</div>
-            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Cada puesto puede tener su propio check-list. Por ejemplo: el operario revisa el estado del vehículo, mantenimiento carga arreglos y servicios. Elegí el puesto y armá su lista de ítems.</div>
+            <div style="font-size:14px;font-weight:600;color:var(--gold);margin-bottom:.4rem;">🧩 Constructor de check-list</div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1.25rem;">Armá el check-list que tu personal completará desde el celular. Elegí cómo organizarlo y agregá los ítems con su forma de respuesta.</div>
 
-            <div class="field">
+            <!-- Alcance: general o por puesto -->
+            <div style="font-size:12px;font-weight:600;color:var(--white);margin-bottom:.5rem;">¿Para quién es este check-list?</div>
+            <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;">
+              <button id="clbModoGeneral" class="clb-modo-btn clb-modo-activo" onclick="setClbModo('general')">📋 Uno general (todos igual)</button>
+              <button id="clbModoPuesto" class="clb-modo-btn" onclick="setClbModo('puesto')">🧩 Distinto por puesto</button>
+            </div>
+
+            <!-- Selector de puesto (si es por puesto) -->
+            <div class="field" id="clbPuestoWrap" style="display:none;">
               <label>Puesto a configurar</label>
               <select id="clbPuesto" onchange="loadChecklistBuilder()">
                 <option value="operario">Operario</option>
@@ -2023,10 +2036,17 @@ footer{
               </select>
             </div>
 
-            <div id="clbItems" style="display:flex;flex-direction:column;gap:.5rem;margin:1rem 0;"></div>
+            <!-- Plantilla sugerida -->
+            <div style="margin-bottom:1rem;">
+              <button class="btn-outline" style="font-size:12px;padding:7px 14px;" onclick="cargarPlantillaSugerida()">⚡ Cargar plantilla sugerida</button>
+            </div>
 
-            <button class="btn-outline" style="font-size:13px;padding:9px 16px;width:100%;margin-bottom:.5rem;" onclick="addChecklistItem()">+ Agregar ítem</button>
-            <button class="btn-gold" style="font-size:13px;padding:10px 16px;width:100%;" onclick="saveChecklistBuilder()">Guardar check-list de este puesto</button>
+            <!-- Lista de ítems -->
+            <div style="font-size:12px;font-weight:600;color:var(--white);margin-bottom:.5rem;">Ítems del check-list</div>
+            <div id="clbItems" style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem;"></div>
+
+            <button class="btn-outline" style="font-size:13px;padding:10px 16px;width:100%;margin-bottom:.5rem;" onclick="addChecklistItem()">+ Agregar ítem</button>
+            <button class="btn-gold" style="font-size:13px;padding:11px 16px;width:100%;" onclick="saveChecklistBuilder()">Guardar check-list</button>
           </div>
 
           <!-- Personal y accesos al check-list (cuando el checklist está habilitado) -->
@@ -3148,13 +3168,18 @@ function handleExcelUpload(input, tipo){
       var ws = wb.Sheets[wb.SheetNames[0]];
       var rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
 
-      // Buscar la fila de encabezados (la que tiene "Patente")
+      // Buscar la fila de encabezados real: tiene "patente" Y es una fila corta de títulos
+      // (la fila de instrucciones también menciona "patente", hay que distinguirla)
       var headerIdx = -1;
       for(var i=0;i<rows.length;i++){
-        var rowStr = rows[i].join('|').toLowerCase();
-        if(rowStr.indexOf('patente')>=0){ headerIdx = i; break; }
+        var celdas = rows[i].map(function(x){ return String(x).toLowerCase().trim(); });
+        var tienePatente = celdas.indexOf('patente')>=0;
+        // La fila de encabezados tiene "patente" como celda EXACTA y varias columnas más
+        if(tienePatente && celdas.length >= 3){
+          headerIdx = i; break;
+        }
       }
-      if(headerIdx<0){ showToast('No encontré la columna "Patente" en el Excel. Usá la plantilla.','error'); return; }
+      if(headerIdx<0){ showToast('No encontré la columna "Patente" en el Excel. Descargá y usá la plantilla.','error'); return; }
 
       var headers = rows[headerIdx].map(function(h){ return String(h).toLowerCase().trim(); });
       var dataRows = rows.slice(headerIdx+1).filter(function(r){
@@ -3570,7 +3595,13 @@ var GES_RESPUESTAS = [
   { k:['cancelar','baja','dar de baja','dejar de usar','suspender mi cuenta'], r:"Podés cancelar cuando quieras, sin permanencia. Escribinos un ticket desde Soporte (tema Pagos) y lo gestionamos. Tus datos los podés exportar antes de irte. 👋" },
   // ── Saludos / cortesía ──
   { k:['gracias','genial','perfecto','buenisimo','buenísimo','dale','barbaro','bárbaro','joya'], r:"¡De nada! 😊 Cualquier otra cosa, acá estoy. Si querés probar GesFlota, podés empezar gratis." },
-  { k:['hola','buenas','buen dia','buen día','hey','que tal','qué tal','holaa'], r:"¡Hola! 👋 ¿En qué te puedo ayudar? Te puedo contar de los planes, cómo cargar tu flota, los check-lists, o ayudarte si algo no te funciona." }
+  { k:['hola','buenas','buen dia','buen día','hey','que tal','qué tal','holaa'], r:"¡Hola! 👋 ¿En qué te puedo ayudar? Te puedo contar de los planes, cómo cargar tu flota, los check-lists, o ayudarte si algo no te funciona." },
+  // ── PASOS DETALLADOS de uso del sitio ──
+  { k:['paso a paso','pasos para','como hago para','cómo hago para','explicame como','explicame paso','guia','guía','no se como','no sé cómo'], r:"Te doy los pasos según lo que necesites. ¿Qué querés hacer?\n\n• Cargar un vehículo\n• Cargar la VTV o el seguro\n• Crear un check-list\n• Dar acceso a mi personal\n• Ver vencimientos y alertas\n\nDecime el tema y te paso el paso a paso. 📋" },
+  { k:['cargar un vehiculo','cargar un vehículo','agregar un vehiculo','dar de alta vehiculo','como agrego un auto','sumar una unidad','como cargo un vehiculo'], r:"Para cargar un vehículo:\n\n1. Entrá a tu panel y andá a 'Flota'\n2. Tocá el botón '+ Cargar vehículo'\n3. Completá: N° interno, patente (sin guiones), tipo y obra\n4. Guardá\n\nQueda cargado al instante. Si tenés muchos, mejor usá la carga por Excel. 🚗" },
+  { k:['cargar vtv','cargar seguro','poner vencimiento','fecha de vtv','fecha de seguro','editar fecha','como cargo la vtv'], r:"Para cargar la VTV o el seguro de un vehículo:\n\n1. En 'Flota', buscá el vehículo\n2. Tocá el lápiz ✏️ en su fila\n3. Cargá la fecha de VTV y/o seguro\n4. Guardá\n\nEl sistema calcula solo si está vigente, por vencer o vencido. 🗓️" },
+  { k:['ver vencimientos','ver alertas','que vence','qué vence','proximos vencimientos','próximos vencimientos','donde veo los vencimientos'], r:"Para ver qué está por vencer:\n\n1. En el menú lateral, entrá a 'Alertas' → ahí ves todo lo que vence pronto\n2. O entrá a 'VTV' / 'Seguros' para ver cada uno por separado\n\nLos vehículos aparecen automáticamente según las fechas que cargaste. 🔔" },
+  { k:['dar acceso','acceso a mi personal','que mi personal','crear pin','agregar personal','dar de alta personal','como agrego personal'], r:"Para que tu personal cargue check-lists:\n\n1. Andá a Configuración → 'Personal y accesos'\n2. Tocá '+ Agregar persona': nombre, puesto y cada cuánto debe cargar\n3. El sistema genera un PIN\n4. Compartiles el QR o el link\n\nEllos entran con su nombre y PIN, y solo cargan check-lists. 👷" }
 ];
 
 // Respuestas a PROBLEMAS / ERRORES comunes (uso cotidiano)
@@ -3723,59 +3754,100 @@ function hayPendientesOffline(){
 }
 
 // ══════════════════════════════════════════════════════
-//  CONSTRUCTOR DE CHECK-LISTS POR PUESTO
+//  CONSTRUCTOR DE CHECK-LISTS (unificado, visual)
 // ══════════════════════════════════════════════════════
-// Tipos de respuesta disponibles para cada ítem
+// Tipos de respuesta con íconos y opciones (lo que verá el operario)
 var TIPOS_RESPUESTA = {
-  estado:      { label:'Estado (Bien / Mal / N/A)', opciones:['Bien','Mal','N/A'] },
-  mercaderia:  { label:'Mercadería (Buen estado / Mal estado / No tenía / N/A)', opciones:['Buen estado','Mal estado','No tenía','N/A'] },
-  documentacion:{ label:'Documentación (Corresponde / No corresponde)', opciones:['Corresponde','No corresponde'] },
-  siNo:        { label:'Sí / No', opciones:['Sí','No'] },
-  texto:       { label:'Texto libre', opciones:[] }
+  estado:      { label:'Estado', icono:'✅', opciones:[
+                  {v:'bien', ic:'✅', t:'Bien'},{v:'regular', ic:'⚠️', t:'Regular'},{v:'mal', ic:'❌', t:'Mal'}] },
+  siNo:        { label:'Sí / No', icono:'👍', opciones:[
+                  {v:'si', ic:'✅', t:'Sí'},{v:'no', ic:'❌', t:'No'}] },
+  presencia:   { label:'Tiene / No tiene', icono:'📦', opciones:[
+                  {v:'tiene', ic:'✅', t:'Tiene'},{v:'noTiene', ic:'❌', t:'No tiene'},{v:'na', ic:'➖', t:'No aplica'}] },
+  nivel:       { label:'Nivel', icono:'🟢', opciones:[
+                  {v:'ok', ic:'🟢', t:'OK'},{v:'bajo', ic:'🟡', t:'Bajo'},{v:'critico', ic:'🔴', t:'Crítico'}] },
+  estadoFisico:{ label:'Estado físico', icono:'🟢', opciones:[
+                  {v:'bueno', ic:'🟢', t:'Buen estado'},{v:'roto', ic:'🔴', t:'Roto / Mal'},{v:'na', ic:'➖', t:'No aplica'}] },
+  observacion: { label:'Observación', icono:'📝', opciones:[] }, // texto libre
+  numero:      { label:'Número', icono:'🔢', opciones:[] },      // numérico
+  firma:       { label:'Firma', icono:'✍️', opciones:[] }        // firma con el dedo
 };
 
-// Ítems por defecto según puesto (plantilla inicial editable)
 var CHECKLIST_DEFAULTS = {
+  general: [
+    {texto:'Estado general del vehículo', tipo:'estado'},
+    {texto:'Niveles (aceite, agua, refrigerante)', tipo:'nivel'},
+    {texto:'Luces y señalización', tipo:'estado'},
+    {texto:'Neumáticos', tipo:'estadoFisico'},
+    {texto:'Documentación del vehículo', tipo:'presencia'},
+    {texto:'Observaciones', tipo:'observacion'},
+    {texto:'Firma del responsable', tipo:'firma'}
+  ],
   operario: [
     {texto:'Estado general del vehículo', tipo:'estado'},
-    {texto:'Niveles (aceite, agua, líquido de frenos)', tipo:'estado'},
+    {texto:'Niveles (aceite, agua, frenos)', tipo:'nivel'},
     {texto:'Luces y señalización', tipo:'estado'},
-    {texto:'Neumáticos', tipo:'estado'},
-    {texto:'Documentación del vehículo', tipo:'documentacion'}
+    {texto:'Neumáticos', tipo:'estadoFisico'},
+    {texto:'Documentación', tipo:'presencia'},
+    {texto:'Firma', tipo:'firma'}
   ],
   chofer: [
     {texto:'Estado general del vehículo', tipo:'estado'},
-    {texto:'Mercadería / carga', tipo:'mercaderia'},
-    {texto:'Documentación interna de la empresa', tipo:'documentacion'},
-    {texto:'Combustible suficiente', tipo:'siNo'}
+    {texto:'Mercadería / carga', tipo:'estadoFisico'},
+    {texto:'Documentación interna', tipo:'presencia'},
+    {texto:'Combustible suficiente', tipo:'siNo'},
+    {texto:'Firma', tipo:'firma'}
   ],
   mantenimiento: [
-    {texto:'Tipo de intervención (arreglo / servicio)', tipo:'texto'},
-    {texto:'Repuestos utilizados', tipo:'texto'},
+    {texto:'Tipo de intervención', tipo:'observacion'},
+    {texto:'Repuestos utilizados', tipo:'observacion'},
+    {texto:'Kilometraje / horas', tipo:'numero'},
     {texto:'Estado tras la intervención', tipo:'estado'},
-    {texto:'Requiere seguimiento', tipo:'siNo'}
+    {texto:'Requiere seguimiento', tipo:'siNo'},
+    {texto:'Firma', tipo:'firma'}
   ],
   supervisor: [
     {texto:'Verificación general de la unidad', tipo:'estado'},
-    {texto:'Documentación al día', tipo:'documentacion'}
+    {texto:'Documentación al día', tipo:'presencia'},
+    {texto:'Firma', tipo:'firma'}
   ],
   jefe: [
-    {texto:'Verificación general', tipo:'estado'}
+    {texto:'Verificación general', tipo:'estado'},
+    {texto:'Firma', tipo:'firma'}
   ]
 };
 
 var _clbItems = [];
+var _clbModo = 'general'; // 'general' | 'puesto'
+
+function setClbModo(modo){
+  _clbModo = modo;
+  document.getElementById('clbModoGeneral').classList.toggle('clb-modo-activo', modo==='general');
+  document.getElementById('clbModoPuesto').classList.toggle('clb-modo-activo', modo==='puesto');
+  document.getElementById('clbPuestoWrap').style.display = (modo==='puesto') ? 'block' : 'none';
+  loadChecklistBuilder();
+}
+
+function _clbKey(){
+  return _clbModo==='puesto' ? document.getElementById('clbPuesto').value : 'general';
+}
 
 function loadChecklistBuilder(){
-  var puesto = document.getElementById('clbPuesto').value;
+  var key = _clbKey();
   var cfg = loadState('checklistConfig') || {};
-  // Si ya hay config guardada para ese puesto, usarla; si no, la plantilla por defecto
-  if(cfg[puesto] && cfg[puesto].length){
-    _clbItems = JSON.parse(JSON.stringify(cfg[puesto]));
+  if(cfg[key] && cfg[key].length){
+    _clbItems = JSON.parse(JSON.stringify(cfg[key]));
   } else {
-    _clbItems = JSON.parse(JSON.stringify(CHECKLIST_DEFAULTS[puesto]||[]));
+    _clbItems = [];
   }
   renderChecklistBuilder();
+}
+
+function cargarPlantillaSugerida(){
+  var key = _clbKey();
+  _clbItems = JSON.parse(JSON.stringify(CHECKLIST_DEFAULTS[key] || CHECKLIST_DEFAULTS.general));
+  renderChecklistBuilder();
+  showToast('Plantilla cargada. Editala como necesites.','success');
 }
 
 function renderChecklistBuilder(){
@@ -3783,32 +3855,37 @@ function renderChecklistBuilder(){
   if(!cont) return;
   cont.innerHTML = '';
   if(!_clbItems.length){
-    cont.innerHTML = '<div style="font-size:12px;color:var(--gray);text-align:center;padding:.75rem;border:1px dashed var(--bdr);border-radius:var(--r);">Sin ítems. Agregá el primero.</div>';
+    cont.innerHTML = '<div style="font-size:12px;color:var(--gray);text-align:center;padding:1rem;border:1px dashed var(--bdr);border-radius:var(--r);">Sin ítems. Agregá uno o cargá la plantilla sugerida.</div>';
     return;
   }
   _clbItems.forEach(function(item, idx){
-    var div = document.createElement('div');
-    div.style.cssText = 'display:flex;gap:.5rem;align-items:center;padding:.5rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);';
-    // Texto del ítem
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'padding:.75rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);';
+    // Fila 1: texto del ítem + borrar
+    var fila1 = document.createElement('div');
+    fila1.style.cssText='display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem;';
     var inp = document.createElement('input');
     inp.type='text'; inp.value=item.texto; inp.placeholder='Descripción del ítem';
-    inp.style.cssText='flex:1;min-width:100px;background:transparent;border:none;color:var(--white);font-size:13px;outline:none;';
+    inp.style.cssText='flex:1;background:var(--card);border:1px solid var(--bdr);color:var(--white);font-size:13px;padding:8px;border-radius:6px;outline:none;';
     inp.oninput=(function(i){ return function(e){ _clbItems[i].texto=e.target.value; }; })(idx);
-    // Tipo de respuesta
-    var selT = document.createElement('select');
-    selT.style.cssText='background:var(--card);border:1px solid var(--bdr);color:var(--white);font-size:11px;border-radius:5px;padding:4px;max-width:130px;';
-    Object.keys(TIPOS_RESPUESTA).forEach(function(k){
-      var o=document.createElement('option'); o.value=k; o.textContent=TIPOS_RESPUESTA[k].label.split(' (')[0];
-      if(item.tipo===k) o.selected=true;
-      selT.appendChild(o);
-    });
-    selT.onchange=(function(i){ return function(e){ _clbItems[i].tipo=e.target.value; }; })(idx);
-    // Botón borrar
     var del = document.createElement('button');
-    del.className='btn-edit-veh'; del.textContent='🗑️'; del.style.cssText='font-size:11px;padding:4px 7px;';
+    del.className='btn-edit-veh'; del.textContent='🗑️'; del.style.cssText='font-size:12px;padding:6px 9px;';
     del.onclick=(function(i){ return function(){ _clbItems.splice(i,1); renderChecklistBuilder(); }; })(idx);
-    div.appendChild(inp); div.appendChild(selT); div.appendChild(del);
-    cont.appendChild(div);
+    fila1.appendChild(inp); fila1.appendChild(del);
+    wrap.appendChild(fila1);
+    // Fila 2: tipos de respuesta como botones visuales
+    var fila2 = document.createElement('div');
+    fila2.style.cssText='display:flex;gap:5px;flex-wrap:wrap;';
+    Object.keys(TIPOS_RESPUESTA).forEach(function(k){
+      var t = TIPOS_RESPUESTA[k];
+      var b = document.createElement('button');
+      b.className='clb-tipo-btn'+(item.tipo===k?' activo':'');
+      b.innerHTML = t.icono+' '+t.label;
+      b.onclick=(function(i,tipo){ return function(){ _clbItems[i].tipo=tipo; renderChecklistBuilder(); }; })(idx,k);
+      fila2.appendChild(b);
+    });
+    wrap.appendChild(fila2);
+    cont.appendChild(wrap);
   });
 }
 
@@ -3818,14 +3895,14 @@ function addChecklistItem(){
 }
 
 function saveChecklistBuilder(){
-  var puesto = document.getElementById('clbPuesto').value;
-  // Filtrar ítems vacíos
+  var key = _clbKey();
   var items = _clbItems.filter(function(it){ return it.texto && it.texto.trim(); });
   if(!items.length){ showToast('Agregá al menos un ítem con descripción','error'); return; }
   var cfg = loadState('checklistConfig') || {};
-  cfg[puesto] = items;
+  cfg[key] = items;
   saveState('checklistConfig', cfg);
-  showToast('✓ Check-list de '+puesto+' guardado ('+items.length+' ítems)','success');
+  var nombre = key==='general' ? 'general' : 'de '+key;
+  showToast('✓ Check-list '+nombre+' guardado ('+items.length+' ítems)','success');
 }
 
 // ══════════════════════════════════════════════════════
@@ -4076,7 +4153,11 @@ function cargarHistorialOperario(){
     p_pin: _opActual.pin
   }).then(function(res){
     if(res.error){
-      cont.innerHTML = '<div style="font-size:12px;color:var(--gray);">No se pudo cargar el historial.</div>';
+      var msg = (res.error.message||'').indexOf('function')>=0 || (res.error.message||'').indexOf('does not exist')>=0
+        ? 'El historial requiere actualizar la base de datos. Avisale al administrador (falta correr el SQL 05).'
+        : 'No se pudo cargar el historial: '+(res.error.message||'error');
+      cont.innerHTML = '<div style="font-size:12px;color:var(--amber);padding:.5rem;">'+escapeHtml(msg)+'</div>';
+      console.warn('Historial error:', res.error);
       return;
     }
     var hist = res.data || [];
@@ -4817,101 +4898,115 @@ function onClVehiculoChange(){
 }
 
 function onClTipoChange(){
-  var tipo = document.getElementById('clTipoVeh').value;     // pesado | liviano
-  var freq = document.getElementById('clFreqVeh').value;     // semanal | mensual
   var cont = document.getElementById('clChecklistItems');
   var html = '';
 
-  // Si el operario tiene un puesto con checklist configurado a medida, usar esos ítems
+  // Determinar qué checklist usar: el del puesto del operario, o el general
+  var cfg = loadState('checklistConfig') || {};
+  var items = null;
   var puestoActual = (_opActual && _opActual.puesto) ? _opActual.puesto : null;
-  var cfgPuesto = null;
-  if(puestoActual){
-    var cfg = loadState('checklistConfig') || {};
-    if(cfg[puestoActual] && cfg[puestoActual].length) cfgPuesto = cfg[puestoActual];
+  if(puestoActual && cfg[puestoActual] && cfg[puestoActual].length){
+    items = cfg[puestoActual];
+  } else if(cfg.general && cfg.general.length){
+    items = cfg.general;
   }
 
-  if(cfgPuesto){
-    // Render del checklist a medida según los ítems configurados para el puesto
-    html += '<div style="font-size:12px;color:var(--gray);margin-bottom:.85rem;">Check-list configurado para tu puesto.</div>';
-    cfgPuesto.forEach(function(item, i){
-      var nm = 'item_'+i;
-      var opts = (TIPOS_RESPUESTA[item.tipo]||TIPOS_RESPUESTA.estado).opciones;
-      html += '<div style="padding:9px 12px;border-radius:var(--r);margin-bottom:5px;background:var(--input-bg);">'
-        +'<div style="font-size:13px;color:var(--white);margin-bottom:6px;">'+escapeHtml(item.texto)+'</div>';
-      if(opts.length){
-        html += '<div style="display:flex;gap:5px;flex-wrap:wrap;">';
-        opts.forEach(function(op, j){
-          html += '<label class="cl-check" style="opacity:1;"><input type="radio" name="'+nm+'" value="'+escapeHtml(op)+'" '+(j===0?'checked':'')+'/> '+escapeHtml(op)+'</label>';
-        });
-        html += '</div>';
-      } else {
-        // Texto libre
-        html += '<input type="text" name="'+nm+'" placeholder="Escribí..." style="width:100%;padding:7px;background:var(--card);border:1px solid var(--bdr);border-radius:5px;color:var(--white);font-size:13px;"/>';
-      }
+  // Si no hay nada configurado, usar la plantilla general por defecto
+  if(!items){ items = CHECKLIST_DEFAULTS.general; }
+
+  window._clItemsActivos = items;
+
+  // Barra de progreso
+  html += '<div style="position:sticky;top:0;background:var(--card);padding:.5rem 0;z-index:2;margin-bottom:.5rem;">'
+    +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gray);margin-bottom:4px;">'
+    +'<span>Progreso</span><span id="clProgreso">0 de '+items.length+'</span></div>'
+    +'<div style="height:5px;background:var(--input-bg);border-radius:3px;overflow:hidden;"><div id="clProgresoBar" style="height:100%;width:0%;background:var(--gold);transition:width .2s;"></div></div></div>';
+
+  // Render de cada ítem como tarjeta
+  items.forEach(function(item, i){
+    var t = TIPOS_RESPUESTA[item.tipo] || TIPOS_RESPUESTA.estado;
+    var nm = 'cli_'+i;
+    html += '<div class="cl-item-card" data-item="'+i+'" style="padding:.9rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:.6rem;">'
+      +'<div style="font-size:14px;color:var(--white);font-weight:500;margin-bottom:.6rem;">'+escapeHtml(item.texto)+'</div>';
+
+    if(t.opciones.length){
+      // Botones de opciones grandes con ícono + etiqueta
+      html += '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+      t.opciones.forEach(function(op){
+        html += '<button type="button" class="cl-opt-btn" data-name="'+nm+'" data-val="'+op.v+'" onclick="selectClOpt(this,\''+nm+'\','+i+')" '
+          +'style="flex:1;min-width:80px;padding:10px 8px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--card);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .12s;">'
+          +'<span style="font-size:22px;">'+op.ic+'</span>'
+          +'<span style="font-size:11px;color:var(--gray);">'+op.t+'</span></button>';
+      });
       html += '</div>';
-    });
-    // Observaciones + botón guardar
-    html += '<div style="margin-top:1rem;"><label style="font-size:12px;color:var(--gray);">Observaciones</label><textarea id="clObs" style="width:100%;min-height:60px;padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;resize:vertical;"></textarea></div>';
-    cont.innerHTML = html;
-    return;
-  }
-
-  function renderSection(titulo, items){
-    var h = '<div style="display:flex;align-items:center;gap:8px;margin:1.25rem 0 .6rem;">'
-      +'<span style="width:3px;height:14px;background:var(--gold);border-radius:2px;"></span>'
-      +'<span style="font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;">'+titulo+'</span>'
-      +'</div>';
-    items.forEach(function(it, i){
-      var nm = (titulo+'_'+i).replace(/\s/g,'');
-      h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:var(--r);margin-bottom:3px;background:var(--input-bg);">'
-        +'<span style="font-size:13px;color:var(--white);">'+it+'</span>'
-        +'<div style="display:flex;gap:5px;">'
-        +'<label class="cl-check"><input type="radio" name="'+nm+'" value="bien" checked/> ✅</label>'
-        +'<label class="cl-check"><input type="radio" name="'+nm+'" value="mal"/> ❌</label>'
-        +'<label class="cl-check" title="No aplica"><input type="radio" name="'+nm+'" value="na"/> N/A</label>'
-        +'</div></div>';
-    });
-    return h;
-  }
-
-  // Leyenda de referencia
-  html += '<div style="display:flex;gap:1rem;flex-wrap:wrap;padding:.6rem .85rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);margin-bottom:.85rem;font-size:11px;color:var(--gray);">'
-    +'<span>✅ = En buen estado</span>'
-    +'<span>❌ = Con problema</span>'
-    +'<span>N/A = No aplica</span>'
-    +'</div>';
-
-  // Km / Hs
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.5rem;">';
-  html += '<div><label style="font-size:12px;color:var(--gray);">Km</label><input type="number" id="clKm" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"/></div>';
-  if(tipo==='pesado'){
-    html += '<div><label style="font-size:12px;color:var(--gray);">Hs</label><input type="number" id="clHs" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"/></div>';
-  }
-  html += '</div>';
-
-  if(freq==='semanal'){
-    html += renderSection('Controles', CHECKLIST_ITEMS.semanal.controles);
-    html += renderSection('Niveles y fluidos', CHECKLIST_ITEMS.semanal.niveles);
-  } else {
-    // Mensual: secciones agrupadas según tipo
-    var secciones = CHECKLIST_ITEMS[tipo]; // objeto {seccion: [items]}
-    Object.keys(secciones).forEach(function(sec){
-      html += renderSection(sec, secciones[sec]);
-    });
-  }
-
-  // Semirremolque — solo pesados, condicional
-  if(tipo==='pesado'){
-    html += '<label style="display:flex;align-items:center;gap:8px;margin-top:1rem;font-size:13px;color:var(--white);cursor:pointer;"><input type="checkbox" id="clTieneSemi" onchange="toggleClSection(\'semiSection\',this.checked)" style="accent-color:var(--gold);"/> ¿Tiene semirremolque?</label>';
-    html += '<div id="semiSection" style="display:none;">'+renderSection('Semirremolque', CHECKLIST_ITEMS.semirremolque)+'</div>';
-    html += '<label style="display:flex;align-items:center;gap:8px;margin-top:.75rem;font-size:13px;color:var(--white);cursor:pointer;"><input type="checkbox" id="clTieneHidro" onchange="toggleClSection(\'hidroSection\',this.checked)" style="accent-color:var(--gold);"/> ¿Tiene hidrogrúa?</label>';
-    html += '<div id="hidroSection" style="display:none;">'+renderSection('Hidrogrúa', CHECKLIST_ITEMS.hidrogrua)+'</div>';
-  }
-
-  // Observaciones
-  html += '<div style="margin-top:1rem;"><label style="font-size:12px;color:var(--gray);">Observaciones generales</label><textarea id="clObs" style="width:100%;min-height:60px;padding:8px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;resize:vertical;"></textarea></div>';
+    } else if(item.tipo==='observacion'){
+      html += '<textarea data-name="'+nm+'" onchange="marcarItemCompleto('+i+')" placeholder="Escribí tu observación..." style="width:100%;min-height:55px;padding:8px;background:var(--card);border:1px solid var(--bdr);border-radius:6px;color:var(--white);font-size:13px;resize:vertical;"></textarea>';
+    } else if(item.tipo==='numero'){
+      html += '<input type="number" data-name="'+nm+'" onchange="marcarItemCompleto('+i+')" placeholder="Ingresá el número" style="width:100%;padding:9px;background:var(--card);border:1px solid var(--bdr);border-radius:6px;color:var(--white);font-size:13px;"/>';
+    } else if(item.tipo==='firma'){
+      html += '<div style="font-size:11px;color:var(--gray);margin-bottom:5px;">Firmá con el dedo en el recuadro:</div>'
+        +'<canvas class="cl-firma" data-name="'+nm+'" data-item="'+i+'" width="300" height="120" style="width:100%;height:120px;background:#fff;border:1px solid var(--bdr);border-radius:6px;touch-action:none;cursor:crosshair;"></canvas>'
+        +'<button type="button" onclick="limpiarFirma('+i+')" style="font-size:11px;color:var(--gray);background:none;border:none;cursor:pointer;margin-top:4px;text-decoration:underline;">Borrar firma</button>';
+    }
+    html += '</div>';
+  });
 
   cont.innerHTML = html;
+  // Inicializar los canvas de firma
+  setTimeout(initFirmas, 50);
+}
+
+function selectClOpt(btn, name, itemIdx){
+  // Desmarcar otros botones del mismo ítem
+  document.querySelectorAll('.cl-opt-btn[data-name="'+name+'"]').forEach(function(b){
+    b.style.borderColor='var(--bdr)'; b.style.background='var(--card)';
+    b.removeAttribute('data-selected');
+  });
+  // Marcar este
+  btn.style.borderColor='var(--gold)'; btn.style.background='var(--gold-dim)';
+  btn.setAttribute('data-selected','1');
+  marcarItemCompleto(itemIdx);
+}
+
+function marcarItemCompleto(itemIdx){
+  var card = document.querySelector('.cl-item-card[data-item="'+itemIdx+'"]');
+  if(card) card.setAttribute('data-completo','1');
+  actualizarProgresoChecklist();
+}
+
+function actualizarProgresoChecklist(){
+  var total = (window._clItemsActivos||[]).length;
+  var completos = document.querySelectorAll('.cl-item-card[data-completo="1"]').length;
+  var pEl = document.getElementById('clProgreso');
+  var bEl = document.getElementById('clProgresoBar');
+  if(pEl) pEl.textContent = completos+' de '+total;
+  if(bEl) bEl.style.width = total ? Math.round(completos/total*100)+'%' : '0%';
+}
+
+// ── Firma con el dedo (canvas) ──
+function initFirmas(){
+  document.querySelectorAll('.cl-firma').forEach(function(canvas){
+    if(canvas._init) return;
+    canvas._init = true;
+    var ctx = canvas.getContext('2d');
+    ctx.strokeStyle='#0B0E14'; ctx.lineWidth=2; ctx.lineCap='round';
+    var dibujando=false;
+    function pos(e){
+      var r=canvas.getBoundingClientRect();
+      var x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+      var y=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+      return {x:x*(canvas.width/r.width), y:y*(canvas.height/r.height)};
+    }
+    function start(e){ dibujando=true; var p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); e.preventDefault(); }
+    function move(e){ if(!dibujando)return; var p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault(); }
+    function end(){ if(dibujando){ dibujando=false; canvas.setAttribute('data-firmado','1'); var idx=canvas.getAttribute('data-item'); marcarItemCompleto(parseInt(idx)); } }
+    canvas.addEventListener('mousedown',start); canvas.addEventListener('mousemove',move); canvas.addEventListener('mouseup',end);
+    canvas.addEventListener('touchstart',start); canvas.addEventListener('touchmove',move); canvas.addEventListener('touchend',end);
+  });
+}
+function limpiarFirma(itemIdx){
+  var canvas = document.querySelector('.cl-firma[data-item="'+itemIdx+'"]');
+  if(canvas){ canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height); canvas.removeAttribute('data-firmado'); }
 }
 
 function toggleClSection(id, show){
