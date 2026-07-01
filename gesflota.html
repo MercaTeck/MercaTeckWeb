@@ -78,6 +78,8 @@ select option{ background:var(--card); color:var(--white); }
 .clb-modo-btn.clb-modo-activo{border-color:var(--gold);background:var(--gold-dim);color:var(--gold);}
 .clb-tipo-btn{padding:6px 10px;border-radius:6px;border:1px solid var(--bdr);background:var(--card);color:var(--gray);font-size:11px;cursor:pointer;transition:all .12s;white-space:nowrap;}
 .clb-tipo-btn.activo{border-color:var(--gold);background:var(--gold-dim);color:var(--gold);font-weight:600;}
+.cfg-cl-tab{padding:9px 14px;background:none;border:none;border-bottom:2px solid transparent;color:var(--gray);font-size:13px;font-weight:500;cursor:pointer;margin-bottom:-1px;}
+.cfg-cl-tab-activo{color:var(--gold);border-bottom-color:var(--gold);}
 html{scroll-behavior:smooth;}
 body{font-family:var(--font);background:var(--black);color:var(--white);line-height:1.6;overflow-x:hidden;}
 a{color:inherit;text-decoration:none;}
@@ -1498,6 +1500,7 @@ footer{
               <p style="font-size:13px;color:var(--gray);">Sincronización automática con el panel</p>
             </div>
             <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+              <button id="btnConfigChecklist" style="display:none;font-size:12px;padding:6px 14px;background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-border);border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="abrirConfigChecklist()">⚙️ Configurar check-list</button>
               <button id="btnOpenChecklist" style="display:none;font-size:12px;padding:6px 14px;background:var(--green);color:#000;border:none;border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="openChecklistForm()">📋 Cargar check-list</button>
               <button id="btnShareChecklist" style="display:none;font-size:12px;padding:6px 14px;background:var(--gold);color:#000;border:none;border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="openShareChecklist()">📲 Compartir / QR</button>
               <select id="checklistFiltroObra" style="font-size:12px;padding:6px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
@@ -1948,7 +1951,7 @@ footer{
             <!-- Frecuencia del check-list -->
             <div style="margin-bottom:1rem;">
               <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:6px;">¿Cada cuánto se hace este check-list?</label>
-              <select id="clbFrecuencia" style="width:100%;">
+              <select id="clbFrecuencia" style="width:100%;padding:10px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;outline:none;cursor:pointer;">
                 <option value="diario">Todos los días</option>
                 <option value="semanal" selected>1 vez por semana</option>
                 <option value="mensual">1 vez al mes</option>
@@ -2414,6 +2417,24 @@ footer{
     <div style="display:flex;gap:.5rem;padding:1rem 1.5rem;border-top:1px solid var(--bdr);flex-shrink:0;">
       <button class="btn-outline" style="flex:1;padding:11px;" onclick="closeGenModal()">Cancelar</button>
       <button class="btn-gold" style="flex:1;padding:11px;" id="genModalOk" onclick="genModalConfirm()">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIGURAR CHECK-LIST (constructor + personal) -->
+<div class="modal-overlay" id="configChecklistModal">
+  <div class="modal-box" style="max-width:640px;">
+    <div class="modal-hdr">
+      <h3>⚙️ Configurar check-list</h3>
+      <button class="modal-close" onclick="cerrarConfigChecklist()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- Pestañas -->
+      <div style="display:flex;gap:.5rem;margin-bottom:1.25rem;border-bottom:1px solid var(--bdr);">
+        <button id="tabCfgConstructor" class="cfg-cl-tab cfg-cl-tab-activo" onclick="setCfgChecklistTab('constructor')">🧩 Constructor</button>
+        <button id="tabCfgPersonal" class="cfg-cl-tab" onclick="setCfgChecklistTab('personal')">👷 Personal y accesos</button>
+      </div>
+      <div id="cfgChecklistContent"></div>
     </div>
   </div>
 </div>
@@ -2928,6 +2949,8 @@ function setTab(el, tabId){
     if(shareBtn) shareBtn.style.display = window._showChecklistShare ? 'inline-block' : 'none';
     var ob = document.getElementById('btnOpenChecklist');
     if(ob) ob.style.display = window._checklistIncluded ? 'inline-block' : 'none';
+    var cfgBtn = document.getElementById('btnConfigChecklist');
+    if(cfgBtn) cfgBtn.style.display = window._checklistIncluded ? 'inline-block' : 'none';
     loadChecklistRegistros();
   }
   if(tabId==='dash-config'){
@@ -2936,17 +2959,13 @@ function setTab(el, tabId){
     loadFreqConfig();
     loadDestinatarios();
     loadFirma();
-    loadChecklistConfig();
     loadWhiteLabel();
-    loadPersonal();
-    // Mostrar sección de personal y constructor solo si el checklist está habilitado
+    // El constructor y personal ahora viven en la ventana de Check-list.
+    // Los ocultamos de Configuración.
     var pc = document.getElementById('personalCard');
-    if(pc) pc.style.display = window._checklistIncluded ? 'block' : 'none';
+    if(pc) pc.style.display = 'none';
     var cb = document.getElementById('checklistBuilderCard');
-    if(cb){
-      cb.style.display = window._checklistIncluded ? 'block' : 'none';
-      if(window._checklistIncluded) loadChecklistBuilder();
-    }
+    if(cb) cb.style.display = 'none';
   }
   if(tabId==='dash-flota'){
     cambiarPeriodoFlota();
@@ -3894,6 +3913,32 @@ function addChecklistItem(){
 }
 function closeCatalogoItems(){ document.getElementById('catalogoItemsModal').classList.remove('open'); }
 
+// ── Configurar check-list (constructor + personal) en la ventana de check-list ──
+function abrirConfigChecklist(){
+  document.getElementById('configChecklistModal').classList.add('open');
+  setCfgChecklistTab('constructor');
+}
+function cerrarConfigChecklist(){
+  document.getElementById('configChecklistModal').classList.remove('open');
+}
+function setCfgChecklistTab(tab){
+  document.getElementById('tabCfgConstructor').classList.toggle('cfg-cl-tab-activo', tab==='constructor');
+  document.getElementById('tabCfgPersonal').classList.toggle('cfg-cl-tab-activo', tab==='personal');
+  var cont = document.getElementById('cfgChecklistContent');
+  // Mover el card correspondiente dentro del modal
+  var constructor = document.getElementById('checklistBuilderCard');
+  var personal = document.getElementById('personalCard');
+  if(tab==='constructor'){
+    if(constructor){ cont.appendChild(constructor); constructor.style.display='block'; }
+    if(personal) personal.style.display='none';
+    loadChecklistBuilder();
+  } else {
+    if(personal){ cont.appendChild(personal); personal.style.display='block'; }
+    if(constructor) constructor.style.display='none';
+    loadPersonal();
+  }
+}
+
 function setClbModo(modo){
   _clbModo = modo;
   document.getElementById('clbModoGeneral').classList.toggle('clb-modo-activo', modo==='general');
@@ -3936,36 +3981,60 @@ function renderChecklistBuilder(){
     return;
   }
   _clbItems.forEach(function(item, idx){
+    if(item.obligatorio === undefined) item.obligatorio = true; // por defecto obligatorio
+    var t = TIPOS_RESPUESTA[item.tipo] || TIPOS_RESPUESTA.estado;
     var wrap = document.createElement('div');
-    wrap.style.cssText = 'padding:.75rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);';
-    // Fila 1: nombre del ítem (FIJO, no editable) + borrar
+    wrap.style.cssText = 'padding:.7rem .8rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);';
+    // Fila 1: nombre + borrar
     var fila1 = document.createElement('div');
     fila1.style.cssText='display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem;';
     var nombre = document.createElement('span');
     nombre.textContent = item.texto;
     nombre.style.cssText='flex:1;color:var(--white);font-size:13px;font-weight:500;';
     var del = document.createElement('button');
-    del.className='btn-edit-veh'; del.textContent='🗑️'; del.style.cssText='font-size:12px;padding:6px 9px;';
+    del.className='btn-edit-veh'; del.textContent='🗑️'; del.style.cssText='font-size:12px;padding:5px 8px;';
     del.onclick=(function(i){ return function(){ _clbItems.splice(i,1); renderChecklistBuilder(); }; })(idx);
     fila1.appendChild(nombre); fila1.appendChild(del);
     wrap.appendChild(fila1);
-    // Fila 2: tipos de respuesta como botones visuales
+    // Fila 2: tipo de respuesta compacto + botón cambiar + toggle obligatorio
     var fila2 = document.createElement('div');
-    fila2.style.cssText='display:flex;gap:5px;flex-wrap:wrap;';
-    Object.keys(TIPOS_RESPUESTA).forEach(function(k){
-      var t = TIPOS_RESPUESTA[k];
-      var b = document.createElement('button');
-      b.className='clb-tipo-btn'+(item.tipo===k?' activo':'');
-      b.innerHTML = t.icono+' '+t.label;
-      b.onclick=(function(i,tipo){ return function(){ _clbItems[i].tipo=tipo; renderChecklistBuilder(); }; })(idx,k);
-      fila2.appendChild(b);
-    });
+    fila2.style.cssText='display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;';
+    // Tipo actual (compacto)
+    var tipoLbl = document.createElement('span');
+    tipoLbl.style.cssText='font-size:12px;color:var(--gray);';
+    tipoLbl.innerHTML = 'Respuesta: <span style="color:var(--gold);">'+t.icono+' '+t.label+'</span>';
+    fila2.appendChild(tipoLbl);
+    // Botón cambiar tipo (muestra las opciones solo al tocar)
+    var cambiar = document.createElement('button');
+    cambiar.textContent='cambiar'; cambiar.style.cssText='font-size:11px;color:var(--gray);background:none;border:none;text-decoration:underline;cursor:pointer;';
+    cambiar.onclick=(function(i){ return function(){ _clbTipoAbierto = (_clbTipoAbierto===i)?-1:i; renderChecklistBuilder(); }; })(idx);
+    fila2.appendChild(cambiar);
+    // Toggle obligatorio
+    var oblWrap = document.createElement('label');
+    oblWrap.style.cssText='margin-left:auto;display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray);cursor:pointer;';
+    var obl = document.createElement('input'); obl.type='checkbox'; obl.checked=item.obligatorio!==false; obl.style.accentColor='var(--gold)';
+    obl.onchange=(function(i){ return function(e){ _clbItems[i].obligatorio=e.target.checked; }; })(idx);
+    oblWrap.appendChild(obl); oblWrap.appendChild(document.createTextNode('Obligatorio'));
+    fila2.appendChild(oblWrap);
     wrap.appendChild(fila2);
+    // Fila 3 (opcional): opciones de tipo, SOLO si está abierto para este ítem
+    if(_clbTipoAbierto===idx){
+      var fila3 = document.createElement('div');
+      fila3.style.cssText='display:flex;gap:5px;flex-wrap:wrap;margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--bdr);';
+      Object.keys(TIPOS_RESPUESTA).forEach(function(k){
+        var tt = TIPOS_RESPUESTA[k];
+        var b = document.createElement('button');
+        b.className='clb-tipo-btn'+(item.tipo===k?' activo':'');
+        b.innerHTML = tt.icono+' '+tt.label;
+        b.onclick=(function(i,tipo){ return function(){ _clbItems[i].tipo=tipo; _clbTipoAbierto=-1; renderChecklistBuilder(); }; })(idx,k);
+        fila3.appendChild(b);
+      });
+      wrap.appendChild(fila3);
+    }
     cont.appendChild(wrap);
   });
 }
-
-
+var _clbTipoAbierto = -1;
 
 function saveChecklistBuilder(){
   var key = _clbKey();
@@ -3973,7 +4042,6 @@ function saveChecklistBuilder(){
   if(!items.length){ showToast('Agregá al menos un ítem','error'); return; }
   var cfg = loadState('checklistConfig') || {};
   cfg[key] = items;
-  // Guardar la frecuencia (global del checklist)
   var freqEl = document.getElementById('clbFrecuencia');
   if(freqEl) cfg._frecuencia = freqEl.value;
   saveState('checklistConfig', cfg);
@@ -4171,7 +4239,16 @@ function loginOperario(){
       return;
     }
     _opActual = { nombre:nombre, pin:pin, puesto:res.data[0].puesto, frecuencia:res.data[0].frecuencia||'semanal' };
-    mostrarPanelOperario();
+    // Traer la config del check-list de la empresa (los ítems que armó el admin)
+    sb.rpc('config_checklist_empresa', {
+      p_empresa_id: window._opEmpresaId, p_nombre: nombre, p_pin: pin
+    }).then(function(cfgRes){
+      if(!cfgRes.error && cfgRes.data){
+        // Guardar en el cache local para que onClTipoChange la use
+        _configCache['checklistConfig'] = cfgRes.data;
+      }
+      mostrarPanelOperario();
+    });
   });
 }
 
@@ -4872,9 +4949,12 @@ function addVehRow(v){
 //  COMPARTIR CHECKLIST (Enterprise — QR + link)
 // ══════════════════════════════════════════════════════
 function openShareChecklist(){
+  // Generar el link REAL con el ID de la empresa
+  var link = getChecklistBaseUrl() + '?cl=' + (window._empresaId||'');
+  var inp = document.getElementById('checklistLink');
+  if(inp) inp.value = link;
   document.getElementById('shareChecklistModal').classList.add('open');
   var qrEl = document.getElementById('qrCode');
-  var link = document.getElementById('checklistLink').value;
   qrEl.innerHTML = '';
   if(typeof QRCode !== 'undefined'){
     try{
@@ -5008,8 +5088,9 @@ function onClTipoChange(){
   items.forEach(function(item, i){
     var t = TIPOS_RESPUESTA[item.tipo] || TIPOS_RESPUESTA.estado;
     var nm = 'cli_'+i;
-    html += '<div class="cl-item-card" data-item="'+i+'" style="padding:.9rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:.6rem;">'
-      +'<div style="font-size:14px;color:var(--white);font-weight:500;margin-bottom:.6rem;">'+escapeHtml(item.texto)+'</div>';
+    var oblMark = (item.obligatorio!==false) ? '<span style="color:var(--red);" title="Obligatorio">*</span>' : '';
+    html += '<div class="cl-item-card" data-item="'+i+'" data-obl="'+(item.obligatorio!==false?'1':'0')+'" style="padding:.9rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:.6rem;">'
+      +'<div style="font-size:14px;color:var(--white);font-weight:500;margin-bottom:.6rem;">'+escapeHtml(item.texto)+' '+oblMark+'</div>';
 
     if(t.opciones.length){
       // Botones de opciones grandes con ícono + etiqueta
@@ -5065,6 +5146,37 @@ function actualizarProgresoChecklist(){
   if(bEl) bEl.style.width = total ? Math.round(completos/total*100)+'%' : '0%';
 }
 
+// Recolecta las respuestas de cada ítem y valida los obligatorios
+function recolectarRespuestasChecklist(){
+  var items = window._clItemsActivos || [];
+  var respuestas = {};
+  var faltan = [];
+  items.forEach(function(item, i){
+    var nm = 'cli_'+i;
+    var valor = null;
+    var t = TIPOS_RESPUESTA[item.tipo] || TIPOS_RESPUESTA.estado;
+    if(t.opciones.length){
+      var sel = document.querySelector('.cl-opt-btn[data-name="'+nm+'"][data-selected="1"]');
+      if(sel) valor = sel.getAttribute('data-val');
+    } else if(item.tipo==='observacion' || item.tipo==='numero'){
+      var inp = document.querySelector('[data-name="'+nm+'"]');
+      if(inp && inp.value.trim()) valor = inp.value.trim();
+    } else if(item.tipo==='firma'){
+      var canvas = document.querySelector('.cl-firma[data-item="'+i+'"]');
+      if(canvas && canvas.getAttribute('data-firmado')==='1'){
+        try{ valor = canvas.toDataURL('image/png'); }catch(e){ valor = 'firmado'; }
+      }
+    }
+    respuestas[item.texto] = valor;
+    // Validar obligatorio (por defecto todos son obligatorios salvo que diga obligatorio:false)
+    var esObligatorio = (item.obligatorio !== false);
+    if(esObligatorio && (valor===null || valor==='')){
+      faltan.push(item.texto);
+    }
+  });
+  return { ok: faltan.length===0, faltan: faltan, respuestas: respuestas };
+}
+
 // ── Firma con el dedo (canvas) ──
 function initFirmas(){
   document.querySelectorAll('.cl-firma').forEach(function(canvas){
@@ -5101,14 +5213,20 @@ var _checklistCache = [];
 function submitChecklist(){
   var patente = document.getElementById('clPatente').value;
   var tipo = document.getElementById('clTipoVeh').value;
-  // La frecuencia viene de la config del operario (no de la pantalla)
   var freq = (_opActual && _opActual.frecuencia) ? _opActual.frecuencia : document.getElementById('clFreqVeh').value;
-  // Si hay dominio de semi, agregarlo al identificador
   var semiEl = document.getElementById('clSemiDominio');
   var semiDom = (semiEl && semiEl.value.trim()) ? semiEl.value.trim().toUpperCase() : '';
   var idVehiculo = semiDom ? (patente+' + semi '+semiDom) : patente;
   var _h = new Date();
   var fecha = _h.getFullYear()+'-'+('0'+(_h.getMonth()+1)).slice(-2)+'-'+('0'+_h.getDate()).slice(-2);
+
+  // Recolectar las respuestas de cada ítem + validar obligatorios
+  var recolectado = recolectarRespuestasChecklist();
+  if(!recolectado.ok){
+    showToast('⚠️ Faltan responder ítems obligatorios: '+recolectado.faltan.join(', '),'error');
+    return;
+  }
+  var items = recolectado.respuestas;
 
   // Si es un operario cargando desde el link/QR, usar la función segura
   if(window._opModoCarga && _opActual && window._opEmpresaId){
@@ -5119,9 +5237,9 @@ function submitChecklist(){
       p_patente: idVehiculo,
       p_tipo_movil: tipo,
       p_frecuencia: freq,
-      p_items: {}
+      p_items: items,
+      p_fecha: fecha
     };
-    // Sin señal: guardar offline y avisar
     if(!sb || !navigator.onLine){
       encolarChecklistOffline(payload);
       closeChecklistForm();
@@ -5130,7 +5248,6 @@ function submitChecklist(){
     }
     sb.rpc('guardar_checklist_operario', payload).then(function(res){
       if(res.error){
-        // Si falla por red, guardar offline
         encolarChecklistOffline(payload);
         closeChecklistForm();
         showToast('📴 Guardado sin conexión. Se enviará al recuperar señal.','warning');
@@ -5146,21 +5263,24 @@ function submitChecklist(){
   if(sb && window._empresaId){
     sb.from('checklists').insert({
       empresa_id: window._empresaId,
-      patente: patente,
+      patente: idVehiculo,
       tipo_movil: tipo,
       frecuencia: freq,
-      fecha: fecha
+      fecha: fecha,
+      operario: (currentUser && currentUser.name) ? currentUser.name : 'Admin',
+      items: items
     }).then(function(res){
       if(res.error){ showToast('Error al guardar: '+res.error.message,'error'); return; }
-      _checklistCache.push({ patente:patente, freq:freq, fecha:fecha, estado:'realizado' });
+      _checklistCache.push({ patente:idVehiculo, freq:freq, fecha:fecha, estado:'realizado' });
       closeChecklistForm();
-      showToast('✓ Check-list '+freq+' de '+patente+' cargado ('+fecha+'). Guardado.','success');
+      showToast('✓ Check-list de '+idVehiculo+' cargado ('+fecha+'). Guardado.','success');
       marcarChecklistRealizado(patente, freq, fecha);
+      loadChecklistRegistros();
     });
   } else {
-    _checklistCache.push({ patente:patente, freq:freq, fecha:fecha, estado:'realizado' });
+    _checklistCache.push({ patente:idVehiculo, freq:freq, fecha:fecha, estado:'realizado' });
     closeChecklistForm();
-    showToast('✓ Check-list '+freq+' de '+patente+' cargado ('+fecha+').','success');
+    showToast('✓ Check-list de '+idVehiculo+' cargado ('+fecha+').','success');
     marcarChecklistRealizado(patente, freq, fecha);
   }
 }
