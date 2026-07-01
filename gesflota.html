@@ -1933,85 +1933,6 @@ footer{
           </div>
 
           <!-- Config Checklist + White-label (SOLO Enterprise) -->
-          <div class="app-card" id="checklistConfigCard" style="padding:1.5rem;margin-top:.75rem;display:none;">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:.5rem;">
-              <div style="font-size:13px;font-weight:600;color:var(--gold);">📋 Configuración de Check-list</div>
-              <span style="font-size:9px;background:var(--green);color:#000;padding:1px 6px;border-radius:4px;font-weight:700;">ENTERPRISE</span>
-            </div>
-            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Definí cada cuánto se hace el check-list, qué módulos usás y qué ítems aparecen en la app de carga.</div>
-
-            <!-- Qué módulos usa -->
-            <div style="margin-bottom:1.25rem;">
-              <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:6px;">¿Qué módulos de check-list vas a usar?</label>
-              <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                <label class="alert-chip"><input type="radio" name="clModulos" value="ambos" checked onchange="toggleClModulos()"/> Pesados + Livianos</label>
-                <label class="alert-chip"><input type="radio" name="clModulos" value="livianos" onchange="toggleClModulos()"/> Solo Livianos</label>
-                <label class="alert-chip"><input type="radio" name="clModulos" value="pesados" onchange="toggleClModulos()"/> Solo Pesados</label>
-              </div>
-            </div>
-
-            <div style="margin-bottom:1.25rem;">
-              <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:6px;">Frecuencia del check-list por vehículo</label>
-              <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                <label class="alert-chip"><input type="radio" name="clFreq" value="semanal" checked/> 1 vez por semana</label>
-                <label class="alert-chip"><input type="radio" name="clFreq" value="diario"/> Todos los días</label>
-                <label class="alert-chip"><input type="radio" name="clFreq" value="mensual"/> 1 vez al mes</label>
-              </div>
-            </div>
-
-            <!-- Campos MÓVILES LIVIANOS -->
-            <div id="clFieldsLivianos" style="margin-bottom:1.25rem;">
-              <label style="font-size:12px;color:var(--gold);display:block;margin-bottom:6px;font-weight:600;">🚗 Ítems Móviles Livianos</label>
-              <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="km" checked/> Kilometraje</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="documentacion" checked/> Documentación vehículo</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="docpersonal" checked/> Documentación personal</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="cajaherr" checked/> Caja de herramientas</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="gato" checked/> Gato</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="llaverueda" checked/> Llave de rueda</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="auxilio" checked/> Rueda de auxilio</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="chaleco" checked/> Chaleco refractario</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="conos" checked/> Conos</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="matafuegos" checked/> Matafuegos</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="botiquin" checked/> Botiquín</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="triangulos" checked/> Triángulos</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="luces" checked/> Luces</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="neumaticos" checked/> Neumáticos</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="frenos" checked/> Frenos</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="foto"/> Foto del vehículo</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-liv" value="firma" checked/> Firma del operario</label>
-              </div>
-            </div>
-
-            <!-- Campos MÓVILES PESADOS -->
-            <div id="clFieldsPesados" style="margin-bottom:1.25rem;">
-              <label style="font-size:12px;color:var(--gold);display:block;margin-bottom:6px;font-weight:600;">🚛 Ítems Móviles Pesados</label>
-              <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="km" checked/> Kilometraje</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="horas" checked/> Horas de uso</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="documentacion" checked/> Documentación vehículo</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="docpersonal" checked/> Documentación personal</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="cajaherr" checked/> Caja de herramientas</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="gato" checked/> Gato</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="llaverueda" checked/> Llave de rueda</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="chaleco" checked/> Chaleco refractario</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="conos" checked/> Conos (4)</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="cadenas" checked/> Cadenas y perro</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="matafuegos" checked/> Matafuegos</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="arrestallamas" checked/> Arrestallamas</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="botiquin" checked/> Botiquín</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="cablevida" checked/> Cable de vida</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="izaje" checked/> Elementos de izaje (fajas, grilletes, soga, arnés)</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="semirremolque"/> Semirremolque</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="hidrogrua"/> Hidrogrúa</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="estadogeneral" checked/> Estado general</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="foto"/> Foto del vehículo</label>
-                <label class="alert-chip"><input type="checkbox" class="cl-field-pes" value="firma" checked/> Firma del operario</label>
-              </div>
-            </div>
-            <button class="btn-gold" style="font-size:13px;padding:9px 18px;" onclick="saveChecklistConfig()">Guardar configuración</button>
-          </div>
-
           <!-- Constructor de check-lists por puesto -->
           <div class="app-card" id="checklistBuilderCard" style="padding:1.5rem;margin-top:.75rem;display:none;">
             <div style="font-size:14px;font-weight:600;color:var(--gold);margin-bottom:.4rem;">🧩 Constructor de check-list</div>
@@ -2022,6 +1943,16 @@ footer{
             <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;">
               <button id="clbModoGeneral" class="clb-modo-btn clb-modo-activo" onclick="setClbModo('general')">📋 Uno general (todos igual)</button>
               <button id="clbModoPuesto" class="clb-modo-btn" onclick="setClbModo('puesto')">🧩 Distinto por puesto</button>
+            </div>
+
+            <!-- Frecuencia del check-list -->
+            <div style="margin-bottom:1rem;">
+              <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:6px;">¿Cada cuánto se hace este check-list?</label>
+              <select id="clbFrecuencia" style="width:100%;">
+                <option value="diario">Todos los días</option>
+                <option value="semanal" selected>1 vez por semana</option>
+                <option value="mensual">1 vez al mes</option>
+              </select>
             </div>
 
             <!-- Selector de puesto (si es por puesto) -->
@@ -2483,6 +2414,20 @@ footer{
     <div style="display:flex;gap:.5rem;padding:1rem 1.5rem;border-top:1px solid var(--bdr);flex-shrink:0;">
       <button class="btn-outline" style="flex:1;padding:11px;" onclick="closeGenModal()">Cancelar</button>
       <button class="btn-gold" style="flex:1;padding:11px;" id="genModalOk" onclick="genModalConfirm()">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CATÁLOGO DE ÍTEMS -->
+<div class="modal-overlay" id="catalogoItemsModal">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="modal-hdr">
+      <h3>Elegí un ítem</h3>
+      <button class="modal-close" onclick="closeCatalogoItems()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--gray);margin-bottom:1rem;">Tocá un ítem para agregarlo al check-list. Después elegís cómo se responde.</p>
+      <div id="catalogoItemsList" style="display:flex;flex-direction:column;gap:.4rem;"></div>
     </div>
   </div>
 </div>
@@ -3818,6 +3763,137 @@ var CHECKLIST_DEFAULTS = {
 var _clbItems = [];
 var _clbModo = 'general'; // 'general' | 'puesto'
 
+// Catálogo de ítems predeterminados (todos los del sistema original, agrupados)
+// El usuario elige de acá, no escribe el nombre.
+var CATALOGO_ITEMS = [
+  // ── Medición ──
+  {texto:'Kilometraje', tipo:'numero', grupo:'Medición'},
+  {texto:'Horas de uso', tipo:'numero', grupo:'Medición'},
+  // ── Documentación del vehículo ──
+  {texto:'VTV / RTO', tipo:'presencia', grupo:'Documentación'},
+  {texto:'Seguro', tipo:'presencia', grupo:'Documentación'},
+  {texto:'Cédula / Credencial', tipo:'presencia', grupo:'Documentación'},
+  {texto:'Patente visible', tipo:'siNo', grupo:'Documentación'},
+  {texto:'Documentación del vehículo', tipo:'presencia', grupo:'Documentación'},
+  // ── Documentación personal ──
+  {texto:'Licencia de conducir', tipo:'presencia', grupo:'Documentación personal'},
+  {texto:'Manejo defensivo', tipo:'presencia', grupo:'Documentación personal'},
+  {texto:'Carnet hidrogrúa', tipo:'presencia', grupo:'Documentación personal'},
+  {texto:'Autorización de manejo', tipo:'presencia', grupo:'Documentación personal'},
+  {texto:'Documentación personal', tipo:'presencia', grupo:'Documentación personal'},
+  {texto:'Documentación interna de la empresa', tipo:'presencia', grupo:'Documentación personal'},
+  // ── Elementos obligatorios ──
+  {texto:'Caja de herramientas', tipo:'presencia', grupo:'Elementos obligatorios'},
+  {texto:'Gato', tipo:'presencia', grupo:'Elementos obligatorios'},
+  {texto:'Llave de rueda', tipo:'presencia', grupo:'Elementos obligatorios'},
+  {texto:'Rueda de auxilio', tipo:'estadoFisico', grupo:'Elementos obligatorios'},
+  {texto:'Chaleco refractario', tipo:'presencia', grupo:'Elementos obligatorios'},
+  {texto:'Conos de señalización', tipo:'presencia', grupo:'Elementos obligatorios'},
+  {texto:'Conos de señalización (4)', tipo:'presencia', grupo:'Elementos obligatorios'},
+  {texto:'Cadenas y perro (2)', tipo:'presencia', grupo:'Elementos obligatorios'},
+  {texto:'Matafuegos', tipo:'estadoFisico', grupo:'Elementos obligatorios'},
+  {texto:'Arrestallamas', tipo:'presencia', grupo:'Elementos obligatorios'},
+  {texto:'Botiquín', tipo:'presencia', grupo:'Elementos obligatorios'},
+  {texto:'Triángulos de seguridad', tipo:'presencia', grupo:'Elementos obligatorios'},
+  {texto:'Linterna', tipo:'presencia', grupo:'Elementos obligatorios'},
+  {texto:'Cable de vida', tipo:'presencia', grupo:'Elementos obligatorios'},
+  // ── Estado general ──
+  {texto:'Estado general del vehículo', tipo:'estado', grupo:'Estado general'},
+  {texto:'Luces (todas)', tipo:'estado', grupo:'Estado general'},
+  {texto:'Luces y balizas', tipo:'estado', grupo:'Estado general'},
+  {texto:'Neumáticos', tipo:'estadoFisico', grupo:'Estado general'},
+  {texto:'Neumáticos (todos)', tipo:'estadoFisico', grupo:'Estado general'},
+  {texto:'Frenos', tipo:'estado', grupo:'Estado general'},
+  {texto:'Dirección', tipo:'estado', grupo:'Estado general'},
+  {texto:'Suspensión', tipo:'estado', grupo:'Estado general'},
+  {texto:'Limpiaparabrisas', tipo:'estado', grupo:'Estado general'},
+  {texto:'Espejos', tipo:'estado', grupo:'Estado general'},
+  {texto:'Cinturones', tipo:'estado', grupo:'Estado general'},
+  {texto:'Estado carrocería', tipo:'estado', grupo:'Estado general'},
+  {texto:'Sistema neumático', tipo:'estado', grupo:'Estado general'},
+  {texto:'Quinta rueda', tipo:'estado', grupo:'Estado general'},
+  {texto:'Batería', tipo:'estado', grupo:'Estado general'},
+  {texto:'Correas', tipo:'estado', grupo:'Estado general'},
+  // ── Niveles y fluidos ──
+  {texto:'Aceite motor', tipo:'nivel', grupo:'Niveles y fluidos'},
+  {texto:'Refrigerante', tipo:'nivel', grupo:'Niveles y fluidos'},
+  {texto:'Líquido de frenos', tipo:'nivel', grupo:'Niveles y fluidos'},
+  {texto:'Caja', tipo:'nivel', grupo:'Niveles y fluidos'},
+  {texto:'Transmisión', tipo:'nivel', grupo:'Niveles y fluidos'},
+  {texto:'Presión neumáticos', tipo:'nivel', grupo:'Niveles y fluidos'},
+  {texto:'Niveles (aceite, agua, refrigerante)', tipo:'nivel', grupo:'Niveles y fluidos'},
+  {texto:'Pérdidas (agua / aceite)', tipo:'siNo', grupo:'Niveles y fluidos'},
+  // ── Elementos de izaje ──
+  {texto:'Fajas (4)', tipo:'estadoFisico', grupo:'Elementos de izaje'},
+  {texto:'Grilletes', tipo:'estadoFisico', grupo:'Elementos de izaje'},
+  {texto:'Soga', tipo:'estadoFisico', grupo:'Elementos de izaje'},
+  {texto:'Arnés', tipo:'estadoFisico', grupo:'Elementos de izaje'},
+  {texto:'Apoyo hidráulico', tipo:'estado', grupo:'Elementos de izaje'},
+  {texto:'Plataformas / estabilizadores', tipo:'estado', grupo:'Elementos de izaje'},
+  {texto:'Elementos de izaje (fajas, grilletes, soga, arnés)', tipo:'estadoFisico', grupo:'Elementos de izaje'},
+  // ── Semirremolque ──
+  {texto:'Luces semi', tipo:'estado', grupo:'Semirremolque'},
+  {texto:'Cubiertas', tipo:'estadoFisico', grupo:'Semirremolque'},
+  {texto:'Frenos semi', tipo:'estado', grupo:'Semirremolque'},
+  {texto:'Patas de apoyo', tipo:'estado', grupo:'Semirremolque'},
+  {texto:'Reflectivos', tipo:'presencia', grupo:'Semirremolque'},
+  {texto:'Plato / enganche', tipo:'estado', grupo:'Semirremolque'},
+  {texto:'Semirremolque (general)', tipo:'estado', grupo:'Semirremolque'},
+  // ── Hidrogrúa ──
+  {texto:'Estado de cables', tipo:'estadoFisico', grupo:'Hidrogrúa'},
+  {texto:'Funcionamiento hidráulico', tipo:'estado', grupo:'Hidrogrúa'},
+  {texto:'Pérdidas de aceite', tipo:'siNo', grupo:'Hidrogrúa'},
+  {texto:'Mandos', tipo:'estado', grupo:'Hidrogrúa'},
+  {texto:'Estabilizadores', tipo:'estado', grupo:'Hidrogrúa'},
+  {texto:'Gancho y seguro', tipo:'estado', grupo:'Hidrogrúa'},
+  // ── Carga / mantenimiento ──
+  {texto:'Mercadería / carga', tipo:'estadoFisico', grupo:'Otros'},
+  {texto:'Combustible suficiente', tipo:'siNo', grupo:'Otros'},
+  {texto:'Tipo de intervención', tipo:'observacion', grupo:'Otros'},
+  {texto:'Repuestos utilizados', tipo:'observacion', grupo:'Otros'},
+  {texto:'Requiere seguimiento', tipo:'siNo', grupo:'Otros'},
+  {texto:'Observaciones', tipo:'observacion', grupo:'Otros'},
+  {texto:'Firma del responsable', tipo:'firma', grupo:'Otros'}
+];
+
+function addChecklistItem(){
+  // Mostrar el catálogo de ítems predeterminados agrupado por categoría
+  var cont = document.getElementById('catalogoItemsList');
+  cont.innerHTML = '';
+  var yaAgregados = _clbItems.map(function(it){ return it.texto; });
+  // Agrupar
+  var grupos = {};
+  CATALOGO_ITEMS.forEach(function(item){
+    var g = item.grupo || 'Otros';
+    if(!grupos[g]) grupos[g] = [];
+    grupos[g].push(item);
+  });
+  Object.keys(grupos).forEach(function(g){
+    var titulo = document.createElement('div');
+    titulo.style.cssText='font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.04em;margin:.75rem 0 .35rem;';
+    titulo.textContent = g;
+    cont.appendChild(titulo);
+    grupos[g].forEach(function(item){
+      var yaEsta = yaAgregados.indexOf(item.texto)>=0;
+      var t = TIPOS_RESPUESTA[item.tipo] || TIPOS_RESPUESTA.estado;
+      var b = document.createElement('button');
+      b.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:9px 12px;border-radius:var(--r);border:1px solid var(--bdr);background:'+(yaEsta?'var(--gold-dim)':'var(--input-bg)')+';color:var(--white);font-size:13px;cursor:'+(yaEsta?'default':'pointer')+';text-align:left;width:100%;opacity:'+(yaEsta?'.5':'1')+';margin-bottom:3px;';
+      b.innerHTML = '<span>'+t.icono+' '+escapeHtml(item.texto)+'</span>'+(yaEsta?'<span style="font-size:11px;color:var(--gold);">✓</span>':'<span style="font-size:16px;color:var(--gold);">+</span>');
+      if(!yaEsta){
+        b.onclick = (function(it){ return function(){
+          _clbItems.push({texto:it.texto, tipo:it.tipo});
+          renderChecklistBuilder();
+          closeCatalogoItems();
+          showToast('✓ "'+it.texto+'" agregado','success');
+        }; })(item);
+      }
+      cont.appendChild(b);
+    });
+  });
+  document.getElementById('catalogoItemsModal').classList.add('open');
+}
+function closeCatalogoItems(){ document.getElementById('catalogoItemsModal').classList.remove('open'); }
+
 function setClbModo(modo){
   _clbModo = modo;
   document.getElementById('clbModoGeneral').classList.toggle('clb-modo-activo', modo==='general');
@@ -3838,6 +3914,9 @@ function loadChecklistBuilder(){
   } else {
     _clbItems = [];
   }
+  // Cargar frecuencia guardada
+  var freqEl = document.getElementById('clbFrecuencia');
+  if(freqEl && cfg._frecuencia) freqEl.value = cfg._frecuencia;
   renderChecklistBuilder();
 }
 
@@ -3859,17 +3938,16 @@ function renderChecklistBuilder(){
   _clbItems.forEach(function(item, idx){
     var wrap = document.createElement('div');
     wrap.style.cssText = 'padding:.75rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);';
-    // Fila 1: texto del ítem + borrar
+    // Fila 1: nombre del ítem (FIJO, no editable) + borrar
     var fila1 = document.createElement('div');
     fila1.style.cssText='display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem;';
-    var inp = document.createElement('input');
-    inp.type='text'; inp.value=item.texto; inp.placeholder='Descripción del ítem';
-    inp.style.cssText='flex:1;background:var(--card);border:1px solid var(--bdr);color:var(--white);font-size:13px;padding:8px;border-radius:6px;outline:none;';
-    inp.oninput=(function(i){ return function(e){ _clbItems[i].texto=e.target.value; }; })(idx);
+    var nombre = document.createElement('span');
+    nombre.textContent = item.texto;
+    nombre.style.cssText='flex:1;color:var(--white);font-size:13px;font-weight:500;';
     var del = document.createElement('button');
     del.className='btn-edit-veh'; del.textContent='🗑️'; del.style.cssText='font-size:12px;padding:6px 9px;';
     del.onclick=(function(i){ return function(){ _clbItems.splice(i,1); renderChecklistBuilder(); }; })(idx);
-    fila1.appendChild(inp); fila1.appendChild(del);
+    fila1.appendChild(nombre); fila1.appendChild(del);
     wrap.appendChild(fila1);
     // Fila 2: tipos de respuesta como botones visuales
     var fila2 = document.createElement('div');
@@ -3887,17 +3965,17 @@ function renderChecklistBuilder(){
   });
 }
 
-function addChecklistItem(){
-  _clbItems.push({texto:'', tipo:'estado'});
-  renderChecklistBuilder();
-}
+
 
 function saveChecklistBuilder(){
   var key = _clbKey();
   var items = _clbItems.filter(function(it){ return it.texto && it.texto.trim(); });
-  if(!items.length){ showToast('Agregá al menos un ítem con descripción','error'); return; }
+  if(!items.length){ showToast('Agregá al menos un ítem','error'); return; }
   var cfg = loadState('checklistConfig') || {};
   cfg[key] = items;
+  // Guardar la frecuencia (global del checklist)
+  var freqEl = document.getElementById('clbFrecuencia');
+  if(freqEl) cfg._frecuencia = freqEl.value;
   saveState('checklistConfig', cfg);
   var nombre = key==='general' ? 'general' : 'de '+key;
   showToast('✓ Check-list '+nombre+' guardado ('+items.length+' ítems)','success');
@@ -5603,36 +5681,9 @@ function loadFirma(){
 // ══════════════════════════════════════════════════════
 //  CONFIG CHECKLIST + WHITE-LABEL (Enterprise)
 // ══════════════════════════════════════════════════════
-function toggleClModulos(){
-  var mod = document.querySelector('input[name="clModulos"]:checked');
-  var v = mod ? mod.value : 'ambos';
-  var liv = document.getElementById('clFieldsLivianos');
-  var pes = document.getElementById('clFieldsPesados');
-  if(liv) liv.style.display = (v==='ambos'||v==='livianos') ? 'block' : 'none';
-  if(pes) pes.style.display = (v==='ambos'||v==='pesados') ? 'block' : 'none';
-}
-function saveChecklistConfig(){
-  var freq = document.querySelector('input[name="clFreq"]:checked');
-  var mod = document.querySelector('input[name="clModulos"]:checked');
-  var camposLiv = [], camposPes = [];
-  document.querySelectorAll('.cl-field-liv:checked').forEach(function(c){ camposLiv.push(c.value); });
-  document.querySelectorAll('.cl-field-pes:checked').forEach(function(c){ camposPes.push(c.value); });
-  saveState('checklistConfig', {
-    freq: freq?freq.value:'semanal',
-    modulos: mod?mod.value:'ambos',
-    camposLiv: camposLiv, camposPes: camposPes
-  });
-  showToast('✓ Configuración de check-list guardada','success');
-}
-function loadChecklistConfig(){
-  var cfg = loadState('checklistConfig');
-  if(!cfg) { toggleClModulos(); return; }
-  if(cfg.freq){ var r=document.querySelector('input[name="clFreq"][value="'+cfg.freq+'"]'); if(r) r.checked=true; }
-  if(cfg.modulos){ var m=document.querySelector('input[name="clModulos"][value="'+cfg.modulos+'"]'); if(m) m.checked=true; }
-  if(cfg.camposLiv){ document.querySelectorAll('.cl-field-liv').forEach(function(c){ c.checked = cfg.camposLiv.indexOf(c.value)>=0; }); }
-  if(cfg.camposPes){ document.querySelectorAll('.cl-field-pes').forEach(function(c){ c.checked = cfg.camposPes.indexOf(c.value)>=0; }); }
-  toggleClModulos();
-}
+function toggleClModulos(){ /* sección vieja eliminada, reemplazada por el constructor */ }
+function saveChecklistConfig(){ /* reemplazada por saveChecklistBuilder */ }
+function loadChecklistConfig(){ /* reemplazada por loadChecklistBuilder */ }
 function saveWhiteLabel(){
   var nombre = document.getElementById('wlNombre').value.trim();
   if(!nombre){ showToast('Ingresá el nombre de tu empresa','error'); return; }
