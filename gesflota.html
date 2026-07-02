@@ -2326,14 +2326,21 @@ footer{
 
 <!-- MODAL CATÁLOGO DE ÍTEMS -->
 <div class="modal-overlay" id="catalogoItemsModal">
-  <div class="modal-box" style="max-width:440px;">
+  <div class="modal-box" style="max-width:900px;width:95vw;height:90vh;display:flex;flex-direction:column;">
     <div class="modal-hdr">
-      <h3>Elegí un ítem</h3>
+      <h3>Elegí los ítems del check-list</h3>
       <button class="modal-close" onclick="closeCatalogoItems()">×</button>
     </div>
-    <div class="modal-body">
-      <p style="font-size:12px;color:var(--gray);margin-bottom:1rem;">Tocá un ítem para agregarlo al check-list. Después elegís cómo se responde.</p>
-      <div id="catalogoItemsList" style="display:flex;flex-direction:column;gap:.4rem;"></div>
+    <div class="modal-body" style="flex:1;overflow-y:auto;">
+      <p style="font-size:12px;color:var(--gray);margin-bottom:1rem;">Marcá todos los ítems que quieras. Podés seleccionar un grupo entero con el botón de al lado del título. Cuando termines, tocá <strong style="color:var(--gold);">Guardar seleccionados</strong>.</p>
+      <div id="catalogoItemsList"></div>
+    </div>
+    <div style="padding:1rem 1.5rem;border-top:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center;gap:1rem;background:var(--card);border-radius:0 0 var(--r) var(--r);">
+      <span id="catalogoContador" style="font-size:13px;color:var(--gray);">0 ítems seleccionados</span>
+      <div style="display:flex;gap:.5rem;">
+        <button class="btn-outline" style="font-size:13px;padding:9px 16px;" onclick="closeCatalogoItems()">Cancelar</button>
+        <button class="btn-gold" style="font-size:13px;padding:9px 20px;" onclick="guardarSeleccionCatalogo()">Guardar seleccionados</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3764,8 +3771,16 @@ var CATALOGO_ITEMS = [
   {texto:'Firma del responsable', tipo:'firma', grupo:'Otros'}
 ];
 
+var _catalogoSeleccion = {}; // texto -> item seleccionado (pendiente de guardar)
+
 function addChecklistItem(){
-  // Mostrar el catálogo de ítems predeterminados agrupado por categoría
+  _catalogoSeleccion = {}; // reiniciar selección
+  renderCatalogoItems();
+  actualizarContadorCatalogo();
+  document.getElementById('catalogoItemsModal').classList.add('open');
+}
+
+function renderCatalogoItems(){
   var cont = document.getElementById('catalogoItemsList');
   cont.innerHTML = '';
   var yaAgregados = _clbItems.map(function(it){ return it.texto; });
@@ -3777,31 +3792,78 @@ function addChecklistItem(){
     grupos[g].push(item);
   });
   Object.keys(grupos).forEach(function(g){
-    var titulo = document.createElement('div');
-    titulo.style.cssText='font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.04em;margin:.75rem 0 .35rem;';
+    // Encabezado de grupo con botón "seleccionar todo el grupo"
+    var header = document.createElement('div');
+    header.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin:1.1rem 0 .5rem;';
+    var titulo = document.createElement('span');
+    titulo.style.cssText='font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.04em;';
     titulo.textContent = g;
-    cont.appendChild(titulo);
+    // ¿Cuántos del grupo se pueden agregar (no están ya en el checklist)?
+    var disponibles = grupos[g].filter(function(it){ return yaAgregados.indexOf(it.texto)<0; });
+    var todosSel = disponibles.length>0 && disponibles.every(function(it){ return _catalogoSeleccion[it.texto]; });
+    var btnGrupo = document.createElement('button');
+    btnGrupo.style.cssText='font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid '+(todosSel?'var(--gold)':'var(--bdr)')+';background:'+(todosSel?'var(--gold-dim)':'transparent')+';color:'+(todosSel?'var(--gold)':'var(--gray)')+';cursor:pointer;white-space:nowrap;';
+    btnGrupo.textContent = todosSel ? '✓ Todo el grupo' : '+ Todo el grupo';
+    if(disponibles.length===0){ btnGrupo.style.display='none'; }
+    btnGrupo.onclick = (function(disp, marcar){ return function(){
+      disp.forEach(function(it){
+        if(marcar) _catalogoSeleccion[it.texto] = {texto:it.texto, tipo:it.tipo};
+        else delete _catalogoSeleccion[it.texto];
+      });
+      renderCatalogoItems();
+      actualizarContadorCatalogo();
+    }; })(disponibles, !todosSel);
+    header.appendChild(titulo); header.appendChild(btnGrupo);
+    cont.appendChild(header);
+
+    // Grid de ítems del grupo
+    var grid = document.createElement('div');
+    grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px;';
     grupos[g].forEach(function(item){
       var yaEsta = yaAgregados.indexOf(item.texto)>=0;
+      var seleccionado = !!_catalogoSeleccion[item.texto];
       var t = TIPOS_RESPUESTA[item.tipo] || TIPOS_RESPUESTA.estado;
       var vaAlFinal = (item.tipo==='firma' || item.tipo==='observacion');
       var notaFinal = vaAlFinal ? '<span style="font-size:9px;color:var(--gray);margin-left:5px;">(va al final)</span>' : '';
       var b = document.createElement('button');
-      b.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:9px 12px;border-radius:var(--r);border:1px solid var(--bdr);background:'+(yaEsta?'var(--gold-dim)':'var(--input-bg)')+';color:var(--white);font-size:13px;cursor:'+(yaEsta?'default':'pointer')+';text-align:left;width:100%;opacity:'+(yaEsta?'.5':'1')+';margin-bottom:3px;';
-      b.innerHTML = '<span>'+t.icono+' '+escapeHtml(item.texto)+notaFinal+'</span>'+(yaEsta?'<span style="font-size:11px;color:var(--gold);">✓</span>':'<span style="font-size:16px;color:var(--gold);">+</span>');
+      var bg = yaEsta ? 'var(--gold-dim)' : (seleccionado ? 'var(--gold-dim)' : 'var(--input-bg)');
+      var bd = seleccionado ? 'var(--gold)' : 'var(--bdr)';
+      b.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:9px 12px;border-radius:var(--r);border:1.5px solid '+bd+';background:'+bg+';color:var(--white);font-size:13px;cursor:'+(yaEsta?'default':'pointer')+';text-align:left;width:100%;opacity:'+(yaEsta?'.5':'1')+';';
+      var marca = yaEsta
+        ? '<span style="font-size:11px;color:var(--gold);">ya está</span>'
+        : (seleccionado ? '<span style="font-size:15px;color:var(--gold);">☑</span>' : '<span style="font-size:15px;color:var(--gray);">☐</span>');
+      b.innerHTML = '<span>'+t.icono+' '+escapeHtml(item.texto)+notaFinal+'</span>'+marca;
       if(!yaEsta){
         b.onclick = (function(it){ return function(){
-          _clbItems.push({texto:it.texto, tipo:it.tipo});
-          renderChecklistBuilder();
-          closeCatalogoItems();
-          showToast('✓ "'+it.texto+'" agregado','success');
+          if(_catalogoSeleccion[it.texto]) delete _catalogoSeleccion[it.texto];
+          else _catalogoSeleccion[it.texto] = {texto:it.texto, tipo:it.tipo};
+          renderCatalogoItems();
+          actualizarContadorCatalogo();
         }; })(item);
       }
-      cont.appendChild(b);
+      grid.appendChild(b);
     });
+    cont.appendChild(grid);
   });
-  document.getElementById('catalogoItemsModal').classList.add('open');
 }
+
+function actualizarContadorCatalogo(){
+  var n = Object.keys(_catalogoSeleccion).length;
+  var el = document.getElementById('catalogoContador');
+  if(el) el.textContent = n + (n===1?' ítem seleccionado':' ítems seleccionados');
+}
+
+function guardarSeleccionCatalogo(){
+  var seleccionados = Object.keys(_catalogoSeleccion);
+  if(!seleccionados.length){ showToast('No marcaste ningún ítem','error'); return; }
+  seleccionados.forEach(function(txt){
+    _clbItems.push({texto:_catalogoSeleccion[txt].texto, tipo:_catalogoSeleccion[txt].tipo});
+  });
+  renderChecklistBuilder();
+  closeCatalogoItems();
+  showToast('✓ '+seleccionados.length+' ítem'+(seleccionados.length===1?'':'s')+' agregado'+(seleccionados.length===1?'':'s'),'success');
+}
+
 function closeCatalogoItems(){ document.getElementById('catalogoItemsModal').classList.remove('open'); }
 
 // ── Configurar check-list (constructor + personal) en la ventana de check-list ──
