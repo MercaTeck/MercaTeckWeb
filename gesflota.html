@@ -1492,23 +1492,6 @@ footer{
               <button id="btnConfigChecklist" style="display:none;font-size:12px;padding:6px 14px;background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-border);border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="abrirConfigChecklist()">⚙️ Configurar check-list</button>
               <button id="btnOpenChecklist" style="display:none;font-size:12px;padding:6px 14px;background:var(--green);color:#000;border:none;border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="openChecklistForm()">📋 Cargar check-list</button>
               <button id="btnShareChecklist" style="display:none;font-size:12px;padding:6px 14px;background:var(--gold);color:#000;border:none;border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="openShareChecklist()">📲 Compartir / QR</button>
-              <select id="checklistFiltroObra" style="font-size:12px;padding:6px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
-                <option>Todas las obras</option>
-                <option>Obra Norte</option>
-                <option>Obra Sur</option>
-                <option>Obra Este</option>
-              </select>
-              <select id="checklistFiltroTipo" style="font-size:12px;padding:6px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
-                <option>Semanal + Mensual</option>
-                <option>Solo Semanal</option>
-                <option>Solo Mensual</option>
-              </select>
-              <select id="checklistFiltroPeriodo" style="font-size:12px;padding:6px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
-                <option value="semana">Esta semana</option>
-                <option value="mes">Este mes</option>
-                <option value="todo">Histórico</option>
-              </select>
-              <input type="text" id="checklistFiltroPat" placeholder="🔍 Patente / ID" style="font-size:12px;padding:6px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);width:140px;"/>
             </div>
           </div>
 
@@ -1523,6 +1506,20 @@ footer{
           <!-- Filtros del panel de check-list (movidos desde flota) -->
           <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
             <input type="text" id="clFiltroPat" placeholder="🔍 Patente / ID" onkeyup="renderChecklistsCargados()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);flex:1;min-width:150px;outline:none;"/>
+            <select id="clFiltroSector" onchange="renderChecklistsCargados()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+              <option value="">Todos los sectores</option>
+            </select>
+            <select id="clFiltroFrecuencia" onchange="renderChecklistsCargados()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+              <option value="">Toda frecuencia</option>
+              <option value="diario">Diario</option>
+              <option value="semanal">Semanal</option>
+              <option value="mensual">Mensual</option>
+            </select>
+            <select id="clFiltroPeriodo" onchange="renderChecklistsCargados()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+              <option value="todo">Histórico</option>
+              <option value="semana">Esta semana</option>
+              <option value="mes">Este mes</option>
+            </select>
             <select id="clFiltroOperario" onchange="renderChecklistsCargados()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
               <option value="">Por operario: todos</option>
             </select>
@@ -5217,6 +5214,7 @@ function loadChecklistRegistros(){
         // Cargar el mapa de puestos (para el filtro por puesto) y los operarios (para su filtro)
         cargarPersonalPuestos(function(){
           llenarFiltroOperariosChecklist();
+          llenarFiltroSectoresChecklist();
           renderChecklistsCargados();
           actualizarStatsChecklist();
         });
@@ -5263,7 +5261,23 @@ function renderChecklistsCargados(){
   var fPat = (document.getElementById('clFiltroPat')||{}).value || '';
   var fOp = (document.getElementById('clFiltroOperario')||{}).value || '';
   var fPuesto = (document.getElementById('clFiltroPuesto')||{}).value || '';
+  var fSector = (document.getElementById('clFiltroSector')||{}).value || '';
+  var fFreq = (document.getElementById('clFiltroFrecuencia')||{}).value || '';
+  var fPeriodo = (document.getElementById('clFiltroPeriodo')||{}).value || 'todo';
   fPat = fPat.toUpperCase();
+
+  // Mapa patente -> sector (del vehículo)
+  var sectorDe = {};
+  (window._vehCacheChecklist||[]).forEach(function(v){ sectorDe[v.patente] = v.obra || ''; });
+
+  // Rango de fechas según período
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  var desde = null;
+  if(fPeriodo==='semana'){
+    desde = new Date(hoy); desde.setDate(hoy.getDate() - hoy.getDay()); // domingo de esta semana
+  } else if(fPeriodo==='mes'){
+    desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  }
 
   var filtrados = _checklistsCargados.filter(function(c){
     var id = (c.identificador || c.patente || '').toUpperCase();
@@ -5272,6 +5286,15 @@ function renderChecklistsCargados(){
     if(fPuesto){
       var puestoDe = _personalPuestos[(c.operario||'').toLowerCase()];
       if(puestoDe !== fPuesto) return false;
+    }
+    if(fSector){
+      var sec = sectorDe[c.patente] || '';
+      if(sec !== fSector) return false;
+    }
+    if(fFreq && c.frecuencia !== fFreq) return false;
+    if(desde && c.fecha){
+      var f = new Date(c.fecha+'T00:00:00');
+      if(f < desde) return false;
     }
     return true;
   });
@@ -5301,8 +5324,22 @@ function renderChecklistsCargados(){
       +'<td><button class="btn-edit-veh" style="font-size:11px;padding:5px 10px;" onclick="verDetalleChecklist('+idx+')">Ver detalle</button></td>';
     body.appendChild(tr);
   });
-  // Guardar los filtrados para que "ver detalle" use el índice correcto
   window._checklistsFiltrados = filtrados;
+}
+
+// Llena el filtro de sectores con los sectores reales de los vehículos
+function llenarFiltroSectoresChecklist(){
+  var sel = document.getElementById('clFiltroSector');
+  if(!sel) return;
+  var sectores = {};
+  (window._vehCacheChecklist||[]).forEach(function(v){ if(v.obra) sectores[v.obra]=true; });
+  var actual = sel.value;
+  sel.innerHTML = '<option value="">Todos los sectores</option>';
+  Object.keys(sectores).forEach(function(s){
+    var o = document.createElement('option'); o.value=s; o.textContent=s;
+    sel.appendChild(o);
+  });
+  sel.value = actual;
 }
 
 function actualizarStatsChecklist(){
