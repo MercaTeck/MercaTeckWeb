@@ -1822,11 +1822,16 @@ footer{
             <div style="font-size:14px;font-weight:600;color:var(--gold);margin-bottom:.4rem;">🧩 Constructor de check-list</div>
             <div style="font-size:13px;color:var(--gray);margin-bottom:1.25rem;">Armá el check-list que tu personal completará desde el celular. Elegí cómo organizarlo y agregá los ítems con su forma de respuesta.</div>
 
-            <!-- Alcance: general o por puesto -->
-            <div style="font-size:12px;font-weight:600;color:var(--white);margin-bottom:.5rem;">¿Para quién es este check-list?</div>
-            <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;">
-              <button id="clbModoGeneral" class="clb-modo-btn clb-modo-activo" onclick="setClbModo('general')">📋 Uno general (todos igual)</button>
-              <button id="clbModoPuesto" class="clb-modo-btn" onclick="setClbModo('puesto')">🧩 Distinto por puesto</button>
+            <!-- Selector de puesto (siempre visible: cada puesto tiene su check-list) -->
+            <div class="field" id="clbPuestoWrap">
+              <label>¿Para qué puesto es este check-list?</label>
+              <select id="clbPuesto" onchange="loadChecklistBuilder()">
+                <option value="operario">Operario</option>
+                <option value="chofer">Chofer</option>
+                <option value="mantenimiento">Mantenimiento</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="jefe">Jefe</option>
+              </select>
             </div>
 
             <!-- Frecuencia del check-list -->
@@ -1836,18 +1841,6 @@ footer{
                 <option value="diario">Todos los días</option>
                 <option value="semanal" selected>1 vez por semana</option>
                 <option value="mensual">1 vez al mes</option>
-              </select>
-            </div>
-
-            <!-- Selector de puesto (si es por puesto) -->
-            <div class="field" id="clbPuestoWrap" style="display:none;">
-              <label>Puesto a configurar</label>
-              <select id="clbPuesto" onchange="loadChecklistBuilder()">
-                <option value="operario">Operario</option>
-                <option value="chofer">Chofer</option>
-                <option value="mantenimiento">Mantenimiento</option>
-                <option value="supervisor">Supervisor</option>
-                <option value="jefe">Jefe</option>
               </select>
             </div>
 
@@ -3145,7 +3138,9 @@ function genConfirm(title, msg, onOk){
   document.getElementById('genModalMsg').textContent = msg;
   document.getElementById('genModalInputs').innerHTML = '';
   _genCallback = function(){ onOk(); };
-  document.getElementById('genModal').classList.add('open');
+  var gm = document.getElementById('genModal');
+  gm.style.zIndex = '600';
+  gm.classList.add('open');
 }
 function genPrompt(title, fields, onOk){
   // fields: [{id,label,placeholder,type,options}]
@@ -3172,7 +3167,9 @@ function genPrompt(title, fields, onOk){
     fields.forEach(function(f){ var el=document.getElementById('gen_'+f.id); vals[f.id] = el ? el.value : ''; });
     onOk(vals);
   };
-  document.getElementById('genModal').classList.add('open');
+  var gm = document.getElementById('genModal');
+  gm.style.zIndex = '600'; // por encima de otros modales (que usan 500)
+  gm.classList.add('open');
 }
 function genModalConfirm(){
   var cb = _genCallback; _genCallback = null;
@@ -3620,6 +3617,8 @@ var TIPOS_RESPUESTA = {
                   {v:'ok', ic:'🟢', t:'OK'},{v:'bajo', ic:'🟡', t:'Bajo'},{v:'critico', ic:'🔴', t:'Crítico'}] },
   estadoFisico:{ label:'Estado físico', icono:'🟢', opciones:[
                   {v:'bueno', ic:'🟢', t:'Buen estado'},{v:'roto', ic:'🔴', t:'Roto / Mal'},{v:'na', ic:'➖', t:'No aplica'}] },
+  vigencia:    { label:'Vigencia', icono:'📅', opciones:[
+                  {v:'aldia', ic:'✅', t:'Al día'},{v:'porvencer', ic:'⚠️', t:'Por vencer'},{v:'vencida', ic:'❌', t:'Vencida'}] },
   observacion: { label:'Observación', icono:'📝', opciones:[] }, // texto libre
   numero:      { label:'Número', icono:'🔢', opciones:[] },      // numérico
   firma:       { label:'Firma', icono:'✍️', opciones:[] }        // firma con el dedo
@@ -3679,18 +3678,18 @@ var CATALOGO_ITEMS = [
   {texto:'Kilometraje', tipo:'numero', grupo:'Medición'},
   {texto:'Horas de uso', tipo:'numero', grupo:'Medición'},
   // ── Documentación del vehículo ──
-  {texto:'VTV / RTO', tipo:'presencia', grupo:'Documentación'},
-  {texto:'Seguro', tipo:'presencia', grupo:'Documentación'},
-  {texto:'Cédula / Credencial', tipo:'presencia', grupo:'Documentación'},
+  {texto:'VTV / RTO', tipo:'vigencia', grupo:'Documentación'},
+  {texto:'Seguro', tipo:'vigencia', grupo:'Documentación'},
+  {texto:'Cédula / Credencial', tipo:'siNo', grupo:'Documentación'},
   {texto:'Patente visible', tipo:'siNo', grupo:'Documentación'},
-  {texto:'Documentación del vehículo', tipo:'presencia', grupo:'Documentación'},
+  {texto:'Documentación del vehículo', tipo:'siNo', grupo:'Documentación'},
   // ── Documentación personal ──
-  {texto:'Licencia de conducir', tipo:'presencia', grupo:'Documentación personal'},
-  {texto:'Manejo defensivo', tipo:'presencia', grupo:'Documentación personal'},
-  {texto:'Carnet hidrogrúa', tipo:'presencia', grupo:'Documentación personal'},
-  {texto:'Autorización de manejo', tipo:'presencia', grupo:'Documentación personal'},
-  {texto:'Documentación personal', tipo:'presencia', grupo:'Documentación personal'},
-  {texto:'Documentación interna de la empresa', tipo:'presencia', grupo:'Documentación personal'},
+  {texto:'Licencia de conducir', tipo:'siNo', grupo:'Documentación personal'},
+  {texto:'Manejo defensivo', tipo:'siNo', grupo:'Documentación personal'},
+  {texto:'Carnet hidrogrúa', tipo:'siNo', grupo:'Documentación personal'},
+  {texto:'Autorización de manejo', tipo:'siNo', grupo:'Documentación personal'},
+  {texto:'Documentación personal', tipo:'siNo', grupo:'Documentación personal'},
+  {texto:'Documentación interna de la empresa', tipo:'siNo', grupo:'Documentación personal'},
   // ── Elementos obligatorios ──
   {texto:'Caja de herramientas', tipo:'presencia', grupo:'Elementos obligatorios'},
   {texto:'Gato', tipo:'presencia', grupo:'Elementos obligatorios'},
@@ -3785,9 +3784,11 @@ function addChecklistItem(){
     grupos[g].forEach(function(item){
       var yaEsta = yaAgregados.indexOf(item.texto)>=0;
       var t = TIPOS_RESPUESTA[item.tipo] || TIPOS_RESPUESTA.estado;
+      var vaAlFinal = (item.tipo==='firma' || item.tipo==='observacion');
+      var notaFinal = vaAlFinal ? '<span style="font-size:9px;color:var(--gray);margin-left:5px;">(va al final)</span>' : '';
       var b = document.createElement('button');
       b.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:9px 12px;border-radius:var(--r);border:1px solid var(--bdr);background:'+(yaEsta?'var(--gold-dim)':'var(--input-bg)')+';color:var(--white);font-size:13px;cursor:'+(yaEsta?'default':'pointer')+';text-align:left;width:100%;opacity:'+(yaEsta?'.5':'1')+';margin-bottom:3px;';
-      b.innerHTML = '<span>'+t.icono+' '+escapeHtml(item.texto)+'</span>'+(yaEsta?'<span style="font-size:11px;color:var(--gold);">✓</span>':'<span style="font-size:16px;color:var(--gold);">+</span>');
+      b.innerHTML = '<span>'+t.icono+' '+escapeHtml(item.texto)+notaFinal+'</span>'+(yaEsta?'<span style="font-size:11px;color:var(--gold);">✓</span>':'<span style="font-size:16px;color:var(--gold);">+</span>');
       if(!yaEsta){
         b.onclick = (function(it){ return function(){
           _clbItems.push({texto:it.texto, tipo:it.tipo});
@@ -3830,15 +3831,13 @@ function setCfgChecklistTab(tab){
 }
 
 function setClbModo(modo){
-  _clbModo = modo;
-  document.getElementById('clbModoGeneral').classList.toggle('clb-modo-activo', modo==='general');
-  document.getElementById('clbModoPuesto').classList.toggle('clb-modo-activo', modo==='puesto');
-  document.getElementById('clbPuestoWrap').style.display = (modo==='puesto') ? 'block' : 'none';
+  // Ya no hay modo general: siempre es por puesto. Se mantiene por compatibilidad.
   loadChecklistBuilder();
 }
 
 function _clbKey(){
-  return _clbModo==='puesto' ? document.getElementById('clbPuesto').value : 'general';
+  var sel = document.getElementById('clbPuesto');
+  return sel ? sel.value : 'operario';
 }
 
 function loadChecklistBuilder(){
@@ -5000,18 +4999,16 @@ function onClTipoChange(){
   var cont = document.getElementById('clChecklistItems');
   var html = '';
 
-  // Determinar qué checklist usar: el del puesto del operario, o el general
+  // Determinar qué checklist usar: el del puesto del operario
   var cfg = loadState('checklistConfig') || {};
   var items = null;
   var puestoActual = (_opActual && _opActual.puesto) ? _opActual.puesto : null;
   if(puestoActual && cfg[puestoActual] && cfg[puestoActual].length){
     items = cfg[puestoActual];
-  } else if(cfg.general && cfg.general.length){
-    items = cfg.general;
   }
 
-  // Si no hay nada configurado, usar la plantilla general por defecto
-  if(!items){ items = CHECKLIST_DEFAULTS.general; }
+  // Si no hay nada configurado para su puesto, usar la plantilla por defecto de ese puesto
+  if(!items){ items = CHECKLIST_DEFAULTS[puestoActual] || CHECKLIST_DEFAULTS.operario; }
   // Ordenar: firma y observación siempre al final
   items = _ordenarItemsChecklist(items);
 
