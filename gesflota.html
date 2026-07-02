@@ -1280,6 +1280,7 @@ footer{
         <div style="margin-top:.5rem;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:var(--r);padding:8px 10px;font-size:10px;color:var(--gray);line-height:1.5;">
           🔒 <strong style="color:#F87171;">Seguridad:</strong> nunca te pediremos pagos fuera de este panel ni por WhatsApp. Verificá el dominio oficial antes de transferir.
         </div>
+        <div style="margin-top:.5rem;text-align:center;font-size:10px;color:var(--gray);opacity:.6;">GesFlota by MercaTeck · v2026.07.02</div>
       </div>
     </aside>
 
@@ -6032,7 +6033,6 @@ function loadTheme(){
 window.addEventListener('load', function(){
   initHero();
   loadTheme();
-  detectarLinkChecklist();
   iniciarFrasesRotativas();
   // Cerrar CUALQUIER modal al hacer click en el fondo (overlay)
   document.querySelectorAll('.modal-overlay').forEach(function(ov){
@@ -6048,6 +6048,20 @@ window.addEventListener('load', function(){
       });
     }
   });
+
+  // 1) Si la URL es de acceso de operario (?cl=), eso tiene prioridad
+  if(detectarLinkChecklist()){ return; }
+
+  // 2) Verificar si hay una sesión activa en Supabase (para no cerrar sesión al recargar)
+  if(sb && sb.auth && sb.auth.getSession){
+    sb.auth.getSession().then(function(res){
+      if(res && res.data && res.data.session && res.data.session.user){
+        // Hay sesión activa → restaurar el panel del usuario
+        cargarSesion(res.data.session.user);
+      }
+      // Si no hay sesión, se queda en la landing (comportamiento normal)
+    }).catch(function(){ /* si falla, se queda en la landing */ });
+  }
 });
 </script>
 <!-- CHATBOT GES — Asistente IA -->
