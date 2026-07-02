@@ -1362,17 +1362,6 @@ footer{
                 <option value="ok">Al día</option>
                 <option value="pend">Pendiente / Sin cargar</option>
               </select>
-              <select id="flotaOperario" onchange="filterPorOperario()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
-                <option value="">Check-list por operario: todos</option>
-              </select>
-              <select id="flotaPuesto" onchange="filterPorPuesto()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
-                <option value="">Por puesto: todos</option>
-                <option value="jefe">Jefes</option>
-                <option value="supervisor">Supervisores</option>
-                <option value="operario">Operarios</option>
-                <option value="chofer">Choferes</option>
-                <option value="mantenimiento">Mantenimiento</option>
-              </select>
             </div>
             <div style="overflow-x:auto;">
               <table class="app-table" id="flotaTable">
@@ -1531,142 +1520,37 @@ footer{
             <div class="app-stat"><div class="app-stat-val amber">3</div><div class="app-stat-lbl">Con observaciones</div></div>
           </div>
 
-          <!-- Tabs pesados/livianos -->
-          <div style="display:flex;gap:.5rem;margin-bottom:1rem;">
-            <button id="tabPesados" style="padding:8px 18px;border-radius:var(--r);border:1px solid var(--gold-border);background:var(--gold-dim);color:var(--gold);font-size:13px;font-weight:600;cursor:pointer;" onclick="switchChecklistTab('pesados')">🚛 Pesados</button>
-            <button id="tabLivianos" style="padding:8px 18px;border-radius:var(--r);border:1px solid var(--bdr);background:transparent;color:var(--gray);font-size:13px;font-weight:500;cursor:pointer;" onclick="switchChecklistTab('livianos')">🚗 Livianos</button>
+          <!-- Filtros del panel de check-list (movidos desde flota) -->
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+            <input type="text" id="clFiltroPat" placeholder="🔍 Patente / ID" onkeyup="renderChecklistsCargados()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);flex:1;min-width:150px;outline:none;"/>
+            <select id="clFiltroOperario" onchange="renderChecklistsCargados()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+              <option value="">Por operario: todos</option>
+            </select>
+            <select id="clFiltroPuesto" onchange="renderChecklistsCargados()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+              <option value="">Por puesto: todos</option>
+              <option value="jefe">Jefes</option>
+              <option value="supervisor">Supervisores</option>
+              <option value="operario">Operarios</option>
+              <option value="chofer">Choferes</option>
+              <option value="mantenimiento">Mantenimiento</option>
+            </select>
           </div>
 
-          <!-- PESADOS -->
-          <div id="clPesados">
-            <div class="app-card">
-              <div class="app-card-hdr">
-                <h3>🚛 Móviles Pesados — Semana 24/06 al 30/06</h3>
-                <span style="font-size:12px;color:var(--gray);">Semanal + Mensual</span>
-              </div>
-              <div style="overflow-x:auto;">
-                <table class="app-table">
-                  <thead>
-                    <tr>
-                      <th>Patente</th><th>Tipo</th><th>Obra</th>
-                      <th>Sem. semanal</th><th>Ítem falla</th>
-                      <th>Sem. mensual</th><th>Responsable</th><th>Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody id="clPesadosBody">
-                    <tr>
-                      <td><strong>XA123BC</strong></td><td>Camión</td><td>Obra Sur</td>
-                      <td><span class="badge badge-ok">✓ 26/06</span></td>
-                      <td style="font-size:12px;color:var(--gray);">—</td>
-                      <td><span class="badge badge-ok">✓ Al día</span></td>
-                      <td style="font-size:12px;">J. González</td>
-                      <td><span class="badge badge-ok">OK</span></td>
-                    </tr>
-                    <tr>
-                      <td><strong>WD012GH</strong></td><td>Camión</td><td>Obra Sur</td>
-                      <td><span class="badge badge-warn">⚠ 25/06</span></td>
-                      <td style="font-size:12px;color:#FCD34D;">Frenos — falla</td>
-                      <td><span class="badge badge-ok">✓ Al día</span></td>
-                      <td style="font-size:12px;">M. Rodríguez</td>
-                      <td><span class="badge badge-warn">Con obs.</span></td>
-                    </tr>
-                    <tr>
-                      <td><strong>YB456CD</strong></td><td>Batea</td><td>Obra Este</td>
-                      <td><span class="badge badge-red">✗ Sin cargar</span></td>
-                      <td style="font-size:12px;color:var(--gray);">—</td>
-                      <td><span class="badge badge-red">✗ Vencido</span></td>
-                      <td style="font-size:12px;color:var(--gray);">—</td>
-                      <td><span class="badge badge-red">Pendiente</span></td>
-                    </tr>
-                    <tr>
-                      <td><strong>VE345IJ</strong></td><td>Semirremolque</td><td>Obra Norte</td>
-                      <td><span class="badge badge-ok">✓ 24/06</span></td>
-                      <td style="font-size:12px;color:var(--gray);">—</td>
-                      <td><span class="badge badge-ok">✓ Al día</span></td>
-                      <td style="font-size:12px;">C. López</td>
-                      <td><span class="badge badge-ok">OK</span></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+          <!-- Tabla de check-lists cargados (datos reales) -->
+          <div class="app-card">
+            <div class="app-card-hdr">
+              <h3>Check-lists cargados</h3>
+              <span style="font-size:12px;color:var(--gray);" id="clCargadosCount"></span>
             </div>
-          </div>
-
-          <!-- LIVIANOS -->
-          <div id="clLivianos" style="display:none;">
-            <div class="app-card">
-              <div class="app-card-hdr">
-                <h3>🚗 Móviles Livianos — Semana 24/06 al 30/06</h3>
-                <span style="font-size:12px;color:var(--gray);">Semanal + Mensual</span>
-              </div>
-              <div style="overflow-x:auto;">
-                <table class="app-table">
-                  <thead>
-                    <tr>
-                      <th>Patente</th><th>Tipo</th><th>Obra</th>
-                      <th>Sem. semanal</th><th>Ítem falla</th>
-                      <th>Sem. mensual</th><th>Responsable</th><th>Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><strong>ZC789EF</strong></td><td>Hilux</td><td>Obra Norte</td>
-                      <td><span class="badge badge-ok">✓ 24/06</span></td>
-                      <td style="font-size:12px;color:var(--gray);">—</td>
-                      <td><span class="badge badge-ok">✓ Al día</span></td>
-                      <td style="font-size:12px;">A. Fernández</td>
-                      <td><span class="badge badge-ok">OK</span></td>
-                    </tr>
-                    <tr>
-                      <td><strong>UF678KL</strong></td><td>Ranger</td><td>Obra Sur</td>
-                      <td><span class="badge badge-ok">✓ 26/06</span></td>
-                      <td style="font-size:12px;color:var(--gray);">—</td>
-                      <td><span class="badge badge-red">✗ Sin cargar</span></td>
-                      <td style="font-size:12px;">P. Martínez</td>
-                      <td><span class="badge badge-warn">Mensual pend.</span></td>
-                    </tr>
-                    <tr>
-                      <td><strong>TG901MN</strong></td><td>Frontier</td><td>Obra Este</td>
-                      <td><span class="badge badge-red">✗ Sin cargar</span></td>
-                      <td style="font-size:12px;color:var(--gray);">—</td>
-                      <td><span class="badge badge-ok">✓ Al día</span></td>
-                      <td style="font-size:12px;color:var(--gray);">—</td>
-                      <td><span class="badge badge-red">Semanal pend.</span></td>
-                    </tr>
-                    <tr>
-                      <td><strong>SH234OP</strong></td><td>Hilux</td><td>Obra Oeste</td>
-                      <td><span class="badge badge-ok">✓ 25/06</span></td>
-                      <td style="font-size:12px;color:var(--gray);">—</td>
-                      <td><span class="badge badge-ok">✓ Al día</span></td>
-                      <td style="font-size:12px;">R. Sánchez</td>
-                      <td><span class="badge badge-ok">OK</span></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <!-- Avance por obra -->
-          <div class="app-card" style="padding:1.25rem;">
-            <div class="app-card-hdr" style="padding:0 0 .75rem;margin-bottom:.75rem;"><h3>Avance por obra — semana actual</h3></div>
-            <div style="display:flex;flex-direction:column;gap:.6rem;" id="checklistPorObra">
-              <div>
-                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span style="color:var(--white);">Obra Norte</span><span style="color:var(--green);">4/4 vehículos ✓</span></div>
-                <div style="background:rgba(255,255,255,.06);border-radius:3px;height:7px;overflow:hidden;"><div style="width:100%;height:100%;background:linear-gradient(90deg,var(--green),#34D399);border-radius:3px;"></div></div>
-              </div>
-              <div>
-                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span style="color:var(--white);">Obra Sur</span><span style="color:var(--amber);">5/7 vehículos</span></div>
-                <div style="background:rgba(255,255,255,.06);border-radius:3px;height:7px;overflow:hidden;"><div style="width:71%;height:100%;background:linear-gradient(90deg,var(--amber),#FCD34D);border-radius:3px;"></div></div>
-              </div>
-              <div>
-                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span style="color:var(--white);">Obra Este</span><span style="color:var(--red);">3/6 vehículos</span></div>
-                <div style="background:rgba(255,255,255,.06);border-radius:3px;height:7px;overflow:hidden;"><div style="width:50%;height:100%;background:linear-gradient(90deg,var(--red),#F87171);border-radius:3px;"></div></div>
-              </div>
-              <div>
-                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span style="color:var(--white);">Obra Oeste</span><span style="color:var(--green);">6/6 vehículos ✓</span></div>
-                <div style="background:rgba(255,255,255,.06);border-radius:3px;height:7px;overflow:hidden;"><div style="width:100%;height:100%;background:linear-gradient(90deg,var(--green),#34D399);border-radius:3px;"></div></div>
-              </div>
+            <div style="overflow-x:auto;">
+              <table class="app-table">
+                <thead>
+                  <tr><th>Patente / ID</th><th>Cargó</th><th>Fecha</th><th>Frecuencia</th><th></th></tr>
+                </thead>
+                <tbody id="checklistsCargadosBody">
+                  <tr><td colspan="5" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargando check-lists...</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -2418,6 +2302,17 @@ footer{
       <button class="btn-outline" style="flex:1;padding:11px;" onclick="closeGenModal()">Cancelar</button>
       <button class="btn-gold" style="flex:1;padding:11px;" id="genModalOk" onclick="genModalConfirm()">Aceptar</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE CHECK-LIST -->
+<div class="modal-overlay" id="detalleChecklistModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-hdr">
+      <h3>Detalle del check-list</h3>
+      <button class="modal-close" onclick="cerrarDetalleChecklist()">×</button>
+    </div>
+    <div class="modal-body" id="detalleChecklistContent"></div>
   </div>
 </div>
 
@@ -5305,20 +5200,161 @@ function marcarChecklistRealizado(patente, freq, fecha){
   });
 }
 
+var _checklistsCargados = []; // cache de los checklists reales
+var _personalPuestos = {};    // mapa nombre->puesto para filtrar por puesto
+
 function loadChecklistRegistros(){
-  // Cargar desde Supabase
   if(sb && window._empresaId){
-    sb.from('checklists').select('patente, frecuencia, fecha').eq('empresa_id', window._empresaId).then(function(res){
-      if(res.error){ console.warn('Error checklists:', res.error); return; }
-      _checklistCache = (res.data||[]).map(function(c){
-        return { patente:c.patente, freq:c.frecuencia, fecha:c.fecha, estado:'realizado' };
+    // Traer los checklists reales con todos los datos
+    sb.from('checklists').select('patente, identificador, frecuencia, fecha, operario, items, creado_en')
+      .eq('empresa_id', window._empresaId)
+      .order('creado_en', {ascending:false})
+      .then(function(res){
+        if(res.error){ console.warn('Error checklists:', res.error); _mostrarErrorChecklists(); return; }
+        _checklistsCargados = res.data || [];
+        // Marcar en la tabla de flota los que tienen check
+        _checklistsCargados.forEach(function(reg){ marcarChecklistRealizado(reg.patente, reg.frecuencia, reg.fecha); });
+        // Cargar el mapa de puestos (para el filtro por puesto) y los operarios (para su filtro)
+        cargarPersonalPuestos(function(){
+          llenarFiltroOperariosChecklist();
+          renderChecklistsCargados();
+          actualizarStatsChecklist();
+        });
       });
-      _checklistCache.forEach(function(reg){ marcarChecklistRealizado(reg.patente, reg.freq, reg.fecha); });
-    });
   } else {
-    _checklistCache.forEach(function(reg){ marcarChecklistRealizado(reg.patente, reg.freq, reg.fecha); });
+    renderChecklistsCargados();
   }
 }
+
+function _mostrarErrorChecklists(){
+  var body = document.getElementById('checklistsCargadosBody');
+  if(body) body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--amber);padding:1.5rem;">No se pudieron cargar los check-lists. Revisá tu conexión.</td></tr>';
+}
+
+function cargarPersonalPuestos(cb){
+  _personalPuestos = {};
+  if(!sb || !window._empresaId){ if(cb)cb(); return; }
+  sb.from('usuarios_empresa').select('nombre, puesto').eq('empresa_id', window._empresaId).then(function(res){
+    if(!res.error && res.data){
+      res.data.forEach(function(p){ _personalPuestos[p.nombre.toLowerCase()] = p.puesto; });
+    }
+    if(cb) cb();
+  });
+}
+
+function llenarFiltroOperariosChecklist(){
+  var sel = document.getElementById('clFiltroOperario');
+  if(!sel) return;
+  var operarios = {};
+  _checklistsCargados.forEach(function(c){ if(c.operario) operarios[c.operario]=true; });
+  var actual = sel.value;
+  sel.innerHTML = '<option value="">Por operario: todos</option>';
+  Object.keys(operarios).forEach(function(op){
+    var o = document.createElement('option'); o.value=op; o.textContent=op;
+    sel.appendChild(o);
+  });
+  sel.value = actual;
+}
+
+function renderChecklistsCargados(){
+  var body = document.getElementById('checklistsCargadosBody');
+  if(!body) return;
+  // Aplicar filtros
+  var fPat = (document.getElementById('clFiltroPat')||{}).value || '';
+  var fOp = (document.getElementById('clFiltroOperario')||{}).value || '';
+  var fPuesto = (document.getElementById('clFiltroPuesto')||{}).value || '';
+  fPat = fPat.toUpperCase();
+
+  var filtrados = _checklistsCargados.filter(function(c){
+    var id = (c.identificador || c.patente || '').toUpperCase();
+    if(fPat && id.indexOf(fPat)<0) return false;
+    if(fOp && c.operario!==fOp) return false;
+    if(fPuesto){
+      var puestoDe = _personalPuestos[(c.operario||'').toLowerCase()];
+      if(puestoDe !== fPuesto) return false;
+    }
+    return true;
+  });
+
+  var cnt = document.getElementById('clCargadosCount');
+  if(cnt) cnt.textContent = filtrados.length + ' registro' + (filtrados.length===1?'':'s');
+
+  if(!filtrados.length){
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:1.5rem;">'
+      + (_checklistsCargados.length ? 'No hay check-lists que coincidan con el filtro.' : 'Todavía no se cargaron check-lists.')
+      + '</td></tr>';
+    return;
+  }
+
+  var freqLabel = {diario:'Diario','3sem':'3x semana','2sem':'2x semana',semanal:'Semanal',mensual:'Mensual'};
+  body.innerHTML = '';
+  filtrados.forEach(function(c, idx){
+    var id = escapeHtml(c.identificador || c.patente || '—');
+    var quien = escapeHtml(c.operario || '—');
+    var fecha = c.fecha ? new Date(c.fecha+'T00:00:00').toLocaleDateString('es-AR') : '—';
+    var freq = escapeHtml(freqLabel[c.frecuencia] || c.frecuencia || '—');
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><strong>'+id+'</strong></td>'
+      +'<td style="font-size:13px;">'+quien+'</td>'
+      +'<td style="font-size:13px;color:var(--gray);">'+fecha+'</td>'
+      +'<td><span class="badge" style="background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-border);">'+freq+'</span></td>'
+      +'<td><button class="btn-edit-veh" style="font-size:11px;padding:5px 10px;" onclick="verDetalleChecklist('+idx+')">Ver detalle</button></td>';
+    body.appendChild(tr);
+  });
+  // Guardar los filtrados para que "ver detalle" use el índice correcto
+  window._checklistsFiltrados = filtrados;
+}
+
+function actualizarStatsChecklist(){
+  // Stats reales: vehículos activos, con check, sin cargar
+  var totalVeh = (window._vehCacheChecklist||[]).length;
+  var conCheck = {};
+  _checklistsCargados.forEach(function(c){ conCheck[c.patente]=true; });
+  var nConCheck = Object.keys(conCheck).length;
+  var sinCargar = Math.max(0, totalVeh - nConCheck);
+  var stEls = document.querySelectorAll('#dash-checklist .app-stat-val');
+  if(stEls[0]) stEls[0].textContent = totalVeh;
+  if(stEls[1]) stEls[1].textContent = nConCheck;
+  if(stEls[2]) stEls[2].textContent = sinCargar;
+  if(stEls[3]) stEls[3].textContent = _checklistsCargados.length;
+}
+
+function verDetalleChecklist(idx){
+  var c = (window._checklistsFiltrados||_checklistsCargados)[idx];
+  if(!c){ return; }
+  var cont = document.getElementById('detalleChecklistContent');
+  var freqLabel = {diario:'Diario','3sem':'3x semana','2sem':'2x semana',semanal:'Semanal',mensual:'Mensual'};
+  var fecha = c.fecha ? new Date(c.fecha+'T00:00:00').toLocaleDateString('es-AR') : '—';
+  var html = '<div style="margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--bdr);">'
+    +'<div style="font-size:18px;color:var(--white);font-weight:600;">'+escapeHtml(c.identificador||c.patente||'—')+'</div>'
+    +'<div style="font-size:13px;color:var(--gray);margin-top:3px;">Cargó: '+escapeHtml(c.operario||'—')+' · '+fecha+' · '+escapeHtml(freqLabel[c.frecuencia]||c.frecuencia||'—')+'</div></div>';
+
+  var items = c.items || {};
+  var claves = Object.keys(items);
+  if(!claves.length){
+    html += '<div style="font-size:13px;color:var(--gray);padding:1rem;text-align:center;">Este check-list no tiene el detalle de ítems guardado (se cargó antes de la última actualización).</div>';
+  } else {
+    html += '<div style="display:flex;flex-direction:column;gap:.5rem;">';
+    claves.forEach(function(k){
+      var val = items[k];
+      // Si es una firma (dataURL de imagen)
+      if(typeof val==='string' && val.indexOf('data:image')===0){
+        html += '<div style="padding:.6rem .75rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);">'
+          +'<div style="font-size:12px;color:var(--gray);margin-bottom:5px;">'+escapeHtml(k)+'</div>'
+          +'<img src="'+val+'" style="max-width:200px;background:#fff;border-radius:6px;"/></div>';
+      } else {
+        var valTxt = (val===null||val==='') ? '<span style="color:var(--gray);">Sin responder</span>' : escapeHtml(String(val));
+        html += '<div style="display:flex;justify-content:space-between;gap:.5rem;padding:.6rem .75rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);">'
+          +'<span style="font-size:13px;color:var(--white);">'+escapeHtml(k)+'</span>'
+          +'<span style="font-size:13px;color:var(--gold);font-weight:500;">'+valTxt+'</span></div>';
+      }
+    });
+    html += '</div>';
+  }
+  cont.innerHTML = html;
+  document.getElementById('detalleChecklistModal').classList.add('open');
+}
+function cerrarDetalleChecklist(){ document.getElementById('detalleChecklistModal').classList.remove('open'); }
 
 // ══════════════════════════════════════════════════════
 //  INFORMES (estado, VTV, seguro, checklist) + IA Enterprise
@@ -5864,7 +5900,7 @@ function addAutoAlert(){
 function openNewMant(){
   genPrompt('Cargar mantenimiento', [
     {id:'veh', label:'Vehículo', type:'select', options:[{v:'Liviano',t:'Liviano'},{v:'Pesado',t:'Pesado'}]},
-    {id:'sector', label:'Sector / Área', placeholder:'Obra Norte'},
+    {id:'sector', label:'Sector / Área', placeholder:'Sector Norte'},
     {id:'tipo', label:'Tipo', type:'select', options:[{v:'Arreglo',t:'Arreglo'},{v:'Compra',t:'Compra'},{v:'Service',t:'Service'}]},
     {id:'patente', label:'Patente', placeholder:'XA123BC'},
     {id:'interno', label:'Interno', placeholder:'A-101'},
@@ -5872,7 +5908,7 @@ function openNewMant(){
     {id:'costo', label:'Costo', type:'number', placeholder:'45000'}
   ], function(v){
     if(!v.patente||!v.desc) { showToast('Completá al menos patente y descripción','error'); return; }
-    showToast('✓ Mantenimiento cargado y sincronizado con el Sheet','success');
+    showToast('✓ Mantenimiento cargado','success');
   });
 }
 function addMantObs(patente){
