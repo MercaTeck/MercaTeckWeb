@@ -1491,7 +1491,6 @@ footer{
             </div>
             <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
               <button id="btnConfigChecklist" style="display:none;font-size:12px;padding:6px 14px;background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-border);border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="abrirConfigChecklist()">⚙️ Configurar check-list</button>
-              <button id="btnOpenChecklist" style="display:none;font-size:12px;padding:6px 14px;background:var(--green);color:#000;border:none;border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="openChecklistForm()">📋 Cargar check-list</button>
               <button id="btnShareChecklist" style="display:none;font-size:12px;padding:6px 14px;background:var(--gold);color:#000;border:none;border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="openShareChecklist()">📲 Compartir / QR</button>
             </div>
           </div>
@@ -2840,8 +2839,6 @@ function setTab(el, tabId){
   if(tabId==='dash-checklist'){
     var shareBtn = document.getElementById('btnShareChecklist');
     if(shareBtn) shareBtn.style.display = window._showChecklistShare ? 'inline-block' : 'none';
-    var ob = document.getElementById('btnOpenChecklist');
-    if(ob) ob.style.display = window._checklistIncluded ? 'inline-block' : 'none';
     var cfgBtn = document.getElementById('btnConfigChecklist');
     if(cfgBtn) cfgBtn.style.display = window._checklistIncluded ? 'inline-block' : 'none';
     loadChecklistRegistros();
@@ -3865,73 +3862,120 @@ function cargarPlantillaSugerida(){
   showToast('Plantilla cargada. Editala como necesites.','success');
 }
 
+// Devuelve el grupo de un ítem según el catálogo (para el título)
+function _grupoDeItem(texto){
+  for(var i=0;i<CATALOGO_ITEMS.length;i++){
+    if(CATALOGO_ITEMS[i].texto===texto) return CATALOGO_ITEMS[i].grupo || 'Otros';
+  }
+  return 'Otros';
+}
+
+// Reordena: Observación y Firma SIEMPRE al final (fijas)
+function _ordenarItemsChecklist(items){
+  var normales = [];
+  var obs = null, firma = null;
+  items.forEach(function(it){
+    if(it.tipo==='firma') firma = it;
+    else if(it.tipo==='observacion') obs = it;
+    else normales.push(it);
+  });
+  var res = normales.slice();
+  if(obs) res.push(obs);
+  if(firma) res.push(firma);
+  return res;
+}
+
 function renderChecklistBuilder(){
   var cont = document.getElementById('clbItems');
   if(!cont) return;
   cont.innerHTML = '';
+  // Reordenar siempre: firma y observación al final
+  _clbItems = _ordenarItemsChecklist(_clbItems);
   if(!_clbItems.length){
     cont.innerHTML = '<div style="font-size:12px;color:var(--gray);text-align:center;padding:1rem;border:1px dashed var(--bdr);border-radius:var(--r);">Sin ítems. Agregá uno o cargá la plantilla sugerida.</div>';
     return;
   }
+  var grupoAnterior = null;
+  // Contar cuántos ítems "normales" hay (para saber hasta dónde se puede reordenar)
+  var nNormales = _clbItems.filter(function(it){ return it.tipo!=='firma' && it.tipo!=='observacion'; }).length;
+
   _clbItems.forEach(function(item, idx){
-    if(item.obligatorio === undefined) item.obligatorio = true; // por defecto obligatorio
+    if(item.obligatorio === undefined) item.obligatorio = true;
     var t = TIPOS_RESPUESTA[item.tipo] || TIPOS_RESPUESTA.estado;
+    var esFinal = (item.tipo==='firma' || item.tipo==='observacion');
+    // Título de grupo (solo para ítems normales, cuando cambia el grupo)
+    if(!esFinal){
+      var grupo = _grupoDeItem(item.texto);
+      if(grupo !== grupoAnterior){
+        var tit = document.createElement('div');
+        tit.style.cssText='font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.04em;margin:.75rem 0 .35rem;';
+        tit.textContent = grupo;
+        cont.appendChild(tit);
+        grupoAnterior = grupo;
+      }
+    }
     var wrap = document.createElement('div');
-    wrap.style.cssText = 'padding:.7rem .8rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);';
-    // Fila 1: nombre + borrar
+    wrap.style.cssText = 'padding:.7rem .8rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:5px;';
+    // Fila 1: flechas + nombre + tipo + borrar
     var fila1 = document.createElement('div');
-    fila1.style.cssText='display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem;';
+    fila1.style.cssText='display:flex;gap:.5rem;align-items:center;';
+    // Flechas de reorden (solo ítems normales, no firma/observación)
+    if(!esFinal && nNormales>1){
+      var arrows = document.createElement('div');
+      arrows.style.cssText='display:flex;flex-direction:column;gap:2px;';
+      var up = document.createElement('button');
+      up.textContent='▲'; up.title='Subir'; up.style.cssText='background:none;border:none;color:var(--gray);font-size:9px;cursor:pointer;padding:0;line-height:1;';
+      up.onclick=(function(i){ return function(){ moverItemChecklist(i,-1); }; })(idx);
+      var down = document.createElement('button');
+      down.textContent='▼'; down.title='Bajar'; down.style.cssText='background:none;border:none;color:var(--gray);font-size:9px;cursor:pointer;padding:0;line-height:1;';
+      down.onclick=(function(i){ return function(){ moverItemChecklist(i,1); }; })(idx);
+      arrows.appendChild(up); arrows.appendChild(down);
+      fila1.appendChild(arrows);
+    }
     var nombre = document.createElement('span');
     nombre.textContent = item.texto;
     nombre.style.cssText='flex:1;color:var(--white);font-size:13px;font-weight:500;';
+    fila1.appendChild(nombre);
+    // Tipo de respuesta (solo lectura, sin editar)
+    var tipoLbl = document.createElement('span');
+    tipoLbl.style.cssText='font-size:11px;color:var(--gold);white-space:nowrap;';
+    tipoLbl.innerHTML = t.icono+' '+t.label;
+    fila1.appendChild(tipoLbl);
     var del = document.createElement('button');
     del.className='btn-edit-veh'; del.textContent='🗑️'; del.style.cssText='font-size:12px;padding:5px 8px;';
-    del.onclick=(function(i){ return function(){ _clbItems.splice(i,1); renderChecklistBuilder(); }; })(idx);
-    fila1.appendChild(nombre); fila1.appendChild(del);
+    del.onclick=(function(txt){ return function(){ _clbItems = _clbItems.filter(function(x){ return x.texto!==txt; }); renderChecklistBuilder(); }; })(item.texto);
+    fila1.appendChild(del);
     wrap.appendChild(fila1);
-    // Fila 2: tipo de respuesta compacto + botón cambiar + toggle obligatorio
+    // Fila 2: toggle obligatorio
     var fila2 = document.createElement('div');
-    fila2.style.cssText='display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;';
-    // Tipo actual (compacto)
-    var tipoLbl = document.createElement('span');
-    tipoLbl.style.cssText='font-size:12px;color:var(--gray);';
-    tipoLbl.innerHTML = 'Respuesta: <span style="color:var(--gold);">'+t.icono+' '+t.label+'</span>';
-    fila2.appendChild(tipoLbl);
-    // Botón cambiar tipo (muestra las opciones solo al tocar)
-    var cambiar = document.createElement('button');
-    cambiar.textContent='cambiar'; cambiar.style.cssText='font-size:11px;color:var(--gray);background:none;border:none;text-decoration:underline;cursor:pointer;';
-    cambiar.onclick=(function(i){ return function(){ _clbTipoAbierto = (_clbTipoAbierto===i)?-1:i; renderChecklistBuilder(); }; })(idx);
-    fila2.appendChild(cambiar);
-    // Toggle obligatorio
+    fila2.style.cssText='display:flex;margin-top:.4rem;';
     var oblWrap = document.createElement('label');
     oblWrap.style.cssText='margin-left:auto;display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray);cursor:pointer;';
     var obl = document.createElement('input'); obl.type='checkbox'; obl.checked=item.obligatorio!==false; obl.style.accentColor='var(--gold)';
-    obl.onchange=(function(i){ return function(e){ _clbItems[i].obligatorio=e.target.checked; }; })(idx);
+    obl.onchange=(function(txt){ return function(e){ var it=_clbItems.find(function(x){return x.texto===txt;}); if(it) it.obligatorio=e.target.checked; }; })(item.texto);
     oblWrap.appendChild(obl); oblWrap.appendChild(document.createTextNode('Obligatorio'));
     fila2.appendChild(oblWrap);
     wrap.appendChild(fila2);
-    // Fila 3 (opcional): opciones de tipo, SOLO si está abierto para este ítem
-    if(_clbTipoAbierto===idx){
-      var fila3 = document.createElement('div');
-      fila3.style.cssText='display:flex;gap:5px;flex-wrap:wrap;margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--bdr);';
-      Object.keys(TIPOS_RESPUESTA).forEach(function(k){
-        var tt = TIPOS_RESPUESTA[k];
-        var b = document.createElement('button');
-        b.className='clb-tipo-btn'+(item.tipo===k?' activo':'');
-        b.innerHTML = tt.icono+' '+tt.label;
-        b.onclick=(function(i,tipo){ return function(){ _clbItems[i].tipo=tipo; _clbTipoAbierto=-1; renderChecklistBuilder(); }; })(idx,k);
-        fila3.appendChild(b);
-      });
-      wrap.appendChild(fila3);
-    }
     cont.appendChild(wrap);
   });
+}
+
+// Mueve un ítem normal arriba/abajo (sin afectar firma/observación del final)
+function moverItemChecklist(idx, dir){
+  var destino = idx + dir;
+  if(destino<0 || destino>=_clbItems.length) return;
+  // No permitir mover más allá de los ítems normales
+  if(_clbItems[destino] && (_clbItems[destino].tipo==='firma' || _clbItems[destino].tipo==='observacion')) return;
+  var tmp = _clbItems[idx];
+  _clbItems[idx] = _clbItems[destino];
+  _clbItems[destino] = tmp;
+  renderChecklistBuilder();
 }
 var _clbTipoAbierto = -1;
 
 function saveChecklistBuilder(){
   var key = _clbKey();
-  var items = _clbItems.filter(function(it){ return it.texto && it.texto.trim(); });
+  var items = _ordenarItemsChecklist(_clbItems.filter(function(it){ return it.texto && it.texto.trim(); }));
   if(!items.length){ showToast('Agregá al menos un ítem','error'); return; }
   var cfg = loadState('checklistConfig') || {};
   cfg[key] = items;
@@ -4968,6 +5012,8 @@ function onClTipoChange(){
 
   // Si no hay nada configurado, usar la plantilla general por defecto
   if(!items){ items = CHECKLIST_DEFAULTS.general; }
+  // Ordenar: firma y observación siempre al final
+  items = _ordenarItemsChecklist(items);
 
   window._clItemsActivos = items;
 
@@ -4977,11 +5023,22 @@ function onClTipoChange(){
     +'<span>Progreso</span><span id="clProgreso">0 de '+items.length+'</span></div>'
     +'<div style="height:5px;background:var(--input-bg);border-radius:3px;overflow:hidden;"><div id="clProgresoBar" style="height:100%;width:0%;background:var(--gold);transition:width .2s;"></div></div></div>';
 
-  // Render de cada ítem como tarjeta
+  // Render de cada ítem como tarjeta, con títulos de grupo
+  var grupoAnt = null;
   items.forEach(function(item, i){
     var t = TIPOS_RESPUESTA[item.tipo] || TIPOS_RESPUESTA.estado;
     var nm = 'cli_'+i;
     var oblMark = (item.obligatorio!==false) ? '<span style="color:var(--red);" title="Obligatorio">*</span>' : '';
+    // Título de grupo (para ítems normales, no firma/observación)
+    if(item.tipo!=='firma' && item.tipo!=='observacion'){
+      var g = _grupoDeItem(item.texto);
+      if(g !== grupoAnt){
+        html += '<div style="display:flex;align-items:center;gap:8px;margin:1.1rem 0 .5rem;">'
+          +'<span style="width:3px;height:14px;background:var(--gold);border-radius:2px;"></span>'
+          +'<span style="font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;">'+escapeHtml(g)+'</span></div>';
+        grupoAnt = g;
+      }
+    }
     html += '<div class="cl-item-card" data-item="'+i+'" data-obl="'+(item.obligatorio!==false?'1':'0')+'" style="padding:.9rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:.6rem;">'
       +'<div style="font-size:14px;color:var(--white);font-weight:500;margin-bottom:.6rem;">'+escapeHtml(item.texto)+' '+oblMark+'</div>';
 
