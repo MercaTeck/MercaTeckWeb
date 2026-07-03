@@ -1138,6 +1138,11 @@ footer{
       </div>
       <div id="opBienvenida" style="display:none;padding:.85rem 1rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);margin-bottom:1rem;font-size:13px;color:var(--cream);line-height:1.5;"></div>
       <button class="btn-gold" style="width:100%;padding:12px;margin-bottom:1rem;" onclick="opNuevoChecklist()">📋 Cargar nuevo check-list</button>
+      <!-- Botones de mantenimiento (solo puesto mantenimiento) -->
+      <div id="opMantBox" style="display:none;">
+        <button class="btn-outline" style="width:100%;padding:12px;margin-bottom:.75rem;border-color:var(--gold-border);color:var(--gold);" onclick="opNuevoMantenimiento()">🔧 Cargar mantenimiento</button>
+        <button class="btn-outline" style="width:100%;padding:12px;margin-bottom:1rem;" onclick="opBuscarMantenimiento()">🔍 Buscar vehículo cargado</button>
+      </div>
       <!-- Historial (solo jefe/supervisor) -->
       <div id="opHistorialBox" style="display:none;">
         <div style="font-size:13px;font-weight:600;color:var(--gold);margin:1rem 0 .5rem;">Últimos check-lists cargados</div>
@@ -2295,7 +2300,68 @@ footer{
   </div>
 </div>
 
-<!-- MODAL DETALLE CHECK-LIST -->
+<!-- MODAL MANTENIMIENTO NUEVO (operario mantenimiento) -->
+<div class="modal-overlay" id="opMantModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-hdr">
+      <h3>🔧 Cargar mantenimiento</h3>
+      <button class="modal-close" onclick="cerrarOpMant()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Vehículo</label>
+        <select id="opMantVeh" onchange="opMantAutocompletar()"></select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;">
+        <div class="field"><label>Interno</label><input type="text" id="opMantInterno" placeholder="A-101"/></div>
+        <div class="field"><label>Sector</label><input type="text" id="opMantSector" placeholder="Sector Norte"/></div>
+      </div>
+      <div class="field">
+        <label>Tipo</label>
+        <select id="opMantTipo">
+          <option value="arreglo">Arreglo</option>
+          <option value="compra">Compra</option>
+          <option value="service">Service</option>
+          <option value="incidente">Incidente (choque/imprevisto)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Descripción de la tarea</label>
+        <textarea id="opMantDesc" style="min-height:70px;" placeholder="Detalle del arreglo, compra o incidente..."></textarea>
+      </div>
+      <div class="field">
+        <label>Costo (opcional)</label>
+        <input type="number" id="opMantCosto" placeholder="45000"/>
+      </div>
+      <button class="btn-gold" style="width:100%;padding:12px;margin-top:.5rem;" onclick="guardarOpMantenimiento()">Guardar mantenimiento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BUSCAR MANTENIMIENTO (operario mantenimiento) -->
+<div class="modal-overlay" id="opBuscarMantModal">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-hdr">
+      <h3>🔍 Vehículos con mantenimiento</h3>
+      <button class="modal-close" onclick="cerrarOpBuscarMant()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="text" id="opBuscarMantInput" onkeyup="renderOpMantList()" placeholder="🔍 Buscar por patente..." style="width:100%;padding:9px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;margin-bottom:1rem;"/>
+      <div id="opMantList" style="display:flex;flex-direction:column;gap:.5rem;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE + OBSERVACIÓN (operario mantenimiento) -->
+<div class="modal-overlay" id="opMantDetalleModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-hdr">
+      <h3>Detalle del mantenimiento</h3>
+      <button class="modal-close" onclick="cerrarOpMantDetalle()">×</button>
+    </div>
+    <div class="modal-body" id="opMantDetalleContent"></div>
+  </div>
+</div>
 <div class="modal-overlay" id="detalleChecklistModal">
   <div class="modal-box" style="max-width:480px;">
     <div class="modal-hdr">
@@ -4270,6 +4336,9 @@ function mostrarPanelOperario(){
   var verHist = (_opActual.puesto==='jefe' || _opActual.puesto==='supervisor');
   document.getElementById('opHistorialBox').style.display = verHist ? 'block' : 'none';
   if(verHist) cargarHistorialOperario();
+  // Puesto mantenimiento ve los botones de mantenimiento (permiso automático)
+  var mantBox = document.getElementById('opMantBox');
+  if(mantBox) mantBox.style.display = (_opActual.puesto==='mantenimiento') ? 'block' : 'none';
   // Intentar sincronizar check-lists que quedaron offline
   if(hayPendientesOffline()){
     var bienv2 = document.getElementById('opBienvenida');
@@ -4299,6 +4368,199 @@ function opNuevoChecklist(){
     abrirChecklistOperario();
   });
 }
+
+// ══════════════════════════════════════════════════════
+//  MANTENIMIENTO (operario con puesto mantenimiento)
+// ══════════════════════════════════════════════════════
+function opNuevoMantenimiento(){
+  if(!sb){ showToast('Sin conexión','error'); return; }
+  // Cargar vehículos de la empresa para el selector
+  sb.rpc('vehiculos_para_checklist', {
+    p_empresa_id: window._opEmpresaId,
+    p_nombre: _opActual.nombre,
+    p_pin: _opActual.pin
+  }).then(function(res){
+    if(res.error){ showToast('Error al cargar vehículos','error'); return; }
+    window._opVehiculos = res.data || [];
+    var sel = document.getElementById('opMantVeh');
+    sel.innerHTML = '';
+    (window._opVehiculos||[]).forEach(function(v){
+      var o = document.createElement('option');
+      o.value = v.patente; o.textContent = v.patente + (v.interno?(' · '+v.interno):'');
+      o.setAttribute('data-interno', v.interno||'');
+      o.setAttribute('data-sector', v.obra||'');
+      sel.appendChild(o);
+    });
+    opMantAutocompletar();
+    // Limpiar campos
+    document.getElementById('opMantDesc').value='';
+    document.getElementById('opMantCosto').value='';
+    document.getElementById('opMantModal').classList.add('open');
+  });
+}
+function opMantAutocompletar(){
+  var sel = document.getElementById('opMantVeh');
+  var opt = sel.options[sel.selectedIndex];
+  if(!opt) return;
+  document.getElementById('opMantInterno').value = opt.getAttribute('data-interno')||'';
+  document.getElementById('opMantSector').value = opt.getAttribute('data-sector')||'';
+}
+function cerrarOpMant(){ document.getElementById('opMantModal').classList.remove('open'); }
+
+function guardarOpMantenimiento(){
+  var patente = document.getElementById('opMantVeh').value;
+  var interno = document.getElementById('opMantInterno').value.trim();
+  var sector = document.getElementById('opMantSector').value.trim();
+  var tipo = document.getElementById('opMantTipo').value;
+  var desc = document.getElementById('opMantDesc').value.trim();
+  var costoRaw = document.getElementById('opMantCosto').value;
+  var costo = costoRaw ? parseFloat(costoRaw) : null;
+  // Validaciones (robustez)
+  if(!patente){ showToast('Elegí un vehículo','error'); return; }
+  if(!desc){ showToast('Escribí la descripción de la tarea','error'); return; }
+  if(costoRaw && (isNaN(costo) || costo<0)){ showToast('El costo no es válido','error'); return; }
+  var _h = new Date();
+  var fecha = _h.getFullYear()+'-'+('0'+(_h.getMonth()+1)).slice(-2)+'-'+('0'+_h.getDate()).slice(-2);
+  if(!sb){ showToast('Sin conexión. Intentá más tarde.','error'); return; }
+  sb.rpc('guardar_mantenimiento_operario', {
+    p_empresa_id: window._opEmpresaId,
+    p_nombre: _opActual.nombre,
+    p_pin: _opActual.pin,
+    p_patente: patente,
+    p_interno: interno,
+    p_sector: sector,
+    p_tipo: tipo,
+    p_descripcion: desc,
+    p_costo: costo,
+    p_fecha: fecha
+  }).then(function(res){
+    if(res.error){ showToast('Error al guardar: '+(res.error.message||''),'error'); return; }
+    cerrarOpMant();
+    showToast('✓ Mantenimiento de '+patente+' cargado. ¡Gracias!','success');
+  });
+}
+
+function opBuscarMantenimiento(){
+  if(!sb){ showToast('Sin conexión','error'); return; }
+  sb.rpc('mantenimientos_para_operario', {
+    p_empresa_id: window._opEmpresaId,
+    p_nombre: _opActual.nombre,
+    p_pin: _opActual.pin
+  }).then(function(res){
+    if(res.error){ showToast('Error al cargar: '+(res.error.message||''),'error'); return; }
+    window._opMantenimientos = res.data || [];
+    renderOpMantList();
+    document.getElementById('opBuscarMantModal').classList.add('open');
+  });
+}
+function cerrarOpBuscarMant(){ document.getElementById('opBuscarMantModal').classList.remove('open'); }
+
+function renderOpMantList(){
+  var cont = document.getElementById('opMantList');
+  var filtro = (document.getElementById('opBuscarMantInput')||{}).value || '';
+  filtro = filtro.toUpperCase();
+  var lista = (window._opMantenimientos||[]).filter(function(m){
+    return !filtro || (m.patente||'').toUpperCase().indexOf(filtro)>=0;
+  });
+  if(!lista.length){
+    cont.innerHTML = '<div style="font-size:13px;color:var(--gray);text-align:center;padding:1rem;">'
+      + ((window._opMantenimientos||[]).length ? 'Ningún vehículo coincide.' : 'Todavía no hay mantenimientos cargados.')
+      + '</div>';
+    return;
+  }
+  var tipoLbl = {arreglo:'Arreglo',compra:'Compra',service:'Service',incidente:'Incidente'};
+  cont.innerHTML = '';
+  lista.forEach(function(m, idx){
+    var estadoBadge = m.estado==='finalizado'
+      ? '<span style="font-size:10px;background:rgba(34,197,94,.15);color:#4ADE80;padding:2px 7px;border-radius:20px;">✓ Finalizado</span>'
+      : '<span style="font-size:10px;background:var(--gold-dim);color:var(--gold);padding:2px 7px;border-radius:20px;">Pendiente</span>';
+    var card = document.createElement('div');
+    card.style.cssText='padding:.75rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);cursor:pointer;';
+    card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'
+      +'<strong style="color:var(--white);font-size:14px;">'+escapeHtml(m.patente)+'</strong>'+estadoBadge+'</div>'
+      +'<div style="font-size:12px;color:var(--gray);">'+escapeHtml(tipoLbl[m.tipo]||m.tipo)+' · '+escapeHtml(m.descripcion.substring(0,50))+(m.descripcion.length>50?'...':'')+'</div>';
+    card.onclick=(function(i){ return function(){ abrirOpMantDetalle(i); }; })(
+      (window._opMantenimientos||[]).indexOf(m)
+    );
+    cont.appendChild(card);
+  });
+}
+
+function abrirOpMantDetalle(idx){
+  var m = (window._opMantenimientos||[])[idx];
+  if(!m) return;
+  window._opMantActual = m;
+  var tipoLbl = {arreglo:'Arreglo',compra:'Compra',service:'Service',incidente:'Incidente'};
+  var cont = document.getElementById('opMantDetalleContent');
+  var obs = m.observaciones || [];
+  var html = '<div style="margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--bdr);">'
+    +'<div style="font-size:18px;color:var(--white);font-weight:600;">'+escapeHtml(m.patente)+'</div>'
+    +'<div style="font-size:13px;color:var(--gray);margin-top:3px;">'+escapeHtml(tipoLbl[m.tipo]||m.tipo)+' · '+escapeHtml(m.estado)+'</div></div>';
+  html += '<div style="font-size:13px;color:var(--white);margin-bottom:.5rem;"><strong>Tarea:</strong> '+escapeHtml(m.descripcion)+'</div>';
+  // Historial de observaciones
+  html += '<div style="font-size:12px;font-weight:600;color:var(--gold);margin:1rem 0 .5rem;">Historial de observaciones</div>';
+  if(!obs.length){
+    html += '<div style="font-size:12px;color:var(--gray);">Sin observaciones todavía.</div>';
+  } else {
+    html += '<div style="display:flex;flex-direction:column;gap:.4rem;max-height:180px;overflow-y:auto;">';
+    obs.forEach(function(o){
+      var f = o.fecha ? new Date(o.fecha).toLocaleDateString('es-AR') : '';
+      html += '<div style="padding:.5rem .7rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:6px;">'
+        +'<div style="font-size:13px;color:var(--white);">'+escapeHtml(o.texto)+'</div>'
+        +'<div style="font-size:10px;color:var(--gray);margin-top:3px;">'+escapeHtml(o.autor||'')+' · '+f+'</div></div>';
+    });
+    html += '</div>';
+  }
+  // Agregar observación + finalizar (solo si está pendiente)
+  if(m.estado!=='finalizado'){
+    html += '<div class="field" style="margin-top:1rem;"><label>Agregar observación</label>'
+      +'<textarea id="opNuevaObs" style="min-height:55px;" placeholder="Nueva novedad de este mantenimiento..."></textarea></div>'
+      +'<div style="display:flex;gap:.5rem;">'
+      +'<button class="btn-gold" style="flex:1;padding:10px;" onclick="guardarOpObservacion()">Guardar observación</button>'
+      +'<button class="btn-outline" style="padding:10px 14px;" onclick="finalizarOpMant()">✓ Finalizar</button></div>';
+  }
+  cont.innerHTML = html;
+  document.getElementById('opMantDetalleModal').classList.add('open');
+}
+function cerrarOpMantDetalle(){ document.getElementById('opMantDetalleModal').classList.remove('open'); }
+
+function guardarOpObservacion(){
+  var m = window._opMantActual;
+  if(!m) return;
+  var texto = document.getElementById('opNuevaObs').value.trim();
+  if(!texto){ showToast('Escribí la observación','error'); return; }
+  if(!sb){ showToast('Sin conexión','error'); return; }
+  sb.rpc('agregar_observacion_mantenimiento', {
+    p_empresa_id: window._opEmpresaId,
+    p_nombre: _opActual.nombre,
+    p_pin: _opActual.pin,
+    p_mantenimiento_id: m.id,
+    p_texto: texto
+  }).then(function(res){
+    if(res.error){ showToast('Error: '+(res.error.message||''),'error'); return; }
+    showToast('✓ Observación agregada','success');
+    cerrarOpMantDetalle();
+    opBuscarMantenimiento(); // recargar la lista con la nueva obs
+  });
+}
+
+function finalizarOpMant(){
+  var m = window._opMantActual;
+  if(!m) return;
+  if(!sb){ showToast('Sin conexión','error'); return; }
+  sb.rpc('finalizar_mantenimiento_operario', {
+    p_empresa_id: window._opEmpresaId,
+    p_nombre: _opActual.nombre,
+    p_pin: _opActual.pin,
+    p_mantenimiento_id: m.id
+  }).then(function(res){
+    if(res.error){ showToast('Error: '+(res.error.message||''),'error'); return; }
+    showToast('✓ Mantenimiento finalizado','success');
+    cerrarOpMantDetalle();
+    opBuscarMantenimiento();
+  });
+}
+
 
 function cargarHistorialOperario(){
   var cont = document.getElementById('opHistorial');
