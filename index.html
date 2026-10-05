@@ -616,7 +616,7 @@ footer p { font-size:.75rem; color:var(--muted); }
 
 
 /* ── APPS GRID 2x2 ── */
-.apps-grid { grid-template-columns:1fr 1fr !important; }
+.apps-grid { grid-template-columns:repeat(3,1fr) !important; }
 .apps-grid .svc { display:flex; flex-direction:column; }
 .app-tags { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:1.2rem; }
 .app-tag {
@@ -624,7 +624,8 @@ footer p { font-size:.75rem; color:var(--muted); }
   font-size:.68rem; letter-spacing:.06em; color:var(--gold);
   border-radius:2px; background:rgba(201,169,110,.05);
 }
-@media(max-width:900px){ .apps-grid { grid-template-columns:1fr !important; } }
+@media(max-width:900px){ .apps-grid { grid-template-columns:1fr 1fr !important; } }
+@media(max-width:600px){ .apps-grid { grid-template-columns:1fr !important; } }
 
 
 /* FAILSAFE: reveal hero even if load event never fires */
@@ -916,6 +917,18 @@ footer p { font-size:.75rem; color:var(--muted); }
         <span class="app-tag">Mercado Pago</span>
       </div>
       <a href="gesflota.html" class="app-enter-btn">Ingresá →</a>
+    </div>
+    <div class="svc reveal">
+      <span class="svc-icon">🌊</span>
+      <h3>Cauce</h3>
+      <p>Sistema de gestión ERP para PYMES y empresas. Reúne ventas, compras, gastos, stock, clientes y proveedores en una sola aplicación web. Permite armar cotizaciones y pedidos, órdenes de compra, control de gastos, inventario por depósito y reportes con indicadores. Multiempresa, con usuarios y permisos configurables. Diseñado por MercaTeck.</p>
+      <div class="app-tags">
+        <span class="app-tag">React</span>
+        <span class="app-tag">TypeScript</span>
+        <span class="app-tag">Supabase</span>
+        <span class="app-tag">Tailwind</span>
+      </div>
+      <a href="cauce.html" class="app-enter-btn">Ingresá →</a>
     </div>
     <div class="svc reveal">
       <span class="svc-icon">📌</span>

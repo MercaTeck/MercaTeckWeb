@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="only light" />
+<title>Cauce · Sistema de gestión para empresas · by MercaTeck</title>
+<meta name="description" content="Cauce reúne ventas, compras, gastos y stock en un solo lugar. Un sistema web para ordenar y controlar la gestión de tu PYME o empresa. Un producto MercaTeck." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pine:#146356; --pine-deep:#0C3F36; --pine-800:#0F5247; --pine-bright:#1E8A75;
+    --cream:#F5F2EA; --paper:#FFFFFF; --ink:#14201C; --muted:#5F6B64;
+    --line:#E4E0D5; --mint:#E7F0ED; --canvas:#F4F6F4;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth; color-scheme:only light; background:#F5F2EA}
+  body{
+    margin:0; background:#F5F2EA !important; color:#14201C;
+    font-family:'Inter',system-ui,sans-serif; font-size:17px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif; line-height:1.1; margin:0; letter-spacing:-.02em}
+  p{margin:0}
+  a{color:inherit}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--pine);
+  }
+  .section{padding:88px 0}
+  .lead{font-size:19px; color:var(--muted); max-width:60ch}
+
+  /* ---------- NAV ---------- */
+  header.top{
+    position:sticky; top:0; z-index:50; background:rgba(245,242,234,.85);
+    backdrop-filter:blur(10px); border-bottom:1px solid var(--line);
+  }
+  .top .wrap{display:flex; align-items:center; justify-content:space-between; height:64px}
+  .brand{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; color:var(--pine); letter-spacing:-.02em}
+  .brand small{display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:500; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; margin-top:-2px}
+  .btn{
+    display:inline-block; font-weight:600; font-size:15px; text-decoration:none;
+    padding:11px 20px; border-radius:10px; transition:.18s; cursor:pointer; border:0;
+  }
+  .btn-primary{background:var(--pine); color:#fff}
+  .btn-primary:hover{background:var(--pine-800)}
+  .btn-ghost{background:transparent; color:var(--pine); border:1.5px solid var(--pine)}
+  .btn-ghost:hover{background:var(--mint)}
+  .top .btn{padding:9px 16px; font-size:14px}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative; overflow:hidden; padding:76px 0 40px}
+  .hero .wrap{position:relative; z-index:2}
+  .hero h1{font-size:clamp(38px,6.4vw,66px); font-weight:700; max-width:16ch}
+  .hero h1 em{font-style:normal; color:var(--pine); position:relative}
+  .hero .lead{margin-top:22px; font-size:20px}
+  .hero .cta{margin-top:30px; display:flex; gap:12px; flex-wrap:wrap}
+  .flow-bg{position:absolute; inset:0; z-index:1; pointer-events:none; opacity:.9}
+
+  /* ---------- MOCKUP (browser window recreando la app) ---------- */
+  .frame{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    box-shadow:0 24px 60px -30px rgba(12,63,54,.45); overflow:hidden;
+  }
+  .frame .bar{display:flex; align-items:center; gap:7px; padding:11px 14px; background:#EEEBE2; border-bottom:1px solid var(--line)}
+  .dot{width:11px; height:11px; border-radius:50%}
+  .url{margin-left:12px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); background:#fff; border:1px solid var(--line); border-radius:6px; padding:3px 10px}
+  /* app chrome */
+  .app-nav{display:flex; align-items:center; gap:16px; padding:12px 16px; background:#fff; border-bottom:1px solid var(--line); font-size:12.5px; overflow:hidden}
+  .app-nav .b{font-family:'Space Grotesk'; font-weight:700; color:var(--pine); font-size:16px; margin-right:6px}
+  .app-nav .n{color:var(--muted); white-space:nowrap}
+  .app-nav .n.active{color:var(--ink); font-weight:600; border-bottom:2px solid var(--pine); padding-bottom:3px}
+  .app-body{padding:18px; background:var(--canvas)}
+  .app-h{font-family:'Space Grotesk'; font-weight:700; font-size:17px; margin-bottom:12px}
+  .fig{font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums}
+  /* KPI cards */
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px}
+  .kpi{background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px}
+  .kpi .l{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em}
+  .kpi .v{font-family:'JetBrains Mono'; font-weight:600; font-size:19px; margin-top:4px}
+  /* tabs */
+  .tabs{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap}
+  .tab{font-size:12px; padding:5px 12px; border-radius:20px; color:var(--muted); background:#fff; border:1px solid var(--line)}
+  .tab.active{background:var(--pine); color:#fff; border-color:var(--pine)}
+  /* table */
+  table.grid{width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); border-radius:10px; overflow:hidden; font-size:12.5px}
+  table.grid th{background:#fff; text-align:left; padding:9px 12px; color:var(--muted); font-weight:600; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--line)}
+  table.grid td{padding:10px 12px; border-bottom:1px solid #F0EEE7}
+  table.grid tr:last-child td{border-bottom:0}
+  .pill{font-size:11px; padding:2px 9px; border-radius:20px; background:var(--mint); color:var(--pine); font-weight:600}
+  .lnk{color:var(--pine); font-weight:600; font-size:11.5px}
+  .num{text-align:right}
+
+  /* ---------- PROBLEM ---------- */
+  .split{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:34px}
+  .panel{border-radius:14px; padding:26px}
+  .panel.bad{background:#fff; border:1px dashed #D9C9B0}
+  .panel.good{background:var(--pine); color:#fff}
+  .panel h3{font-size:18px; margin-bottom:14px}
+  .panel.good h3{color:#fff}
+  .row{display:flex; gap:11px; align-items:flex-start; padding:8px 0; font-size:15.5px}
+  .row .mk{flex:0 0 auto; width:20px; height:20px; border-radius:6px; display:grid; place-items:center; font-size:12px; font-weight:700; margin-top:1px}
+  .bad .mk{background:#F4E7D6; color:#B07B3C}
+  .good .mk{background:rgba(255,255,255,.18); color:#fff}
+  .panel.good .row{color:#EAF3F0}
+
+  /* ---------- FEATURES ---------- */
+  .feat{display:grid; grid-template-columns:1fr 1fr; gap:44px; align-items:center; margin-top:56px}
+  .feat:first-of-type{margin-top:36px}
+  .feat.rev .txt{order:2}
+  .feat .tag{font-family:'JetBrains Mono'; font-size:11.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--pine-800)}
+  .feat h3{font-size:27px; margin:10px 0 12px}
+  .feat p{color:var(--muted); font-size:16.5px}
+  .feat .ben{margin-top:14px; display:inline-flex; align-items:center; gap:9px; font-size:14.5px; font-weight:600; color:var(--pine); background:var(--mint); padding:8px 14px; border-radius:10px}
+
+  /* ---------- BENEFITS strip ---------- */
+  .bs{background:var(--pine-deep); color:#fff; border-radius:20px; padding:44px 34px; margin-top:8px}
+  .bs h2{color:#fff; font-size:30px}
+  .bgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:26px}
+  .bcard{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:20px}
+  .bcard .t{font-family:'Space Grotesk'; font-weight:600; font-size:17px}
+  .bcard .d{color:#C4D6D0; font-size:14px; margin-top:6px}
+
+  /* ---------- AUDIENCE ---------- */
+  .aud{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:30px}
+  .achip{background:#fff; border:1px solid var(--line); border-radius:12px; padding:20px; text-align:center}
+  .achip .t{font-family:'Space Grotesk'; font-weight:600; margin-top:6px}
+  .achip .d{font-size:13px; color:var(--muted); margin-top:4px}
+
+  /* ---------- GALLERY ---------- */
+  .gal{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:34px}
+
+  /* ---------- EVOLUTION ---------- */
+  .evo{background:#fff; border:1px solid var(--line); border-radius:18px; padding:36px; margin-top:8px}
+  .evo .chips{display:flex; flex-wrap:wrap; gap:10px; margin-top:20px}
+  .echip{display:inline-flex; align-items:center; gap:8px; border:1px solid var(--line); background:var(--cream); border-radius:20px; padding:8px 15px; font-size:14px; font-weight:500}
+  .echip .st{font-family:'JetBrains Mono'; font-size:10px; font-weight:600; color:var(--pine); background:var(--mint); padding:2px 7px; border-radius:20px; text-transform:uppercase; letter-spacing:.06em}
+
+  /* ---------- CTA ---------- */
+  .cta-final{background:var(--pine); color:#fff; border-radius:22px; padding:56px 40px; text-align:center; margin-top:8px; position:relative; overflow:hidden}
+  .cta-final h2{color:#fff; font-size:clamp(28px,4vw,40px); max-width:20ch; margin:0 auto}
+  .cta-final p{color:#CFE1DC; margin-top:14px; font-size:18px}
+  .contacts{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:28px}
+  .contact{display:inline-flex; align-items:center; gap:9px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:#fff; text-decoration:none; padding:12px 18px; border-radius:12px; font-weight:600; font-size:15px; transition:.18s}
+  .contact:hover{background:rgba(255,255,255,.18)}
+  .contact svg{width:18px; height:18px}
+
+  footer{padding:40px 0 56px; border-top:1px solid var(--line); margin-top:80px}
+  footer .wrap{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px}
+  footer .muted{color:var(--muted); font-size:13.5px}
+
+  .reveal{opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease}
+  .reveal.in{opacity:1; transform:none}
+
+  @media (max-width:820px){
+    .section{padding:60px 0}
+    .split,.feat,.bgrid,.aud,.gal{grid-template-columns:1fr}
+    .feat.rev .txt{order:0}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .hero h1{font-size:40px}
+    .contacts{flex-direction:column; align-items:stretch}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .reveal{opacity:1; transform:none; transition:none}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">Cauce<small>by MercaTeck</small></div>
+    <a class="btn btn-primary" href="#contacto">Contactar</a>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <svg class="flow-bg" viewBox="0 0 1440 620" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#1E8A75" stop-opacity=".16"/>
+        <stop offset="1" stop-color="#146356" stop-opacity=".04"/>
+      </linearGradient>
+    </defs>
+    <path d="M-40,120 C300,60 340,220 700,190 C1080,158 1160,300 1500,250" fill="none" stroke="url(#g)" stroke-width="70"/>
+    <path d="M-40,300 C320,240 360,420 760,380 C1140,342 1200,470 1500,430" fill="none" stroke="url(#g)" stroke-width="46"/>
+    <path d="M-40,470 C360,420 420,560 820,540 C1160,522 1240,600 1500,580" fill="none" stroke="url(#g)" stroke-width="30"/>
+  </svg>
+  <div class="wrap">
+    <div class="eyebrow">Sistema de gestión web · by MercaTeck</div>
+    <h1 style="margin-top:16px">Dale <em>cauce</em> a la gestión de tu empresa.</h1>
+    <p class="lead">Ventas, compras, gastos y stock en un solo lugar. Pasá de la información dispersa en planillas y papeles a un sistema ordenado que podés consultar y controlar.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="#contacto">Quiero conocerlo</a>
+      <a class="btn btn-ghost" href="#funciones">Ver qué hace</a>
+    </div>
+
+    <!-- Preview del panel -->
+    <div class="frame reveal" style="margin-top:44px">
+      <div class="bar"><span class="dot" style="background:#E4655E"></span><span class="dot" style="background:#E8B24A"></span><span class="dot" style="background:#54B37A"></span><span class="url">cauce · panel</span></div>
+      <div class="app-nav">
+        <span class="b">Cauce</span>
+        <span class="n active">Panel</span><span class="n">Ventas</span><span class="n">Cotizaciones</span><span class="n">Clientes</span><span class="n">Compras</span><span class="n">Proveedores</span><span class="n">Gastos</span><span class="n">Reportes</span><span class="n">Productos</span><span class="n">Stock</span>
+      </div>
+      <div class="app-body">
+        <div class="kpis">
+          <div class="kpi"><div class="l">Ventas del mes</div><div class="v">$ 4.820.500</div></div>
+          <div class="kpi"><div class="l">Compras del mes</div><div class="v">$ 2.150.000</div></div>
+          <div class="kpi"><div class="l">Gastos del mes</div><div class="v">$ 685.300</div></div>
+          <div class="kpi"><div class="l">Pendientes</div><div class="v">7</div></div>
+        </div>
+        <table class="grid">
+          <tr><th>N°</th><th>Fecha</th><th>Cliente</th><th class="num">Total</th><th>Estado</th></tr>
+          <tr><td class="fig">0042</td><td>15 ago 2026</td><td>Distribuidora del Oeste</td><td class="num fig">$ 312.400</td><td><span class="pill">Entregado</span></td></tr>
+          <tr><td class="fig">0041</td><td>14 ago 2026</td><td>Corralón San Martín</td><td class="num fig">$ 98.750</td><td><span class="pill">Confirmado</span></td></tr>
+          <tr><td class="fig">0040</td><td>14 ago 2026</td><td>Ferretería Cuyo</td><td class="num fig">$ 45.900</td><td><span class="pill">Borrador</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ QUÉ ES ============ -->
+<section class="section" id="que-es">
+  <div class="wrap">
+    <div class="eyebrow">¿Qué es?</div>
+    <h2 style="font-size:34px; margin-top:12px; max-width:20ch">Un solo sistema para ordenar el día a día del negocio</h2>
+    <p class="lead" style="margin-top:16px">Cauce es una aplicación web de gestión pensada para PYMES y empresas. Reúne las operaciones comerciales y administrativas —lo que vendés, lo que comprás, lo que gastás y lo que tenés en stock— en una sola herramienta, a la que entrás desde el navegador, sin instalar nada. Cada empresa trabaja en su propio espacio, con sus propios usuarios y permisos.</p>
+  </div>
+</section>
+
+<!-- ============ PROBLEMA ============ -->
+<section class="section" style="padding-top:20px">
+  <div class="wrap">
+    <div class="eyebrow">El problema</div>
+    <h2 style="font-size:34px; margin-top:12px; max-width:22ch">Cuando la información vive en veinte lugares distintos</h2>
+    <p class="lead" style="margin-top:16px">Planillas sueltas, cuadernos, chats y papeles. Encontrar un dato se vuelve una pérdida de tiempo, y controlar el negocio, casi imposible.</p>
+    <div class="split">
+      <div class="panel bad reveal">
+        <h3>Sin un sistema</h3>
+        <div class="row"><span class="mk">✕</span> La información está dispersa en planillas, papeles y aplicaciones distintas.</div>
+        <div class="row"><span class="mk">✕</span> Cuesta saber qué se vendió, qué se compró y cuánto se gastó.</div>
+        <div class="row"><span class="mk">✕</span> No hay control claro sobre gastos ni sobre el stock.</div>
+        <div class="row"><span class="mk">✕</span> Buscar un dato de un cliente o una operación lleva demasiado tiempo.</div>
+        <div class="row"><span class="mk">✕</span> Todo depende de la memoria de una o dos personas.</div>
+      </div>
+      <div class="panel good reveal">
+        <h3>Con Cauce</h3>
+        <div class="row"><span class="mk">✓</span> Todo queda registrado y centralizado en un solo lugar.</div>
+        <div class="row"><span class="mk">✓</span> Ventas, compras y gastos ordenados y con seguimiento.</div>
+        <div class="row"><span class="mk">✓</span> Control del stock con cada movimiento registrado.</div>
+        <div class="row"><span class="mk">✓</span> La información se consulta en segundos.</div>
+        <div class="row"><span class="mk">✓</span> Cada usuario accede a lo que le corresponde.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FUNCIONALIDADES ============ -->
+<section class="section" id="funciones" style="padding-top:20px">
+  <div class="wrap">
+    <div class="eyebrow">Qué podés hacer hoy</div>
+    <h2 style="font-size:34px; margin-top:12px; max-width:20ch">Funciones reales, disponibles y en uso</h2>
+
+    <!-- Ventas -->
+    <div class="feat">
+      <div class="txt reveal">
+        <div class="tag">Ventas</div>
+        <h3>De la cotización a la entrega, sin perder el hilo</h3>
+        <p>Armá cotizaciones, convertilas en pedidos y registrá la entrega, con control de stock en cada paso. Generás un comprobante en PDF con tu logo para enviarle al cliente.</p>
+        <div class="ben">✓ Seguís cada venta y entregás un documento profesional</div>
+      </div>
+      <div class="frame reveal">
+        <div class="bar"><span class="dot" style="background:#E4655E"></span><span class="dot" style="background:#E8B24A"></span><span class="dot" style="background:#54B37A"></span><span class="url">cauce · ventas</span></div>
+        <div class="app-body" style="background:#fff">
+          <div class="app-h">Pedidos de venta</div>
+          <div class="tabs"><span class="tab active">Todos</span><span class="tab">Borrador</span><span class="tab">Confirmado</span><span class="tab">Entrega parcial</span><span class="tab">Entregado</span></div>
+          <table class="grid">
+            <tr><th>N°</th><th>Fecha</th><th>Cliente</th><th class="num">Total</th><th>Estado</th><th></th></tr>
+            <tr><td class="fig">0042</td><td>15 ago</td><td>Distribuidora del Oeste</td><td class="num fig">$ 312.400</td><td><span class="pill">Entregado</span></td><td><span class="lnk">PDF</span></td></tr>
+            <tr><td class="fig">0041</td><td>14 ago</td><td>Corralón San Martín</td><td class="num fig">$ 98.750</td><td><span class="pill">Confirmado</span></td><td><span class="lnk">PDF</span></td></tr>
+            <tr><td class="fig">0040</td><td>14 ago</td><td>Ferretería Cuyo</td><td class="num fig">$ 45.900</td><td><span class="pill">Borrador</span></td><td><span class="lnk">PDF</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compras -->
+    <div class="feat rev">
+      <div class="txt reveal">
+        <div class="tag">Compras</div>
+        <h3>Ordená lo que le pedís a cada proveedor</h3>
+        <p>Generá órdenes de compra, registrá la recepción de la mercadería y llevá el circuito completo. También podés emitir la orden de compra en PDF.</p>
+        <div class="ben">✓ Claridad sobre qué pediste, a quién y qué llegó</div>
+      </div>
+      <div class="frame reveal">
+        <div class="bar"><span class="dot" style="background:#E4655E"></span><span class="dot" style="background:#E8B24A"></span><span class="dot" style="background:#54B37A"></span><span class="url">cauce · compras</span></div>
+        <div class="app-body" style="background:#fff">
+          <div class="app-h">Órdenes de compra</div>
+          <div class="tabs"><span class="tab active">Todas</span><span class="tab">Borrador</span><span class="tab">Aprobada</span><span class="tab">Recibida</span></div>
+          <table class="grid">
+            <tr><th>N°</th><th>Fecha</th><th>Proveedor</th><th class="num">Total</th><th>Estado</th><th></th></tr>
+            <tr><td class="fig">0018</td><td>13 ago</td><td>Insumos del Sur</td><td class="num fig">$ 540.000</td><td><span class="pill">Recibida</span></td><td><span class="lnk">PDF</span></td></tr>
+            <tr><td class="fig">0017</td><td>12 ago</td><td>Metalúrgica Andina</td><td class="num fig">$ 275.300</td><td><span class="pill">Aprobada</span></td><td><span class="lnk">PDF</span></td></tr>
+            <tr><td class="fig">0016</td><td>11 ago</td><td>Distrib. Central</td><td class="num fig">$ 120.000</td><td><span class="pill">Borrador</span></td><td><span class="lnk">PDF</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gastos -->
+    <div class="feat">
+      <div class="txt reveal">
+        <div class="tag">Gastos</div>
+        <h3>Ningún gasto pasa sin control</h3>
+        <p>Registrá los gastos de la empresa con su circuito de aprobación: quedan cargados, categorizados y con un responsable que los aprueba o rechaza.</p>
+        <div class="ben">✓ Todos los egresos registrados y bajo control</div>
+      </div>
+      <div class="frame reveal">
+        <div class="bar"><span class="dot" style="background:#E4655E"></span><span class="dot" style="background:#E8B24A"></span><span class="dot" style="background:#54B37A"></span><span class="url">cauce · gastos</span></div>
+        <div class="app-body" style="background:#fff">
+          <div class="app-h">Gastos</div>
+          <table class="grid">
+            <tr><th>N°</th><th>Fecha</th><th>Categoría</th><th class="num">Importe</th><th>Estado</th></tr>
+            <tr><td class="fig">0091</td><td>15 ago</td><td>Combustible</td><td class="num fig">$ 84.000</td><td><span class="pill">Aprobado</span></td></tr>
+            <tr><td class="fig">0090</td><td>14 ago</td><td>Servicios</td><td class="num fig">$ 132.500</td><td><span class="pill">Pendiente</span></td></tr>
+            <tr><td class="fig">0089</td><td>13 ago</td><td>Mantenimiento</td><td class="num fig">$ 46.800</td><td><span class="pill">Aprobado</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stock -->
+    <div class="feat rev">
+      <div class="txt reveal">
+        <div class="tag">Productos y Stock</div>
+        <h3>Sabé qué tenés y cómo se mueve</h3>
+        <p>Cargá tus productos y servicios, controlá existencias por depósito, y registrá ajustes, transferencias y cada movimiento de inventario.</p>
+        <div class="ben">✓ Inventario ordenado y trazable</div>
+      </div>
+      <div class="frame reveal">
+        <div class="bar"><span class="dot" style="background:#E4655E"></span><span class="dot" style="background:#E8B24A"></span><span class="dot" style="background:#54B37A"></span><span class="url">cauce · stock</span></div>
+        <div class="app-body" style="background:#fff">
+          <div class="app-h">Existencias</div>
+          <table class="grid">
+            <tr><th>Producto</th><th>Depósito</th><th class="num">Stock</th><th class="num">Mínimo</th></tr>
+            <tr><td>Caño estructural 40×40</td><td>Central</td><td class="num fig">320</td><td class="num fig">50</td></tr>
+            <tr><td>Chapa galvanizada C25</td><td>Central</td><td class="num fig">18</td><td class="num fig">20</td></tr>
+            <tr><td>Electrodo 2,5 mm (kg)</td><td>Depósito 2</td><td class="num fig">145</td><td class="num fig">30</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reportes -->
+    <div class="feat">
+      <div class="txt reveal">
+        <div class="tag">Reportes</div>
+        <h3>Números para decidir</h3>
+        <p>Indicadores y rankings por período: ventas, compras y gastos, productos y clientes más importantes. Un panorama claro del estado de la empresa.</p>
+        <div class="ben">✓ Ves cómo viene el negocio de un vistazo</div>
+      </div>
+      <div class="frame reveal">
+        <div class="bar"><span class="dot" style="background:#E4655E"></span><span class="dot" style="background:#E8B24A"></span><span class="dot" style="background:#54B37A"></span><span class="url">cauce · reportes</span></div>
+        <div class="app-body">
+          <div class="app-h">Resumen del período</div>
+          <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+            <div class="kpi"><div class="l">Ventas</div><div class="v">$ 4.82M</div></div>
+            <div class="kpi"><div class="l">Compras</div><div class="v">$ 2.15M</div></div>
+            <div class="kpi"><div class="l">Resultado</div><div class="v" style="color:#146356">$ 1.98M</div></div>
+          </div>
+          <svg viewBox="0 0 320 90" style="width:100%; height:90px; background:#fff; border:1px solid var(--line); border-radius:10px">
+            <polyline fill="none" stroke="#146356" stroke-width="2.5" points="10,70 55,58 100,62 145,40 190,46 235,26 300,20"/>
+            <polyline fill="none" stroke="#9DB8B0" stroke-width="2" points="10,78 55,72 100,74 145,66 190,68 235,58 300,60"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ MÁS FUNCIONES (compactas) ============ -->
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="gal">
+      <div class="panel" style="background:#fff; border:1px solid var(--line)">
+        <div class="tag" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--pine-800)">Clientes y Proveedores</div>
+        <h3 style="font-size:20px;margin:8px 0">Tu base comercial, centralizada</h3>
+        <p style="color:var(--muted);font-size:15px">Todos tus clientes y proveedores en un solo lugar, con sus datos siempre a mano para operar más rápido.</p>
+      </div>
+      <div class="panel" style="background:#fff; border:1px solid var(--line)">
+        <div class="tag" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--pine-800)">Import / Export</div>
+        <h3 style="font-size:20px;margin:8px 0">Cargá y descargá en CSV</h3>
+        <p style="color:var(--muted);font-size:15px">Importá productos, clientes y proveedores desde una planilla, y exportá tu información cuando la necesites.</p>
+      </div>
+      <div class="panel" style="background:#fff; border:1px solid var(--line)">
+        <div class="tag" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--pine-800)">Usuarios y permisos</div>
+        <h3 style="font-size:20px;margin:8px 0">Cada uno ve lo que le corresponde</h3>
+        <p style="color:var(--muted);font-size:15px">Roles y permisos configurables: definís quién puede ver o hacer cada cosa dentro del sistema.</p>
+      </div>
+      <div class="panel" style="background:#fff; border:1px solid var(--line)">
+        <div class="tag" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--pine-800)">Seguridad de datos</div>
+        <h3 style="font-size:20px;margin:8px 0">Tus datos, protegidos y bajo control</h3>
+        <p style="color:var(--muted);font-size:15px">El acceso es por usuario y contraseña, y cada persona ve solo lo que le corresponde. Tu información queda resguardada y separada.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BENEFICIOS ============ -->
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="bs reveal">
+      <div class="eyebrow" style="color:#9FD3C6">Beneficios</div>
+      <h2 style="margin-top:12px">Lo que gana tu empresa</h2>
+      <div class="bgrid">
+        <div class="bcard"><div class="t">Más orden</div><div class="d">Un lugar único para la información, en vez de planillas y papeles sueltos.</div></div>
+        <div class="bcard"><div class="t">Más control</div><div class="d">Seguimiento de ventas, compras y gastos, con aprobaciones donde hace falta.</div></div>
+        <div class="bcard"><div class="t">Consulta rápida</div><div class="d">Encontrás un dato o una operación en segundos, sin revolver archivos.</div></div>
+        <div class="bcard"><div class="t">Información centralizada</div><div class="d">Todo el negocio conectado: clientes, productos, stock y operaciones.</div></div>
+        <div class="bcard"><div class="t">Mejor seguimiento</div><div class="d">Sabés en qué estado está cada venta, compra o gasto en todo momento.</div></div>
+        <div class="bcard"><div class="t">Datos protegidos</div><div class="d">Accesos por permisos y separación total entre empresas.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PARA QUIÉN ============ -->
+<section class="section" style="padding-top:20px">
+  <div class="wrap">
+    <div class="eyebrow">¿Para quién es?</div>
+    <h2 style="font-size:34px; margin-top:12px; max-width:22ch">Pensada para PYMES y empresas que quieren ordenar su gestión</h2>
+    <div class="aud">
+      <div class="achip"><div class="t">PYMES</div><div class="d">Que crecieron y necesitan ordenarse</div></div>
+      <div class="achip"><div class="t">Comercios</div><div class="d">Con ventas, compras y stock</div></div>
+      <div class="achip"><div class="t">Empresas de servicios</div><div class="d">Que controlan gastos y operaciones</div></div>
+      <div class="achip"><div class="t">Distribuidoras</div><div class="d">Con movimiento de mercadería</div></div>
+    </div>
+    <p class="lead" style="margin-top:22px">Si tu empresa maneja ventas, compras, gastos y stock y hoy lo hace con planillas o de forma dispersa, Cauce está pensado para vos.</p>
+  </div>
+</section>
+
+<!-- ============ EN EVOLUCIÓN ============ -->
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="evo reveal">
+      <div class="eyebrow">Producto en evolución</div>
+      <h2 style="font-size:28px; margin-top:12px; max-width:24ch">Cauce sigue creciendo</h2>
+      <p class="lead" style="margin-top:14px">Mejoramos la plataforma de forma continua para sumar herramientas, pulir la experiencia y adaptarla a las necesidades reales de las empresas. Estas funciones están <strong>en desarrollo</strong> y se irán incorporando:</p>
+      <div class="chips">
+        <span class="echip"><span class="st">En desarrollo</span> Factura electrónica (ARCA)</span>
+        <span class="echip"><span class="st">En desarrollo</span> Pagos y cobranzas</span>
+        <span class="echip"><span class="st">En desarrollo</span> Cuentas corrientes</span>
+        <span class="echip"><span class="st">En desarrollo</span> Notas de crédito y débito</span>
+        <span class="echip"><span class="st">En desarrollo</span> Aplicación móvil</span>
+        <span class="echip"><span class="st">En desarrollo</span> Más reportes</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA / CONTACTO ============ -->
+<section class="section" id="contacto" style="padding-top:0">
+  <div class="wrap">
+    <div class="cta-final reveal">
+      <h2>¿Querés ver cómo se adapta a tu empresa?</h2>
+      <p>Escribinos y coordinamos una presentación de Cauce sin compromiso.</p>
+      <div class="contacts">
+        <a class="contact" href="mailto:mercateckinfo@gmail.com">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          mercateckinfo@gmail.com
+        </a>
+        <a class="contact" href="https://instagram.com/mercateck_" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          @mercateck_
+        </a>
+        <a class="contact" href="https://mercateck.com.ar" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg>
+          mercateck.com.ar
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="brand">Cauce<small>by MercaTeck</small></div>
+    <div class="muted">© 2026 MercaTeck · Cauce — Sistema de gestión para empresas</div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var els = document.querySelectorAll('.reveal');
+    if(!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      els.forEach(function(e){ e.classList.add('in'); }); return;
+    }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, {threshold:.12});
+    els.forEach(function(e){ io.observe(e); });
+  })();
+</script>
+</body>
+</html>
