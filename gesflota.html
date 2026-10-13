@@ -3427,7 +3427,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
       <div id="clTipoDetectado" style="display:none;font-size:12px;color:var(--gray);margin:-.5rem 0 .75rem;"></div>
       <div id="clYaCargado" style="display:none;font-size:12px;padding:8px 12px;border:1px solid var(--gold-border);border-radius:var(--r);margin:0 0 .75rem;"></div>
       <!-- KM / Horas actuales (siempre al inicio del check-list) -->
-      <div class="field" id="clKmHsField" style="display:none;">
+      <div class="field" id="clKmHsField" data-obligatorio="0">
         <label id="clKmHsLabel">Kilómetros actuales <span style="color:var(--gold);">*</span></label>
         <input type="number" id="clKmHs" min="0" placeholder="Ej: 85000" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
         <label style="display:flex;align-items:flex-start;gap:8px;margin-top:.6rem;font-size:12px;color:var(--gray);cursor:pointer;line-height:1.4;">
@@ -7182,6 +7182,7 @@ function hayPendientesOffline(){
 // ══════════════════════════════════════════════════════
 
 var _VozRec = null, _vozEscuchando = false, _vozCbs = null;
+var _vozFrenadoPorElUsuario = false, _vozErrorFatal = false;
 
 function vozDisponible(){
   return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
@@ -7194,10 +7195,14 @@ function vozEscuchar(cbs){
   var R = window.SpeechRecognition || window.webkitSpeechRecognition;
   _VozRec = new R();
   _VozRec.lang = 'es-AR';
-  _VozRec.continuous = false;        // tandas cortas: más preciso
+  // Escucha continua: el chofer puede nombrar varios ítems seguidos y hacer
+  // pausas para pensar sin que el micrófono se corte en la primera pausa.
+  _VozRec.continuous = true;
   _VozRec.interimResults = true;
   _VozRec.maxAlternatives = 1;
   _vozCbs = cbs;
+  _vozFrenadoPorElUsuario = false;
+  _vozErrorFatal = false;
   _VozRec.onresult = function(ev){
     var fin = '', parcial = '';
     for(var i=ev.resultIndex; i<ev.results.length; i++){
@@ -7209,13 +7214,19 @@ function vozEscuchar(cbs){
   };
   _VozRec.onerror = function(ev){
     var m = 'No se pudo escuchar.';
-    if(ev.error==='not-allowed' || ev.error==='service-not-allowed') m = 'Tenés que permitir el micrófono en el navegador.';
-    else if(ev.error==='no-speech') m = 'No se escuchó nada. Probá de nuevo.';
-    else if(ev.error==='network') m = 'Sin internet: el reconocimiento de voz necesita conexión.';
-    else if(ev.error==='audio-capture') m = 'No se encontró el micrófono.';
+    if(ev.error==='not-allowed' || ev.error==='service-not-allowed'){ m = 'Tenés que permitir el micrófono en el navegador.'; _vozErrorFatal = true; }
+    else if(ev.error==='audio-capture'){ m = 'No se encontró el micrófono.'; _vozErrorFatal = true; }
+    else if(ev.error==='network'){ m = 'Sin internet: el reconocimiento de voz necesita conexión.'; _vozErrorFatal = true; }
+    else if(ev.error==='no-speech'){ return; }   // silencio: seguimos escuchando
+    else if(ev.error==='aborted'){ return; }
     if(cbs.onError) cbs.onError(m);
   };
   _VozRec.onend = function(){
+    // El navegador corta solo tras un rato de silencio. Si el chofer no tocó
+    // "frenar", volvemos a escuchar para que pueda seguir dictando.
+    if(!_vozFrenadoPorElUsuario && !_vozErrorFatal){
+      try{ _VozRec.start(); _vozEscuchando = true; return; }catch(e){}
+    }
     _vozEscuchando = false;
     if(cbs.onFin) cbs.onFin();
   };
@@ -7224,6 +7235,7 @@ function vozEscuchar(cbs){
 }
 
 function vozFrenar(){
+  _vozFrenadoPorElUsuario = true;
   try{ if(_VozRec) _VozRec.stop(); }catch(e){}
   _vozEscuchando = false;
 }
@@ -7244,10 +7256,19 @@ var _VOZ_UNID = {cero:0,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7
   setenta:70,ochenta:80,noventa:90,cien:100,ciento:100,doscientos:200,trescientos:300,cuatrocientos:400,
   quinientos:500,seiscientos:600,setecientos:700,ochocientos:800,novecientos:900};
 
-// Convierte "doce mil quinientos" o "12500" en 12500. Devuelve null si no hay número.
+// Convierte "doce mil quinientos", "12.500", "12 500" o "12500" en 12500.
+// Devuelve null si no hay número. OJO: tiene que devolver el número COMPLETO,
+// porque de este valor dependen los avisos de cambio de filtros.
 function vozNumero(texto){
+  var crudo = String(texto||'');
+  // a) Número escrito con puntos o comas de miles: 156.434 · 12,500 · 1.234.567
+  var agrupado = crudo.match(/\d{1,3}(?:[.,]\d{3})+/);
+  if(agrupado) return parseInt(agrupado[0].replace(/[.,]/g,''),10);
   var t = vozNorm(texto);
-  var dig = t.replace(/\./g,'').match(/\b\d{1,9}\b/);
+  // b) Grupos de dígitos separados por espacios: "156 434" → 156434
+  var enEspacios = t.match(/\b\d{1,3}(?: \d{3})+\b/);
+  if(enEspacios) return parseInt(enEspacios[0].replace(/ /g,''),10);
+  var dig = t.match(/\b\d{1,9}\b/);
   var palabras = t.split(' ');
   var hayPalabra = palabras.some(function(p){ return _VOZ_UNID[p]!==undefined || p==='mil' || p==='millon' || p==='millones'; });
   if(dig && !hayPalabra) return parseInt(dig[0],10);
@@ -7265,37 +7286,151 @@ function vozNumero(texto){
 
 // ── Palabras que marcan cada estado, por tipo de respuesta ──
 // El valor devuelto es el MISMO que usa el formulario a mano.
+// Palabras comunes: valen para CUALQUIER tipo de ítem. Así "ok", "bien" o
+// "buen estado" se entienden igual en documentación, en neumáticos o en niveles.
+var VOZ_NEGATIVO = ['mal','malo','mala','roto','rota','rotos','rotas','dañado','dañada','pesimo','pesima','destruido','no anda','no funciona','no funciona bien','fuera de servicio','no tiene','no tienen','no esta','no estan','no lleva','no hay','falta','faltan','faltante','ausente','sin','vacio','vacia','vencido','vencida','vencidos','vencidas','gastado','gastada','gastados','gastadas','desgastado','desgastada','pinchado','pinchada','liso','lisos','para cambiar','para cambio','en mal estado','mal estado','rechazado','no','negativo','perdida','pierde','perdiendo'];
+var VOZ_INTERMEDIO = ['regular','mas o menos','masomenos','medio','media','aceptable','para revisar','a revisar','algo gastado','bajo','baja','poco','poca','por vencer','esta por vencer','proximo a vencer','por vencerse','pronto','observar'];
+var VOZ_POSITIVO = ['bien','bueno','buena','buenos','buenas','buen estado','en buen estado','ok','okey','oka','correcto','correcta','perfecto','perfecta','impecable','sin novedad','sin novedades','todo bien','todo ok','normal','en condiciones','nuevo','nueva','nuevos','al dia','vigente','en regla','todo en orden','en orden','aprobado','anda','funciona','funciona bien','lleno','llena','completo','completa','suficiente','tiene','tienen','esta','estan','presente','lleva','si','afirmativo','verde','al maximo'];
+var VOZ_NA = ['no aplica','no corresponde','na','no se aplica'];
+
+// Arma la lista de un tipo: primero las palabras propias, después las comunes.
+// El orden importa: lo negativo se busca antes que lo positivo, porque
+// "no tiene" contiene "tiene".
+function _vozLista(especificas, comunes){
+  return (especificas||[]).concat(comunes||[]);
+}
 var VOZ_ESTADOS = {
   estado: [
-    {v:'mal',     p:['mal','malo','mala','roto','rota','dañado','dañada','pesimo','destruido','no anda','no funciona','fuera de servicio']},
-    {v:'regular', p:['regular','mas o menos','medio','masomenos','aceptable','gastado','algo gastado','para revisar']},
-    {v:'bien',    p:['bien','bueno','buena','ok','okey','correcto','perfecto','sin novedad','sin novedades','todo bien','normal','en condiciones']}
+    {v:'mal',     p:_vozLista([], VOZ_NEGATIVO)},
+    {v:'regular', p:_vozLista([], VOZ_INTERMEDIO)},
+    {v:'bien',    p:_vozLista([], VOZ_POSITIVO)}
   ],
   siNo: [
-    {v:'no', p:['no','negativo','no tiene','falta','sin']},
-    {v:'si', p:['si','afirmativo','correcto','tiene','suficiente','lleno','completo']}
+    {v:'no', p:_vozLista([], VOZ_NEGATIVO)},
+    {v:'si', p:_vozLista([], VOZ_POSITIVO)}
   ],
   presencia: [
-    {v:'na',      p:['no aplica','no corresponde','na']},
-    {v:'noTiene', p:['no tiene','falta','faltante','ausente','no esta','sin','no lleva','vencida','vencido']},
-    {v:'tiene',   p:['tiene','esta','presente','completa','completo','al dia','ok','si','lleva']}
+    {v:'na',      p:_vozLista([], VOZ_NA)},
+    {v:'noTiene', p:_vozLista([], VOZ_NEGATIVO)},
+    {v:'tiene',   p:_vozLista([], VOZ_POSITIVO.concat(VOZ_INTERMEDIO))}
   ],
   nivel: [
-    {v:'critico', p:['critico','critica','vacio','vacia','en cero','muy bajo','rojo']},
-    {v:'bajo',    p:['bajo','baja','poco','poca','falta','medio','amarillo']},
-    {v:'ok',      p:['ok','okey','bien','lleno','llena','normal','correcto','completo','verde','al maximo']}
+    {v:'critico', p:_vozLista(['critico','critica','en cero','muy bajo','rojo','vacio','vacia'], [])},
+    {v:'bajo',    p:_vozLista(['amarillo'], VOZ_INTERMEDIO)},
+    {v:'ok',      p:_vozLista([], VOZ_POSITIVO)}
   ],
   estadoFisico: [
-    {v:'na',    p:['no aplica','no corresponde','na']},
-    {v:'roto',  p:['roto','rota','mal','malo','mala','gastado','gastada','pinchado','pinchada','liso','lisos','dañado','dañada','para cambiar','desgastado']},
-    {v:'bueno', p:['bueno','buena','bien','ok','okey','buen estado','perfecto','correcto','nuevo','nuevos','sin novedad']}
+    {v:'na',    p:_vozLista([], VOZ_NA)},
+    {v:'roto',  p:_vozLista([], VOZ_NEGATIVO)},
+    {v:'bueno', p:_vozLista([], VOZ_POSITIVO.concat(VOZ_INTERMEDIO))}
   ],
   vigencia: [
-    {v:'vencida',   p:['vencida','vencido','vencidas','vencidos','fuera de fecha']},
-    {v:'porvencer', p:['por vencer','pronto','esta por vencer','proximo a vencer','por vencerse']},
-    {v:'aldia',     p:['al dia','vigente','ok','bien','en regla','todo en orden','correcta','correcto']}
+    {v:'vencida',   p:_vozLista(['fuera de fecha'], VOZ_NEGATIVO)},
+    {v:'porvencer', p:_vozLista([], VOZ_INTERMEDIO)},
+    {v:'aldia',     p:_vozLista([], VOZ_POSITIVO)}
   ]
 };
+
+var VOZ_SINONIMOS_ITEM = {
+  "Kilometraje": "kilometros, km, kilometraje actual, odometro",
+  "Horas de uso": "horas, horometro, horas de motor, horas maquina",
+  "VTV / RTO": "vtv, rto, verificacion tecnica, revision tecnica, verificacion",
+  "Seguro": "poliza, seguro del vehiculo, aseguradora",
+  "Cédula / Credencial": "cedula, credencial, cedula verde, cedula azul, tarjeta verde",
+  "Patente visible": "patente, dominio, chapa patente",
+  "Documentación del vehículo": "documentacion del vehiculo, papeles del vehiculo, documentacion vehiculo, papeles del auto",
+  "Licencia de conducir": "licencia, registro, carnet de conducir, licencia de manejo",
+  "Manejo defensivo": "curso de manejo, manejo defensivo, curso defensivo",
+  "Carnet hidrogrúa": "carnet de hidrogrua, carnet grua, habilitacion hidrogrua",
+  "Autorización de manejo": "autorizacion, permiso de manejo, autorizacion de manejo",
+  "Documentación personal": "documentacion personal, papeles personales, documentos personales, dni",
+  "Documentación interna de la empresa": "documentacion interna, documentacion de la empresa, papeles internos, documentacion interna de la empresa, interna",
+  "Caja de herramientas": "herramientas, caja de herramientas, maletin",
+  "Gato": "gato hidraulico, critiquet, gato",
+  "Llave de rueda": "llave de rueda, llave cruz, llave de ruedas",
+  "Rueda de auxilio": "auxilio, rueda de auxilio, cubierta de auxilio, repuesto",
+  "Chaleco refractario": "chaleco, chaleco reflectivo, chaleco refractario",
+  "Conos de señalización": "conos, conos de señalizacion, balizas de cono",
+  "Conos de señalización (4)": "conos, cuatro conos, conos de señalizacion",
+  "Cadenas y perro (2)": "cadenas, perro, cadenas y perro, tensores",
+  "Matafuegos": "matafuego, extintor, extinguidor, matafuegos",
+  "Arrestallamas": "arrestallamas, apagachispas, arresta llamas",
+  "Botiquín": "botiquin, primeros auxilios, botiquin de primeros auxilios",
+  "Triángulos de seguridad": "triangulos, balizas, triangulo de seguridad",
+  "Linterna": "linterna, lampara, foco de mano",
+  "Cable de vida": "cable de vida, linea de vida, cabo de vida",
+  "Estado general del vehículo": "estado general, estado del vehiculo, general del vehiculo, condicion general, estado del movil",
+  "Luces (todas)": "luces, iluminacion, faros, todas las luces",
+  "Luces y balizas": "luces, balizas, luces y balizas, giros",
+  "Neumáticos": "neumaticos, gomas, cubiertas, ruedas, llantas",
+  "Neumáticos (todos)": "neumaticos, gomas, cubiertas, ruedas, todas las gomas",
+  "Frenos": "frenos, sistema de frenos, freno",
+  "Dirección": "direccion, volante, sistema de direccion",
+  "Suspensión": "suspension, amortiguadores, elasticos",
+  "Limpiaparabrisas": "limpiaparabrisas, escobillas, plumas, limpia parabrisas",
+  "Espejos": "espejos, retrovisores, espejo",
+  "Cinturones": "cinturones, cinturon de seguridad, cinturones de seguridad",
+  "Estado carrocería": "carroceria, chapa, estado de carroceria, chapa y pintura",
+  "Cambio de Cubiertas": "cambio de cubiertas, cambio de gomas, cambio de neumaticos",
+  "Sistema neumático": "sistema neumatico, aire, circuito de aire, neumatico del sistema",
+  "Quinta rueda": "quinta rueda, plato, quinta",
+  "Batería": "bateria, acumulador, bornes",
+  "Correas": "correas, correa de distribucion, correa",
+  "Aceite motor": "aceite, aceite de motor, nivel de aceite, aceite motor",
+  "Refrigerante": "refrigerante, agua, radiador, liquido refrigerante",
+  "Líquido de frenos": "liquido de frenos, liquido de freno, frenos liquido",
+  "Caja": "caja, caja de cambios, aceite de caja",
+  "Transmisión": "transmision, diferencial, aceite de transmision",
+  "Presión neumáticos": "presion, presion de gomas, presion de neumaticos, aire de las gomas",
+  "Niveles (aceite, agua, refrigerante)": "niveles, aceite agua refrigerante, niveles de fluidos, fluidos",
+  "Pérdidas (agua / aceite)": "perdidas, perdida de aceite, perdida de agua, goteo, fugas",
+  "Fajas (4)": "fajas, eslingas, cintas de amarre",
+  "Grilletes": "grilletes, grillete, ganchos de izaje",
+  "Soga": "soga, cuerda, cabo",
+  "Arnés": "arnes, arnes de seguridad, arnes de izaje",
+  "Apoyo hidráulico": "apoyo hidraulico, patas hidraulicas, apoyos",
+  "Plataformas / estabilizadores": "plataformas, estabilizadores, patas estabilizadoras",
+  "Elementos de izaje (fajas, grilletes, soga, arnés)": "elementos de izaje, izaje, fajas grilletes soga arnes, aparejos",
+  "Luces semi": "luces del semi, luces semirremolque, luces del acoplado",
+  "Cubiertas": "cubiertas, gomas, neumaticos del semi, ruedas del semi",
+  "Frenos semi": "frenos del semi, frenos semirremolque, frenos del acoplado",
+  "Patas de apoyo": "patas, patas de apoyo, soportes",
+  "Reflectivos": "reflectivos, cintas reflectivas, reflectantes",
+  "Plato / enganche": "plato, enganche, perno rey, acople",
+  "Semirremolque (general)": "semi, semirremolque, acoplado, batea",
+  "Estado de cables": "cables, estado de cables, cable de acero, guaya",
+  "Funcionamiento hidráulico": "hidraulico, funcionamiento hidraulico, sistema hidraulico, bomba hidraulica",
+  "Pérdidas de aceite": "perdida de aceite, perdidas de aceite, goteo de aceite, fuga de aceite",
+  "Mandos": "mandos, comandos, palancas, controles",
+  "Estabilizadores": "estabilizadores, patas, apoyos de la grua",
+  "Gancho y seguro": "gancho, seguro del gancho, gancho y seguro, pestillo",
+  "Mercadería / carga": "carga, mercaderia, la carga, estiba",
+  "Combustible suficiente": "combustible, nafta, gasoil, nivel de combustible, tanque",
+  "Tipo de intervención": "tipo de intervencion, intervencion, trabajo realizado",
+  "Repuestos utilizados": "repuestos, repuestos utilizados, piezas",
+  "Requiere seguimiento": "seguimiento, requiere seguimiento, necesita seguimiento",
+  "Observaciones": "observaciones, observacion, comentario, novedad",
+  "Firma del responsable": "firma, firma del responsable",
+  "Niveles (aceite, agua, frenos)": "niveles, aceite agua frenos, niveles de fluidos, fluidos",
+  "Luces y señalización": "luces, señalizacion, luces y señalizacion, balizas",
+  "Documentación": "documentacion, papeles, documentos",
+  "Documentación interna": "documentacion interna, papeles internos, documentacion de la empresa, interna",
+  "Verificación general de la unidad": "verificacion general, unidad, verificacion de la unidad",
+  "Verificación general": "verificacion general, verificacion",
+  "Estado tras la intervención": "estado tras la intervencion, estado final, como quedo",
+  "Kilometraje / horas": "kilometraje, kilometros, km, horas, horometro",
+  "Firma": "firma"
+};
+
+// Sinónimos ya cargados para cada ítem del catálogo. El administrador de flota
+// puede sumar los suyos desde el constructor; estos vienen de fábrica.
+function _vozSinonimosDe(texto){
+  if(VOZ_SINONIMOS_ITEM[texto]) return VOZ_SINONIMOS_ITEM[texto];
+  // Búsqueda tolerante: por si el nombre tiene tildes o mayúsculas distintas
+  var n = vozNorm(texto);
+  for(var k in VOZ_SINONIMOS_ITEM){ if(vozNorm(k)===n) return VOZ_SINONIMOS_ITEM[k]; }
+  return '';
+}
 
 // ¿Aparece 'patron' en el texto? Tolera plurales y terminaciones
 // ("gastadas" encuentra "gastado", "rotos" encuentra "roto").
@@ -7339,13 +7474,37 @@ function vozPalabrasDeItem(item){
   var ps = [];
   var nombre = vozNorm(item.texto);
   if(nombre) ps.push(nombre);
-  (String(item.palabras||'').split(',')).forEach(function(p){
+  var todas = String(item.palabras||'') + ',' + _vozSinonimosDe(item.texto);
+  todas.split(',').forEach(function(p){
     var n = vozNorm(p); if(n) ps.push(n);
   });
   nombre.split(' ').forEach(function(p){
     if(p.length>=3 && VOZ_VACIAS.indexOf(p)<0) ps.push(p);
   });
   return ps.filter(function(p,i,a){ return p && a.indexOf(p)===i; });
+}
+
+// Todas las palabras de estado juntas, para no confundirlas con nombres de ítems
+var _VOZ_TODAS_ESTADO = null;
+function _vozTodasEstado(){
+  if(_VOZ_TODAS_ESTADO) return _VOZ_TODAS_ESTADO;
+  _VOZ_TODAS_ESTADO = {};
+  [].concat(VOZ_NEGATIVO, VOZ_INTERMEDIO, VOZ_POSITIVO, VOZ_NA).forEach(function(p){ _VOZ_TODAS_ESTADO[p]=true; });
+  return _VOZ_TODAS_ESTADO;
+}
+
+// ¿La palabra que está en esa posición es en realidad parte de un estado?
+// Ejemplo: en "matafuegos buen estado", la palabra "estado" NO nombra al ítem
+// "Estado general del vehículo": es la segunda mitad de "buen estado".
+function _vozEsParteDeEstado(textoNorm, pos, patron){
+  if(!patron || patron.indexOf(' ')>=0) return false;   // solo palabras sueltas
+  var todas = _vozTodasEstado();
+  var antes = textoNorm.slice(0, pos).trim().split(' ');
+  var prev1 = antes[antes.length-1] || '';
+  var prev2 = antes[antes.length-2] || '';
+  if(prev1 && todas[prev1+' '+patron]) return true;              // "buen estado"
+  if(prev2 && todas[prev2+' '+prev1+' '+patron]) return true;    // "en buen estado"
+  return false;
 }
 
 // Dónde aparece el ítem y con cuánta fuerza.
@@ -7357,6 +7516,7 @@ function vozBuscarItem(textoNorm, item){
   ps.forEach(function(p){
     var i = vozContiene(textoNorm, p);
     if(i<0) return;
+    if(_vozEsParteDeEstado(textoNorm, i, p)) return;   // era un estado, no el ítem
     // La posición es la de la coincidencia MÁS LARGA, no la más temprana:
     // así "Documentación del vehículo" no se engancha con la palabra
     // "vehículo" que aparece dentro del nombre de otro ítem.
@@ -7370,9 +7530,27 @@ function vozBuscarItem(textoNorm, item){
 // Recibe el texto y la lista de ítems activos. Devuelve qué entendió:
 //   { items:[{idx, valor, texto}], km:{idx,valor}, observacion:{tipo,detalle}, patente:'...' }
 // Lo que no entiende NO lo inventa: queda afuera.
+// Recorta un pedazo del texto ORIGINAL (con sus puntos) usando posiciones
+// calculadas sobre el texto normalizado. Si no coinciden, devuelve el normalizado.
+function _vozRecorte(original, norm, desde, hasta){
+  var pedazoNorm = norm.slice(desde, hasta);
+  var palabras = pedazoNorm.split(' ').filter(function(p){ return p; });
+  if(!palabras.length) return pedazoNorm;
+  // Buscamos en el original la primera y la última palabra del pedazo
+  var o = String(original);
+  var oNormSimple = vozNorm(o);
+  if(oNormSimple === norm){
+    // Mismo largo de palabras: reconstruimos por índice de palabra
+    var pi = norm.slice(0, desde).split(' ').filter(function(p){ return p; }).length;
+    var pal = o.split(/\s+/);
+    return pal.slice(pi, pi + palabras.length).join(' ');
+  }
+  return pedazoNorm;
+}
+
 function vozLeerChecklist(texto, items, vehiculos){
   var t = vozNorm(texto);
-  var res = { items:[], km:null, observacion:null, patente:null, nada:true };
+  var res = { items:[], km:null, kmLibre:undefined, observacion:null, patente:null, nada:true };
   if(!t) return res;
 
   // 1) Patente o identificador del vehículo (se dicta primero)
@@ -7409,7 +7587,11 @@ function vozLeerChecklist(texto, items, vehiculos){
 
   marcas.sort(function(a,b){ return a.pos-b.pos; });
 
-  // 3) Cada ítem se queda con el pedazo de frase que va hasta el ítem siguiente
+  // 3) Cada ítem se queda con el pedazo de frase que va hasta el ítem siguiente.
+  //    Si entre dos ítems solo hay un conector ("frenos y espejos bien"),
+  //    el primero toma el estado del segundo.
+  var CONECTORES = /^[\s,yeo]*$|^(y|e|o|ni|mas|tambien|igual|idem)$/;
+  var pendientes = [];
   marcas.forEach(function(m, i){
     var hasta = (i+1<marcas.length) ? marcas[i+1].pos : t.length;
     var pedazo = t.slice(m.pos, hasta);
@@ -7421,19 +7603,44 @@ function vozLeerChecklist(texto, items, vehiculos){
     }
     if(item.tipo==='observacion' || item.tipo==='observacionTipo') return; // se maneja aparte
     var val = vozEstadoDe(item.tipo, pedazo);
-    if(val){ res.items.push({ idx:m.idx, valor:val, texto:item.texto }); res.nada=false; }
+    if(val){
+      // Lo que quedó esperando un estado lo toma de acá
+      pendientes.forEach(function(pe){
+        var v2 = vozEstadoDe(pe.item.tipo, pedazo);
+        if(v2){ res.items.push({ idx:pe.idx, valor:v2, texto:pe.item.texto }); res.nada=false; }
+      });
+      pendientes = [];
+      res.items.push({ idx:m.idx, valor:val, texto:item.texto });
+      res.nada=false;
+      return;
+    }
+    // Sin estado propio: ¿lo que sigue es solo un conector?
+    var sobrante = pedazo.slice(vozNorm(item.texto).length>0 ? 0 : 0);
+    var resto = pedazo.split(' ').slice(1).join(' ').trim();
+    if(CONECTORES.test(resto)) pendientes.push({ idx:m.idx, item:item });
+    else pendientes = [];
   });
 
-  // 4) Número suelto sin nombrar el ítem (ej: "kilometraje 12500" ya entró arriba;
-  //    acá cubrimos "12500 kilómetros" cuando el ítem numérico existe y está vacío)
-  if(!res.km){
-    var idxNum = -1;
-    (items||[]).forEach(function(item, idx){ if(idxNum<0 && item.tipo==='numero') idxNum = idx; });
-    if(idxNum>=0 && /\b(kilometro|kilometros|kilometraje|km|horas|hora)\b/.test(t)){
-      var n2 = vozNumero(t);
-      if(n2!==null){ res.km = { idx:idxNum, valor:n2 }; res.nada=false; }
+  // 4) Kilometraje / horas dicho suelto. Vale SIEMPRE, tenga o no la plantilla
+  //    un ítem numérico, porque el campo "Km actuales" del formulario es aparte.
+  var reKm = /\b(kilometraje|kilometros|kilometro|kilometrage|km|horas|hora|horometro)\b/;
+  if(reKm.test(t)){
+    var posKm = t.search(reKm);
+    // El número puede venir antes o después de la palabra: probamos las dos
+    var nDesp = vozNumero(_vozRecorte(texto, t, posKm, t.length));
+    var nAntes = (nDesp===null) ? vozNumero(_vozRecorte(texto, t, 0, posKm)) : null;
+    var nKm = (nDesp!==null) ? nDesp : nAntes;
+    if(nKm!==null){
+      res.kmLibre = nKm;
+      res.nada = false;
+      if(!res.km){
+        var idxNum = -1;
+        (items||[]).forEach(function(item, idx){ if(idxNum<0 && item.tipo==='numero') idxNum = idx; });
+        if(idxNum>=0) res.km = { idx:idxNum, valor:nKm };
+      }
     }
   }
+  if(res.km && res.kmLibre===undefined) res.kmLibre = res.km.valor;
 
   // 5) Observación: tipo (de los que configuró el administrador) + detalle
   if(posObs>=0){
@@ -7541,27 +7748,31 @@ function demoVozAplicar(texto){
 
   // Dominio: lo que viene después de "dominio" o "patente", hasta que
   // aparezca otra palabra del check-list (para no comerse "kilometraje")
-  var CORTES = ['kilometraje','kilometros','kilometro','km','horas','estado','documentacion','documentos','papeles','vtv','seguro','cedula','observacion'];
+  var CORTES = ['kilometraje','kilometros','kilometro','km','horas','hora','estado','documentacion','documentos','papeles','vtv','seguro','cedula','observacion','y','e','o','con','el','la','del'];
   var palabras = t.split(' ');
   var iDom = -1;
   palabras.forEach(function(w,i){ if(iDom<0 && ['dominio','patente','movil'].indexOf(w)>=0) iDom = i; });
   if(iDom>=0){
-    var partes = [];
-    for(var k=iDom+1; k<palabras.length && partes.length<4; k++){
+    var dom = '';
+    for(var k=iDom+1; k<palabras.length; k++){
       var w = palabras[k];
-      if(CORTES.indexOf(w)>=0) break;
+      if(CORTES.indexOf(w)>=0) break;             // empezó otro dato
       if(!/^[a-z0-9]{1,8}$/.test(w)) break;
-      partes.push(w);
+      if(dom.length + w.length > 10) break;       // una patente no es más larga
+      dom += w;
     }
-    var dom = partes.join('').toUpperCase();
+    dom = dom.toUpperCase();
     if(dom.length>=5 && dom.length<=10){ _demoVozDatos.patente = dom; algo = true; }
   }
 
-  // Kilometraje
-  if(/\b(kilometraje|kilometros|kilometro|km|horas)\b/.test(t)){
-    var pos = t.search(/\b(kilometraje|kilometros|kilometro|km|horas)\b/);
-    var n = vozNumero(t.slice(pos));
-    if(n!==null){ _demoVozDatos.km = n; algo = true; }
+  // Kilometraje: el número puede venir antes o después de la palabra,
+  // y tiene que entrar COMPLETO ("156.434" es 156434, no 156).
+  var reKmD = /\b(kilometraje|kilometros|kilometro|km|horas|hora)\b/;
+  if(reKmD.test(t)){
+    var pos = t.search(reKmD);
+    var nD = vozNumero(_vozRecorte(texto, t, pos, t.length));
+    if(nD===null) nD = vozNumero(_vozRecorte(texto, t, 0, pos));
+    if(nD!==null){ _demoVozDatos.km = nD; algo = true; }
   }
 
   // Estado y documentación, cada uno con el pedazo de frase que le toca
@@ -7646,15 +7857,51 @@ function elegirModoChecklist(modo){
   }
 }
 
-// En modo audio el formulario largo se oculta, menos la firma (que se hace con el dedo)
+// En modo audio se oculta todo lo que se carga a mano (vehículo, km, ítems).
+// Queda visible SOLO la firma, que es táctil por obligación.
 function _audioMostrarSoloFirma(soloFirma){
   var items = window._clItemsActivos || [];
-  document.querySelectorAll('#clChecklistItems .cl-item-card').forEach(function(card){
-    var i = parseInt(card.getAttribute('data-item'));
-    var it = items[i];
-    var esFirma = it && it.tipo==='firma';
-    card.style.display = (soloFirma && !esFirma) ? 'none' : '';
-  });
+  var cont = document.getElementById('clChecklistItems');
+  if(cont){
+    // Se oculta TODO el formulario largo (barra de progreso y títulos de grupo
+    // incluidos). Lo único que queda es el recuadro de la firma.
+    Array.prototype.forEach.call(cont.children, function(hijo){
+      var esCard = hijo.classList && hijo.classList.contains('cl-item-card');
+      var esFirma = false;
+      if(esCard){
+        var it = items[parseInt(hijo.getAttribute('data-item'))];
+        esFirma = it && it.tipo==='firma';
+      }
+      hijo.style.display = (soloFirma && !esFirma) ? 'none' : '';
+    });
+  }
+  // En modo audio, el dominio y el kilometraje no se muestran arriba: se dictan
+  // y se ven en la lista de confirmación. En modo manual se ven SIEMPRE,
+  // desde que se abre el check-list.
+  var campoVeh = document.getElementById('clPatente');
+  if(campoVeh && campoVeh.parentElement){
+    campoVeh.parentElement.style.display = soloFirma ? 'none' : '';
+  }
+  var kmField = document.getElementById('clKmHsField');
+  if(kmField) kmField.style.display = soloFirma ? 'none' : 'block';
+  // El semi depende del vehículo: guardamos cómo estaba y lo devolvemos igual
+  var semiF = document.getElementById('clSemiDominioField');
+  if(semiF){
+    if(soloFirma){
+      if(semiF.getAttribute('data-previo')===null) semiF.setAttribute('data-previo', semiF.style.display || '');
+      semiF.style.display = 'none';
+    } else if(semiF.getAttribute('data-previo')!==null){
+      semiF.style.display = semiF.getAttribute('data-previo');
+      semiF.removeAttribute('data-previo');
+    }
+  }
+}
+
+// ¿Este vehículo lleva control de km/horas? (define si el km es obligatorio)
+function _audioKmAplica(){
+  var kmField = document.getElementById('clKmHsField');
+  if(!kmField) return false;
+  return kmField.getAttribute('data-obligatorio')==='1';
 }
 
 // Lee del formulario real qué valor tiene cada ítem (para mostrarlo en la lista)
@@ -7688,21 +7935,25 @@ function _audioRefrescarLista(){
   var html = '', hechos = 0, faltan = [];
 
   // El dominio y el kilometraje van primero, en el mismo orden del check-list
+  // El dominio y el kilometraje se confirman acá: en modo audio no están
+  // arriba, así que esta lista es donde el chofer ve lo que se cargó.
   var selVeh = document.getElementById('clPatente');
   var dom = selVeh ? selVeh.value : '';
   html += _audioFila('Dominio', dom ? ('🚚 '+dom) : null);
   if(dom) hechos++; else faltan.push('dominio');
 
-  var kmField = document.getElementById('clKmHsField');
-  var kmVisible = kmField && kmField.style.display !== 'none';
+  var kmVisible = _audioKmAplica();
+  var km = (document.getElementById('clKmHs')||{}).value;
   if(kmVisible){
-    var km = (document.getElementById('clKmHs')||{}).value;
-    var lblKm = (document.getElementById('clKmHsLabel')||{}).textContent || 'Kilometraje';
-    html += _audioFila(lblKm, km ? ('🔢 '+km) : null);
+    var lblKm = ((document.getElementById('clKmHsLabel')||{}).textContent || 'Kilometraje').replace('*','').trim();
+    html += _audioFila(lblKm, km ? ('🔢 '+Number(km).toLocaleString('es-AR')) : null);
     if(km) hechos++; else faltan.push('kilometraje');
   }
 
+  var nFilas = 0;
   items.forEach(function(it, i){
+    if(it.tipo==='firma') return;          // la firma va en su recuadro, no acá
+    nFilas++;
     var val = _audioValorDe(i);
     var nombre = it.texto;
     if(it.tipo==='observacionTipo') nombre = 'Observación (si hay)';
@@ -7711,8 +7962,25 @@ function _audioRefrescarLista(){
     else if(it.obligatorio!==false) faltan.push(nombre.toLowerCase());
   });
 
+  // Lo mismo que revisa el botón Guardar: si eligió un tipo de observación,
+  // el detalle es obligatorio; y la firma siempre hace falta.
+  var idxObs = -1, idxFirma = -1;
+  items.forEach(function(it,i){
+    if(idxObs<0 && it.tipo==='observacionTipo') idxObs = i;
+    if(idxFirma<0 && it.tipo==='firma') idxFirma = i;
+  });
+  if(idxObs>=0){
+    var selObs = document.querySelector('select[data-name="cli_'+idxObs+'"]');
+    var txtObs = document.querySelector('[data-name="cli_'+idxObs+'_txt"]');
+    if(selObs && selObs.value && !(txtObs && txtObs.value.trim())) faltan.push('detalle de la observación');
+  }
+  if(idxFirma>=0){
+    var can = document.querySelector('.cl-firma[data-item="'+idxFirma+'"]');
+    if(!(can && can.getAttribute('data-firmado')==='1')) faltan.push('firma');
+  }
+
   cont.innerHTML = html;
-  var total = items.length + 1 + (kmVisible?1:0);
+  var total = nFilas + 1 + (kmVisible?1:0);
   var cEl = document.getElementById('clAudioContador');
   if(cEl) cEl.textContent = hechos+' de '+total;
   var fEl = document.getElementById('clAudioFaltan');
@@ -7791,13 +8059,14 @@ function _audioAplicarTexto(texto){
       }
     }
   }
-  // Kilometraje / horas
-  if(r.km){
+  // Kilometraje / horas: va al campo real, que es el que después suma
+  // los km en el panel de Flota y dispara el aviso de cambio de filtros.
+  if(r.kmLibre!==undefined && r.kmLibre!==null){
     var inpKm = document.getElementById('clKmHs');
+    if(inpKm && _audioKmAplica()) inpKm.value = r.kmLibre;
+  }
+  if(r.km){
     var itNum = items[r.km.idx];
-    if(inpKm && document.getElementById('clKmHsField') && document.getElementById('clKmHsField').style.display!=='none'){
-      inpKm.value = r.km.valor;
-    }
     if(itNum && itNum.tipo==='numero'){
       var inpIt = document.querySelector('input[data-name="cli_'+r.km.idx+'"]');
       if(inpIt){ inpIt.value = r.km.valor; marcarItemCompleto(r.km.idx); }
@@ -10787,7 +11056,7 @@ function openChecklistForm(){
   onClVehiculoChange();
   document.getElementById('checklistFormModal').classList.add('open');
 }
-function closeChecklistForm(){ document.getElementById('checklistFormModal').classList.remove('open'); }
+function closeChecklistForm(){ if(typeof _bloquearGuardar==='function') _bloquearGuardar(false); document.getElementById('checklistFormModal').classList.remove('open'); }
 
 function onClVehiculoChange(){
   // Detectar el tipo del vehículo seleccionado por su patente/ID
@@ -10847,21 +11116,24 @@ function onClVehiculoChange(){
       }
     });
   }
-  // Campo km/horas: mostrar solo si la categoría controla filtros
+  // Campo km/horas: SIEMPRE visible, desde que se abre el check-list.
+  // Lo que cambia según la categoría del vehículo es si es obligatorio,
+  // no si se ve. (Antes se ocultaba hasta elegir el vehículo.)
   var kmField = document.getElementById('clKmHsField');
   if(kmField){
     var catV = _normalizarCategoria(veh && veh.tipo);
-    if(catV.aplicaFiltros){
-      kmField.style.display = 'block';
-      var esHoras = (veh && veh.control_por==='horas');
-      var lbl = document.getElementById('clKmHsLabel');
-      if(lbl) lbl.textContent = esHoras ? 'Horas actuales' : 'Kilómetros actuales';
-      var inp = document.getElementById('clKmHs');
-      if(inp){ inp.value = (veh && veh.valor_actual) ? veh.valor_actual : ''; inp.placeholder = esHoras?'Ej: 3200':'Ej: 85000'; }
-      var chk = document.getElementById('clServiceRealizado'); if(chk) chk.checked=false;
-    } else {
-      kmField.style.display = 'none';
-    }
+    kmField.style.display = 'block';
+    kmField.setAttribute('data-obligatorio', catV.aplicaFiltros ? '1' : '0');
+    var esHoras = (veh && veh.control_por==='horas');
+    var lbl = document.getElementById('clKmHsLabel');
+    if(lbl) lbl.innerHTML = (esHoras ? 'Horas actuales' : 'Kilómetros actuales')
+      + (catV.aplicaFiltros ? ' <span style="color:var(--gold);">*</span>'
+                            : ' <span style="font-size:11px;color:var(--gray);font-weight:400;">(opcional para esta categoría)</span>');
+    var inp = document.getElementById('clKmHs');
+    if(inp){ inp.value = (veh && veh.valor_actual) ? veh.valor_actual : ''; inp.placeholder = esHoras?'Ej: 3200':'Ej: 85000'; }
+    var chkSrv = document.getElementById('clServiceRealizado'); if(chkSrv) chkSrv.checked=false;
+    var srvLbl = chkSrv ? chkSrv.parentElement : null;
+    if(srvLbl) srvLbl.style.display = catV.aplicaFiltros ? 'flex' : 'none';
   }
   onClTipoChange();
 }
@@ -11125,6 +11397,9 @@ function _verificarCargaVehiculo(patente, freq, empresaId, cb){
       }
       var row = res.data[0];
       cb({ cargadoHoy: row.cargado_hoy===true, cargasPeriodo: row.cargas_periodo||0, maxCargas:per.maxCargas, labelPeriodo:per.labelPeriodo });
+    }, function(){
+      // Si falla por red, seguimos igual: no perdemos un check-list legítimo
+      cb({ cargadoHoy:false, cargasPeriodo:0, maxCargas:per.maxCargas, labelPeriodo:per.labelPeriodo, sinConexion:true });
     });
     return;
   }
@@ -11147,7 +11422,30 @@ function _verificarCargaVehiculo(patente, freq, empresaId, cb){
     });
 }
 
+var _guardandoChecklist = false;
+
+// Bloquea el botón mientras guarda y lo libera cuando termina (o si algo falla).
+function _bloquearGuardar(bloquear){
+  _guardandoChecklist = bloquear;
+  var btn = document.querySelector('#checklistFormModal .modal-btn');
+  if(!btn) return;
+  btn.disabled = bloquear;
+  btn.style.opacity = bloquear ? '.6' : '1';
+  btn.style.cursor = bloquear ? 'wait' : 'pointer';
+  if(bloquear){
+    btn.setAttribute('data-txt', btn.textContent);
+    btn.textContent = 'Guardando...';
+    // Red de seguridad: si algo no responde, se libera solo
+    clearTimeout(window._guardarTimeout);
+    window._guardarTimeout = setTimeout(function(){ _bloquearGuardar(false); }, 15000);
+  } else {
+    clearTimeout(window._guardarTimeout);
+    if(btn.getAttribute('data-txt')) btn.textContent = btn.getAttribute('data-txt');
+  }
+}
+
 function submitChecklist(){
+  if(_guardandoChecklist) return;   // ya se está guardando: ignorar clics repetidos
   var patente = document.getElementById('clPatente').value;
   var tipo = document.getElementById('clTipoVeh').value;
   var freq = (_opActual && _opActual.frecuencia) ? _opActual.frecuencia : document.getElementById('clFreqVeh').value;
@@ -11167,7 +11465,9 @@ function submitChecklist(){
 
   // Km/horas actuales OBLIGATORIO (si la categoría del vehículo lleva control de filtros)
   var kmEl = document.getElementById('clKmHs');
-  if(kmEl && kmEl.offsetParent !== null){ // visible = aplica a este vehículo
+  var kmWrap = document.getElementById('clKmHsField');
+  var kmObligatorio = kmWrap ? kmWrap.getAttribute('data-obligatorio')==='1' : false;
+  if(kmEl && kmObligatorio){ // la categoría del vehículo lleva control de km/horas
     var kmVal = kmEl.value.trim();
     if(kmVal===''){ showToast('⚠️ Cargá los km/horas actuales del vehículo para continuar.','error'); kmEl.focus(); return; }
     if(isNaN(parseInt(kmVal)) || parseInt(kmVal)<0){ showToast('⚠️ El valor de km/horas debe ser un número válido.','error'); kmEl.focus(); return; }
@@ -11175,6 +11475,7 @@ function submitChecklist(){
 
   // ── ANTI-DUPLICADO: verificar antes de guardar ──
   var empresaIdVerif = window._opEmpresaId || window._empresaId;
+  _bloquearGuardar(true);   // de acá en adelante, un solo clic alcanza
 
   // ── VALIDACIÓN DE ASIGNACIÓN (solo operario que carga con PIN) ──
   // El operario solo puede cargar vehículos asignados a su puesto mediante una
@@ -11192,6 +11493,7 @@ function submitChecklist(){
     }).then(function(res){
       // Si el servidor dice que NO está asignado → bloquear
       if(!res.error && res.data === false){
+        _bloquearGuardar(false);
         showToast('🚫 Este vehículo no está asignado a tu usuario. No podés cargarlo.','error');
         return;
       }
@@ -11213,14 +11515,16 @@ function _continuarGuardadoChecklist(idVehiculo, tipo, freq, fecha, items, empre
   _verificarCargaVehiculo(idVehiculo, freq, empresaIdVerif, function(estado){
     // Bloqueo: ya cargado hoy → no deja guardar
     if(estado.cargadoHoy){
+      _bloquearGuardar(false);
       showToast('🚫 Este vehículo ya fue cargado hoy. No se puede cargar dos veces el mismo día.','error');
       return;
     }
     // Aviso: ya cumplió su frecuencia en el período → avisa pero deja seguir
     if(estado.cargasPeriodo >= estado.maxCargas && estado.maxCargas>0 && !estado.sinConexion){
+      _bloquearGuardar(false);
       genConfirm('Vehículo ya cargado',
         'Este vehículo ya fue cargado '+estado.labelPeriodo+' ('+estado.cargasPeriodo+' de '+estado.maxCargas+' según su frecuencia). ¿Querés cargarlo igual?',
-        function(){ _guardarChecklistFinal(idVehiculo, tipo, freq, fecha, items); });
+        function(){ _bloquearGuardar(true); _guardarChecklistFinal(idVehiculo, tipo, freq, fecha, items); });
       return;
     }
     // Todo ok → guardar normal
@@ -11505,6 +11809,7 @@ function _guardarChecklistFinal(idVehiculo, tipo, freq, fecha, items){
     // refresca TODO el panel para que el check-list se refleje en la lista,
     // en el cumplimiento de reglas y en los gráficos.
     var _trasGuardarOperario = function(){
+      _bloquearGuardar(false);
       closeChecklistForm();
       showToast('✓ Check-list de '+idVehiculo+' cargado correctamente. ¡Gracias!','success');
       if(typeof loadChecklistRegistros==='function') loadChecklistRegistros();
@@ -11527,7 +11832,7 @@ function _guardarChecklistFinal(idVehiculo, tipo, freq, fecha, items){
         if(r1.error){
           console.warn('[GesFlota] Insert con puesto falló:', r1.error.message);
           sb.from('checklists').insert(fila).select().then(function(r2){
-            if(r2.error){ console.error('[GesFlota] Insert SIN puesto también falló:', r2.error.message); showToast('No se pudo guardar: '+r2.error.message,'error'); return; }
+            if(r2.error){ console.error('[GesFlota] Insert SIN puesto también falló:', r2.error.message); _bloquearGuardar(false); showToast('No se pudo guardar: '+r2.error.message,'error'); return; }
             _trasGuardarOperario();
           });
           return;
@@ -11544,9 +11849,9 @@ function _guardarChecklistFinal(idVehiculo, tipo, freq, fecha, items){
           // Si falla, avisamos claro. NO intentamos insert directo porque el RLS
           // lo bloquea (el operario entra con PIN, sin sesión de Supabase).
           if(msg.indexOf('candidate')>=0 || msg.indexOf('does not exist')>=0){
-            showToast('Falta actualizar la base (función de check-list). Avisá al administrador.','error');
+            _bloquearGuardar(false); showToast('Falta actualizar la base (función de check-list). Avisá al administrador.','error');
           } else {
-            showToast('No se pudo guardar: '+msg+'. Intentá de nuevo.','error');
+            _bloquearGuardar(false); showToast('No se pudo guardar: '+msg+'. Intentá de nuevo.','error');
           }
           return;
         }
