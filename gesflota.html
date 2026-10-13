@@ -877,7 +877,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
         <p class="hero-sub">Plataforma de gestión de flota para empresas que no se pueden permitir imprevistos. Control de mantenimiento, VTV, check-lists semanales y alertas en tiempo real.</p>
         <div class="hero-ctas">
           <button class="btn-primary" onclick="showView('register')">
-            Empezá tu prueba de 14 días
+            Creá tu cuenta
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
           <button class="btn-secondary" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">Ver demo</button>
@@ -1001,6 +1001,37 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
           <div class="how-desc">Tu equipo completa check-lists, carga arreglos y recibe alertas automáticas. Vos controlás todo desde el panel en tiempo real.</div>
         </div>
       </div>
+
+      <!-- ══ DEMO EN VIVO: check-list por voz ══ -->
+      <div id="demoVoz" style="margin-top:3rem;background:var(--card);border:1px solid var(--bdr);border-radius:var(--r2);padding:1.75rem;">
+        <div style="text-align:center;margin-bottom:1.25rem;">
+          <div style="font-size:13px;font-weight:600;color:#4ADE80;letter-spacing:.05em;text-transform:uppercase;margin-bottom:.4rem;">🎤 Probalo acá mismo</div>
+          <h3 style="font-family:var(--font-display);font-size:26px;color:var(--white);">Un check-list que se completa hablando</h3>
+          <p style="font-size:14px;color:var(--gray);max-width:600px;margin:.6rem auto 0;line-height:1.6;">Así lo carga tu chofer desde el celular. Tocá el micrófono y decí, por ejemplo:
+            <em style="color:var(--gold);">"Dominio AB 123 CD, kilometraje doce mil quinientos, estado del vehículo bien, documentación al día"</em>.</p>
+        </div>
+
+        <div style="max-width:520px;margin:0 auto;">
+          <div id="dvLista" style="display:flex;flex-direction:column;gap:7px;"></div>
+
+          <div id="dvEscuchado" style="display:none;font-size:13px;color:var(--gray);background:var(--input-bg);border:1px dashed var(--bdr);border-radius:var(--r);padding:.7rem .85rem;margin-top:.85rem;"></div>
+          <div id="dvError" style="display:none;font-size:12px;color:var(--amber);margin-top:.6rem;text-align:center;"></div>
+
+          <div style="display:flex;gap:.6rem;margin-top:1rem;">
+            <button type="button" id="dvBtn" onclick="demoVozToggle()" style="flex:1;padding:15px;border-radius:12px;border:none;background:var(--gold);color:#0B0E14;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;">
+              <span style="font-size:20px;">🎤</span><span id="dvBtnTxt">Tocá y hablá</span>
+            </button>
+            <button type="button" onclick="demoVozLimpiar()" style="padding:15px 18px;border-radius:12px;border:1px solid var(--bdr);background:var(--input-bg);color:var(--gray);font-size:14px;cursor:pointer;">Borrar</button>
+          </div>
+          <p style="font-size:11px;color:var(--gray);text-align:center;margin-top:.75rem;line-height:1.5;">Es una demostración: <strong style="color:var(--white);">no se guarda nada</strong> y se borra al recargar la página. En el sistema real, el check-list lo arma el administrador de flota con los ítems de su empresa.</p>
+        </div>
+      </div>
+
+      <div style="margin-top:2.5rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r2);padding:1.75rem;text-align:center;">
+        <div style="font-family:var(--font-display);font-size:24px;color:var(--white);margin-bottom:.4rem;">¿Querés verlo con tu propia flota?</div>
+        <p style="font-size:14px;color:var(--gray);max-width:560px;margin:0 auto 1.25rem;">Pedí una <strong style="color:var(--gold);">demo sin cargo</strong>: hasta 5 vehículos y 1 mes de uso, con todas las funciones. La activamos nosotros y te mandamos el acceso por email.</p>
+        <button class="btn-gold" style="padding:12px 28px;font-size:15px;font-weight:700;" onclick="abrirSolicitudDemo()">Solicitá tu demo</button>
+      </div>
     </div>
   </section>
 
@@ -1011,7 +1042,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
     <div class="container">
       <div class="section-label">Planes</div>
       <h2>Elegí el plan que se adapta a tu empresa</h2>
-      <p class="section-sub">Sin costos ocultos. Cancelás cuando quieras. Pagás por transferencia o Mercado Pago.</p>
+      <p class="section-sub">Sin costos ocultos. Cancelás cuando quieras. Pagás por transferencia bancaria.</p>
       <div style="display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:2rem;">
         <span id="lblMensual" style="font-size:14px;font-weight:600;color:var(--gold);">Mensual</span>
         <div onclick="togglePeriodo()" style="cursor:pointer;width:52px;height:28px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:14px;position:relative;transition:all .2s;">
@@ -1028,17 +1059,16 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
       <div class="pricing-grid">
 
         <div class="price-card">
-          <div class="price-plan">Básico</div>
+          <div class="price-plan">Demo</div>
           <div class="price-amount">
-            <span class="price-currency">$</span>
-            <span class="price-value" data-precio="45400" id="precioBasico">45.400</span>
+            <span class="price-value" id="precioBasico">Gratis</span>
           </div>
-          <div class="price-period" id="periodoBasico">/ mes</div>
+          <div class="price-period" id="periodoBasico">5 vehículos · 1 mes</div>
           <div style="font-size:11px;color:var(--gray);margin-top:2px;" id="arsBasico"></div>
-          <div style="display:inline-block;margin-top:8px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:#4ADE80;font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;">🎁 14 días de prueba gratis</div>
-          <p class="price-desc" style="margin-top:.5rem;">Ideal para empresas pequeñas que quieren organizar su flota sin complicaciones.</p>
+          <div style="display:inline-block;margin-top:8px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:#4ADE80;font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;">🎁 Sin cargo</div>
+          <p class="price-desc" style="margin-top:.5rem;">Probá GesFlota con tu propia flota antes de decidir. La demo la activa MercaTeck.</p>
           <ul class="price-features">
-            <li><span>✓</span><span>Hasta 20 vehículos</span></li>
+            <li><span>✓</span><span>Hasta 5 vehículos</span></li>
             <li><span>✓</span><span>Panel de inicio con resumen semanal</span></li>
             <li><span>✓</span><span>Panel de flota completo</span></li>
             <li><span>✓</span><span>Control de VTV, seguro y ruta</span></li>
@@ -1050,7 +1080,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
             <li class="dim"><span>—</span><span>Notificaciones por email</span></li>
             <li class="dim"><span>—</span><span>App de check-list</span></li>
           </ul>
-          <button class="btn-plan" onclick="openPayment('Básico','45.400')">Empezar</button>
+          <button class="btn-plan" onclick="abrirSolicitudDemo()">Solicitá tu demo</button>
         </div>
 
         <div class="price-card featured">
@@ -1062,10 +1092,9 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
           </div>
           <div class="price-period" id="periodoPro">/ mes</div>
           <div style="font-size:11px;color:var(--gray);margin-top:2px;" id="arsPro"></div>
-          <div style="display:inline-block;margin-top:8px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:#4ADE80;font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;">🎁 14 días de prueba gratis</div>
-          <p class="price-desc" style="margin-top:.5rem;">Para empresas medianas que necesitan control total de su operación.</p>
+                    <p class="price-desc" style="margin-top:.5rem;">Para empresas medianas que necesitan control total de su operación.</p>
           <ul class="price-features">
-            <li><span>✓</span><span>Todo lo del plan Básico</span></li>
+            <li><span>✓</span><span>Todo lo del plan Demo</span></li>
             <li><span>✓</span><span>Hasta 50 vehículos</span></li>
             <li><span>✓</span><span>Panel de Mantenimiento: arreglos, compras, services e incidentes</span></li>
             <li><span>✓</span><span>Notificaciones por email a los destinatarios que elijas</span></li>
@@ -1085,8 +1114,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
           </div>
           <div class="price-period" id="periodoEnt">/ mes</div>
           <div style="font-size:11px;color:var(--gray);margin-top:2px;" id="arsEnt"></div>
-          <div style="display:inline-block;margin-top:8px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:#4ADE80;font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;">🎁 14 días de prueba gratis</div>
-          <p class="price-desc" style="margin-top:.5rem;">Para grandes empresas con múltiples obras y necesidad de control centralizado.</p>
+                    <p class="price-desc" style="margin-top:.5rem;">Para grandes empresas con múltiples obras y necesidad de control centralizado.</p>
           <ul class="price-features">
             <li><span>✓</span><span>Todo lo del plan Pro</span></li>
             <li><span>✓</span><span>Vehículos ilimitados</span></li>
@@ -1175,7 +1203,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
               <li style="font-size:13px;color:var(--white);display:flex;gap:8px;"><span style="color:var(--green);">✓</span>Informe de cumplimiento por persona</li>
               <li style="font-size:13px;color:var(--white);display:flex;gap:8px;"><span style="color:var(--green);">✓</span>Historial completo por vehículo y sector</li>
             </ul>
-            <button class="btn-gold" style="width:100%;padding:13px;font-size:15px;font-weight:700;" onclick="showView('register')">Empezá tu prueba de 14 días</button>
+            <button class="btn-gold" style="width:100%;padding:13px;font-size:15px;font-weight:700;" onclick="showView('register')">Creá tu cuenta</button>
             <div style="font-size:12px;color:var(--gray);text-align:center;margin-top:.75rem;">Se suma al plan <strong style="color:var(--gold);">Pro</strong> · <strong style="color:var(--gold);">Incluido en Enterprise</strong></div>
           </div>
         </div>
@@ -1308,7 +1336,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
     <div class="container">
       <div class="section-label">Formas de pago</div>
       <h2>Pagás como te convenga</h2>
-      <p class="section-sub">Sin tarjeta de crédito obligatoria. Aceptamos transferencia bancaria y Mercado Pago.</p>
+      <p class="section-sub">Sin tarjeta de crédito obligatoria. Aceptamos transferencia bancaria.</p>
       <div class="pay-grid">
         <div class="pay-card">
           <div class="pay-icon">🏦</div>
@@ -1317,6 +1345,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
             <div class="pay-sub">CBU / Alias. Confirmación en 24hs hábiles tras acreditación.</div>
           </div>
         </div>
+        <!-- MP-OCULTO: forma de pago desactivada. Para reactivarla, quitar este comentario.
         <div class="pay-card">
           <div class="pay-icon">💳</div>
           <div>
@@ -1324,6 +1353,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
             <div class="pay-sub">Tarjeta de crédito, débito o saldo MP. Acreditación inmediata.</div>
           </div>
         </div>
+        -->
       </div>
       <div style="margin-top:1.5rem;padding:1.25rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r2);font-size:13px;color:var(--gray);">
         <strong style="color:var(--gold);">💡 Cómo funciona la renovación:</strong> Te avisamos por email con 7, 3 y 1 día de anticipación antes de cada vencimiento, así tenés tiempo de sobra para renovar sin apuros. Si necesitás unos días más, escribinos y lo vemos juntos.
@@ -1369,7 +1399,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
   <div class="cta-section">
     <div class="container">
       <h2>¿Listo para tomar <span style="color:var(--gold)">el control</span>?</h2>
-      <p>Empezá con 14 días gratis. Sin tarjeta. Sin compromiso.</p>
+      <p>Pedí tu demo sin cargo o creá tu cuenta. Sin tarjeta. Sin compromiso.</p>
       <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;">
         <button class="btn-primary" onclick="showView('register')">Crear cuenta gratis</button>
       </div>
@@ -1531,6 +1561,41 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
 </div>
 
 <!-- ══════════════════════════════════════
+   SOLICITUD DE DEMO (visitantes del sitio)
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="demoModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-hdr">
+      <h3>🎁 Solicitá tu demo</h3>
+      <button class="modal-close" onclick="cerrarSolicitudDemo()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Demo sin cargo: hasta 5 vehículos y 1 mes de uso. Dejanos estos datos y te damos de alta.</p>
+      <div class="auth-alert" id="demoError"></div>
+      <div class="auth-success" id="demoOk"></div>
+      <div class="field"><label>Nombre de la empresa</label><input type="text" id="demoEmpresa" maxlength="80" placeholder="Nombre de tu empresa"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="field"><label>Cantidad de vehículos</label><input type="number" id="demoCant" min="1" max="9999" placeholder="Ej: 12"/></div>
+        <div class="field"><label>Tipo de flota</label>
+          <select id="demoTipo">
+            <option value="">Elegí una opción</option>
+            <option value="Camiones">Camiones</option>
+            <option value="Camionetas">Camionetas</option>
+            <option value="Máquina vial">Máquina vial</option>
+            <option value="Autoelevador">Autoelevador</option>
+            <option value="Mixto">Mixto</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Email de contacto</label><input type="email" id="demoEmail" maxlength="120" placeholder="tucorreo@empresa.com"/></div>
+      <div class="field"><label>Teléfono de contacto</label><input type="tel" id="demoTel" maxlength="40" placeholder="Ej: 261 469 6811"/></div>
+      <button class="btn-gold" style="width:100%;padding:12px;" id="demoBtn" onclick="enviarSolicitudDemo()">Enviar solicitud</button>
+      <p style="font-size:11px;color:var(--gray);text-align:center;margin-top:.75rem;">Te respondemos a ese email dentro de las 24 a 48 hs hábiles.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
    NUEVA CONTRASEÑA (llega desde el email de recuperación)
 ══════════════════════════════════════════ -->
 <div class="view" id="view-reset">
@@ -1563,9 +1628,9 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
       <div class="auth-brand-inner">
         <div class="auth-brand-logo"><span>GES</span><span>FLOTA</span><span>.</span></div>
         <h2>Empezá a controlar tu flota hoy.</h2>
-        <p>Creá tu cuenta y probá GesFlota gratis por 14 días. Sin tarjeta, sin compromiso.</p>
+        <p>Creá tu cuenta y empezá a controlar tu flota hoy. Sin tarjeta, sin compromiso.</p>
         <div class="auth-brand-feats">
-          <div class="auth-brand-feat"><span>🎁</span> 14 días de prueba gratis</div>
+          <div class="auth-brand-feat"><span>🎁</span> Demo sin cargo: 5 vehículos por 1 mes</div>
           <div class="auth-brand-feat"><span>🚚</span> Cargá tu flota en minutos</div>
           <div class="auth-brand-feat"><span>📲</span> Tu equipo carga check-lists del celular</div>
           <div class="auth-brand-feat"><span>🔔</span> Alertas automáticas de vencimientos</div>
@@ -1580,7 +1645,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
         <div style="font-size:11px;color:var(--gray);letter-spacing:.1em;text-transform:uppercase;margin-top:4px;">by MercaTeck</div>
       </div>
       <div class="auth-title">Creá tu cuenta</div>
-      <div class="auth-sub">14 días gratis · Sin tarjeta de crédito</div>
+      <div class="auth-sub">Sin tarjeta de crédito</div>
       <div class="auth-alert" id="regError"></div>
       <div class="auth-success" id="regSuccess"></div>
       <div class="field"><label>Empresa</label><input type="text" id="regCompany" placeholder="Nombre de tu empresa"/></div>
@@ -1598,28 +1663,21 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
         </div>
       </div>
       <div class="field">
-        <label>Elegí tu plan · <span style="color:#4ADE80;text-transform:none;letter-spacing:0;">14 días gratis</span></label>
+        <label>Elegí tu plan</label>
         <div class="plan-cards" id="regPlanCards">
-          <div class="plan-card" data-plan="basico" onclick="_elegirPlanReg('basico')">
-            <div class="plan-card-name">Básico</div>
-            <div class="plan-card-price">$45.400<span>/mes</span></div>
-            <div class="plan-card-feat">Hasta 20 vehículos</div>
-            <div class="plan-card-trial">🎁 14 días</div>
-          </div>
           <div class="plan-card selected" data-plan="pro" onclick="_elegirPlanReg('pro')">
             <div class="plan-card-badge">Recomendado</div>
             <div class="plan-card-name">Pro</div>
             <div class="plan-card-price">$87.800<span>/mes</span></div>
             <div class="plan-card-feat">Hasta 50 vehículos</div>
-            <div class="plan-card-trial">🎁 14 días</div>
           </div>
           <div class="plan-card" data-plan="enterprise" onclick="_elegirPlanReg('enterprise')">
             <div class="plan-card-name">Enterprise</div>
             <div class="plan-card-price">$178.800<span>/mes</span></div>
             <div class="plan-card-feat">Ilimitados</div>
-            <div class="plan-card-trial">🎁 14 días</div>
           </div>
         </div>
+        <div style="font-size:12px;color:var(--gray);margin-top:.5rem;">¿Querés probarlo antes? <a onclick="abrirSolicitudDemo()" style="color:var(--gold);cursor:pointer;">Pedí una demo sin cargo</a>: 5 vehículos por 1 mes, la activamos nosotros.</div>
         <input type="hidden" id="regPlan" value="pro"/>
       </div>
       <div class="field" style="margin-top:.25rem;">
@@ -1707,8 +1765,8 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
         <div class="sf-texto">
           <div style="font-size:12px;color:var(--gray);margin-bottom:.5rem;">Plan <strong style="color:var(--gold)" id="sidebarPlan">Pro</strong></div>
           <div style="background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);padding:8px 10px;font-size:11px;color:var(--gold);">
-            ✓ 14 días de prueba gratis<br/>
-            <span style="color:var(--gray);">Vence: 24/07/2025</span>
+            ✓ Cuenta activa<br/>
+            <span style="color:var(--gray);" id="sidebarVence">—</span>
           </div>
           <div style="margin-top:.5rem;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:var(--r);padding:8px 10px;font-size:10px;color:var(--gray);line-height:1.5;">
             🔒 <strong style="color:#F87171;">Seguridad:</strong> nunca te pediremos pagos fuera de este panel ni por WhatsApp. Verificá el dominio oficial antes de transferir.
@@ -2172,6 +2230,12 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
               <select id="clFiltroOperario" onchange="renderChecklistsCargados()" style="font-size:13px;padding:8px 12px;background:var(--bg2,#0d1117);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;flex:1;min-width:130px;">
                 <option value="">Todos los operarios</option>
               </select>
+              <select id="clFiltroHistorial" onchange="cambiarPeriodoChecklists()" title="Cuánto historial se trae de la base" style="font-size:13px;padding:8px 12px;background:var(--bg2,#0d1117);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;flex:1;min-width:130px;">
+                <option value="30">Últimos 30 días</option>
+                <option value="90">Últimos 90 días</option>
+                <option value="365">Último año</option>
+                <option value="0">Todo el historial</option>
+              </select>
             </div>
           </div>
 
@@ -2317,7 +2381,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
               <div class="app-card" style="padding:1.25rem;">
                 <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:.75rem;">Canales de atención</div>
                 <div style="display:flex;flex-direction:column;gap:.85rem;font-size:13px;color:var(--gray);">
-                  <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">📧</span><div><div style="color:var(--white);">Email</div><div style="font-size:12px;">mercateckinfo@gmail.com</div></div></div>
+                  <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">📧</span><div><div style="color:var(--white);">Email</div><div style="font-size:12px;">germanmercado@mercateck.com.ar</div></div></div>
                   <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">⏱️</span><div><div style="color:var(--white);">Horario</div><div style="font-size:12px;">Lun a Vie, 9 a 18hs</div></div></div>
                   <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">💬</span><div><div style="color:var(--white);">Chat con Ges</div><div style="font-size:12px;">Asistente IA, 24/7 (abajo a la derecha)</div></div></div>
                 </div>
@@ -2715,14 +2779,14 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
             </div>
 
             <div style="font-size:11px;color:var(--gray);margin-top:.75rem;">
-              Los pagos se confirman manualmente al recibir el comprobante. Enviá el tuyo a <strong style="color:var(--gold);">mercateckinfo@gmail.com</strong>.
+              Los pagos se confirman manualmente al recibir el comprobante. Enviá el tuyo a <strong style="color:var(--gold);">germanmercado@mercateck.com.ar</strong>, el único canal para comprobantes.
             </div>
           </div>
           <!-- Vehículos de tu plan -->
           <div class="app-card" style="padding:1.5rem;margin-bottom:.75rem;">
             <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:.75rem;">🚚 Vehículos de tu plan</div>
             <div id="limVehBox"><div style="font-size:13px;color:var(--gray);">Cargando...</div></div>
-            <div style="font-size:11px;color:var(--gray);margin-top:.75rem;">Básico: hasta 20 · Pro: hasta 50 · Enterprise: sin límite. Si bajás de plan, <strong>no se borra ningún vehículo</strong>: solo no vas a poder cargar nuevos hasta quedar por debajo del límite.</div>
+            <div style="font-size:11px;color:var(--gray);margin-top:.75rem;">Demo: hasta 5 · Pro: hasta 50 · Enterprise: sin límite. Si bajás de plan, <strong>no se borra ningún vehículo</strong>: solo no vas a poder cargar nuevos hasta quedar por debajo del límite.</div>
           </div>
             </div>
           </div>
@@ -2788,10 +2852,33 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
       </div>
     </div>
 
+    <div class="app-card" style="margin-bottom:1rem;">
+      <div class="app-card-hdr">
+        <h3>🎁 Alta de demo</h3>
+      </div>
+      <div style="padding:1rem 1.25rem;">
+        <p style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Creá la cuenta de una empresa que pidió la demo: 5 vehículos y 1 mes de uso. Le llega un email con el acceso.</p>
+        <div class="auth-alert" id="altaDemoError"></div>
+        <div class="auth-success" id="altaDemoOk"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem;">
+          <div class="field"><label>Empresa</label><input type="text" id="adEmpresa" maxlength="80" placeholder="Nombre de la empresa"/></div>
+          <div class="field"><label>Nombre del contacto</label><input type="text" id="adNombre" maxlength="60" placeholder="Nombre y apellido"/></div>
+          <div class="field"><label>Email de acceso</label><input type="email" id="adEmail" maxlength="120" placeholder="contacto@empresa.com"/></div>
+          <div class="field"><label>Contraseña</label>
+            <div style="display:flex;gap:.5rem;">
+              <input type="text" id="adPass" maxlength="60" placeholder="Mínimo 8 caracteres" style="flex:1;"/>
+              <button class="btn-outline" style="font-size:12px;padding:0 10px;white-space:nowrap;" onclick="generarPassDemo()">Generar</button>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--gray);margin-bottom:.75rem;">La demo vence el <strong style="color:var(--gold);" id="adVence">—</strong>.</div>
+        <button class="btn-gold" style="padding:10px 22px;" id="adBtn" onclick="crearCuentaDemo()">Crear cuenta demo</button>
+      </div>
+    </div>
+
     <div class="app-card">
       <div class="app-card-hdr">
         <h3>Empresas registradas</h3>
-        <button class="btn-gold" style="font-size:12px;padding:6px 14px;" onclick="showToast('Función disponible próximamente','warning')">+ Nueva empresa</button>
       </div>
       <div style="overflow-x:auto;">
         <table class="app-table">
@@ -2940,7 +3027,6 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
         <div class="field">
           <label>Plan pagado *</label>
           <select id="pgPlan" onchange="_recalcularMontoPago()">
-            <option value="basico">Básico ($45.400/mes)</option>
             <option value="pro">Pro ($87.800/mes)</option>
             <option value="enterprise">Enterprise ($178.800/mes)</option>
           </select>
@@ -2958,7 +3044,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
           <label>Medio de pago</label>
           <select id="pgMedio">
             <option value="transferencia">Transferencia</option>
-            <option value="mercadopago">Mercado Pago</option>
+            <!-- MP-OCULTO: <option value="mercadopago">Mercado Pago</option> -->
             <option value="otro">Otro</option>
           </select>
         </div>
@@ -3002,10 +3088,12 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
           <span class="pm-icon">🏦</span>
           <span class="pm-lbl">Transferencia</span>
         </div>
+        <!-- MP-OCULTO: metodo de pago desactivado
         <div class="pay-method" id="pm-mp" onclick="selectPayMethod('mp')">
           <span class="pm-icon">💳</span>
           <span class="pm-lbl">Mercado Pago</span>
         </div>
+        -->
       </div>
       <div class="transfer-info show" id="transferInfo">
         <div style="text-align:center;padding:1rem .5rem;">
@@ -3017,11 +3105,13 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
           </div>
         </div>
       </div>
+      <!-- MP-OCULTO: panel de Mercado Pago desactivado
       <div class="transfer-info" id="mpInfo" style="text-align:center;">
         <div style="font-size:32px;margin:.5rem 0;">💳</div>
         <div style="font-size:13px;color:var(--white);margin-bottom:.35rem;">Pagar con Mercado Pago</div>
         <div style="font-size:12px;color:var(--gray);">Serás redirigido a la plataforma de pago seguro de Mercado Pago.</div>
       </div>
+      -->
       <button class="modal-btn" onclick="confirmPayment()">
         <span id="payBtnTxt">Confirmar transferencia</span>
       </button>
@@ -3208,7 +3298,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
         <p>El Cliente declara y garantiza que: (a) cuenta con todas las autorizaciones, consentimientos y bases legales necesarias para cargar y tratar los datos que ingresa, incluidos los datos personales de empleados, conductores o terceros; (b) la información es veraz, lícita y obtenida legítimamente; (c) utilizará la plataforma conforme a la ley y a estos términos; (d) es el único responsable frente a sus empleados, clientes, autoridades o terceros por el contenido cargado y por el uso que haga de la plataforma. El Cliente mantendrá indemne al Prestador frente a cualquier reclamo derivado del incumplimiento de estas declaraciones.</p>
 
         <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">4. Limitación de responsabilidad</p>
-        <p>En la máxima medida permitida por la legislación argentina, el Prestador no será responsable por: (a) daños indirectos, lucro cesante, pérdida de chance o perjuicios derivados del uso o imposibilidad de uso de la plataforma; (b) decisiones operativas, de mantenimiento o de seguridad que el Cliente adopte sobre la base de la información de la plataforma; (c) interrupciones, errores, demoras o pérdidas de datos atribuibles a terceros proveedores (servicios de hosting, Google, Mercado Pago, proveedores de conectividad), fuerza mayor o caso fortuito; (d) el uso indebido de credenciales por parte del Cliente o sus dependientes. La responsabilidad total del Prestador, de existir, quedará limitada al monto efectivamente abonado por el Cliente en los tres (3) meses previos al hecho que origine el reclamo.</p>
+        <p>En la máxima medida permitida por la legislación argentina, el Prestador no será responsable por: (a) daños indirectos, lucro cesante, pérdida de chance o perjuicios derivados del uso o imposibilidad de uso de la plataforma; (b) decisiones operativas, de mantenimiento o de seguridad que el Cliente adopte sobre la base de la información de la plataforma; (c) interrupciones, errores, demoras o pérdidas de datos atribuibles a terceros proveedores (servicios de hosting, Google, proveedores de conectividad), fuerza mayor o caso fortuito; (d) el uso indebido de credenciales por parte del Cliente o sus dependientes. La responsabilidad total del Prestador, de existir, quedará limitada al monto efectivamente abonado por el Cliente en los tres (3) meses previos al hecho que origine el reclamo.</p>
 
         <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">5. Seguridad de la información</p>
         <p>El Prestador implementa medidas técnicas y organizativas razonables para proteger la información (encriptación, control de acceso, aislamiento por cuenta). No obstante, el Cliente reconoce que ningún sistema es absolutamente inviolable y que el Prestador no garantiza seguridad absoluta. El Cliente es responsable de resguardar sus credenciales y de notificar de inmediato cualquier uso no autorizado.</p>
@@ -3219,11 +3309,8 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
         <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">7. Suscripción, pagos y suspensión</p>
         <p>El servicio se presta bajo suscripción, en modalidad <strong>mensual o anual</strong> según lo que contrate el Cliente. La suscripción anual puede ofrecerse con una bonificación respecto del total mensual. La falta de pago habilita al Prestador a suspender o dar de baja el acceso, previa notificación. Los precios pueden actualizarse notificando con antelación razonable. No se realizan reembolsos por períodos ya iniciados, salvo disposición legal en contrario.</p>
 
-        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">7.1. Medios de pago: Mercado Pago</p>
-        <p>Cuando el Cliente abone mediante Mercado Pago, dicha operación se rige además por los términos y la política de privacidad de Mercado Pago S.R.L., siendo este un tercero ajeno al Prestador. El Prestador no almacena ni accede a datos completos de tarjetas, credenciales bancarias ni información financiera sensible del Cliente; dicha información es procesada exclusivamente por Mercado Pago bajo sus propios estándares de seguridad (PCI-DSS). El Prestador no será responsable por demoras, rechazos, contracargos, errores de acreditación, retenciones impositivas ni cualquier incidencia atribuible a la plataforma de pago o a la entidad emisora del Cliente. El acceso al servicio se habilita una vez que el Prestador recibe la confirmación efectiva de acreditación del pago por parte de Mercado Pago.</p>
-
-        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">7.2. Medios de pago: Transferencia bancaria</p>
-        <p>Cuando el Cliente abone por transferencia bancaria, será su exclusiva responsabilidad realizar la transferencia a la cuenta correcta informada por el Prestador y conservar el comprobante respectivo, el cual deberá <strong>enviarse por email a mercateckinfo@gmail.com</strong> para su verificación. La acreditación puede demorar hasta cuarenta y ocho (48) horas hábiles desde su efectiva recepción. El Prestador no será responsable por transferencias enviadas a cuentas erróneas, por demoras del sistema bancario, ni por la falta de envío del comprobante. El Cliente reconoce que el envío del comprobante por email es condición para la verificación y habilitación o continuidad del servicio. Cualquier diferencia, retención o gasto bancario derivado de la transferencia será a cargo del Cliente.</p>
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">7.1. Medio de pago: Transferencia bancaria</p>
+        <p>Cuando el Cliente abone por transferencia bancaria, será su exclusiva responsabilidad realizar la transferencia a la cuenta correcta informada por el Prestador y conservar el comprobante respectivo, el cual deberá <strong>enviarse por email a germanmercado@mercateck.com.ar</strong>, único canal habilitado para la recepción de comprobantes, para su verificación. La acreditación puede demorar hasta cuarenta y ocho (48) horas hábiles desde su efectiva recepción. El Prestador no será responsable por transferencias enviadas a cuentas erróneas, por demoras del sistema bancario, ni por la falta de envío del comprobante. El Cliente reconoce que el envío del comprobante por email es condición para la verificación y habilitación o continuidad del servicio. Cualquier diferencia, retención o gasto bancario derivado de la transferencia será a cargo del Cliente.</p>
 
         <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">7.3. Mora y reactivación</p>
         <p>Vencido el plazo de pago sin que se acredite el mismo, el Prestador podrá enviar avisos de vencimiento y, transcurridos los días informados sin regularización, suspender automáticamente el acceso. La reactivación se producirá una vez verificado el pago pendiente. El Prestador no será responsable por la pérdida de acceso ni por las consecuencias operativas derivadas de la falta de pago imputable al Cliente.</p>
@@ -3262,7 +3349,6 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
       <div class="field">
         <label>Plan que querés</label>
         <select id="cpPlan" onchange="_actualizarPrecioCambio()">
-          <option value="basico">Básico — $45.400/mes</option>
           <option value="pro">Pro — $87.800/mes</option>
           <option value="enterprise">Enterprise — $178.800/mes</option>
         </select>
@@ -3354,6 +3440,46 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
       <div class="field" id="clSemiDominioField" style="display:none;">
         <label>Dominio del semirremolque</label>
         <input type="text" id="clSemiDominio" placeholder="Patente del semi" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+      </div>
+
+      <!-- Cómo quiere completar: a mano o por audio -->
+      <div id="clModoWrap" style="display:none;margin-top:1rem;">
+        <div style="font-size:12px;color:var(--gray);margin-bottom:.5rem;">¿Cómo querés completarlo?</div>
+        <div style="display:flex;gap:.5rem;">
+          <button type="button" id="clModoManualBtn" onclick="elegirModoChecklist('manual')" style="flex:1;padding:12px 8px;border-radius:8px;border:1.5px solid var(--gold);background:var(--gold-dim);color:var(--white);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
+            <span style="font-size:22px;">✍️</span><span style="font-size:12px;font-weight:600;">A mano</span>
+          </button>
+          <button type="button" id="clModoAudioBtn" onclick="elegirModoChecklist('audio')" style="flex:1;padding:12px 8px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--card);color:var(--white);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
+            <span style="font-size:22px;">🎤</span><span style="font-size:12px;font-weight:600;">Por audio</span>
+          </button>
+        </div>
+        <div id="clAudioNoDisponible" style="display:none;font-size:11px;color:var(--amber);margin-top:.5rem;"></div>
+      </div>
+
+      <!-- Panel compacto del modo audio (completa el formulario de abajo) -->
+      <div id="clAudioPanel" style="display:none;margin-top:1rem;">
+        <div style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
+            <span style="font-size:12px;font-weight:700;color:var(--gold);">DICTADO</span>
+            <span style="font-size:12px;color:var(--gray);" id="clAudioContador">0 de 0</span>
+          </div>
+          <div id="clAudioLista" style="display:flex;flex-direction:column;gap:4px;max-height:260px;overflow-y:auto;"></div>
+          <div id="clAudioFaltan" style="font-size:11px;color:var(--amber);margin-top:.6rem;"></div>
+        </div>
+
+        <div id="clAudioObsWrap" style="display:none;margin-top:.6rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);padding:.75rem;">
+          <div style="font-size:12px;color:var(--white);font-weight:600;margin-bottom:.5rem;">¿De qué tipo es la observación?</div>
+          <div id="clAudioObsTipos" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+          <div id="clAudioObsDetalle" style="font-size:12px;color:var(--gray);margin-top:.5rem;"></div>
+        </div>
+
+        <div id="clAudioEscuchado" style="display:none;font-size:12px;color:var(--gray);background:var(--card);border:1px dashed var(--bdr);border-radius:var(--r);padding:.6rem .75rem;margin-top:.6rem;"></div>
+        <div id="clAudioError" style="display:none;font-size:12px;color:var(--amber);margin-top:.5rem;"></div>
+
+        <button type="button" id="clAudioBtn" onclick="audioChecklistToggle()" style="width:100%;margin-top:.75rem;padding:16px;border-radius:12px;border:none;background:var(--gold);color:#0B0E14;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+          <span style="font-size:22px;">🎤</span><span id="clAudioBtnTxt">Tocá y hablá</span>
+        </button>
+        <div style="font-size:11px;color:var(--gray);text-align:center;margin-top:.5rem;">Decilo en el orden del check-list. Si se corta, volvé a tocar y seguí donde quedaste.</div>
       </div>
 
       <div id="clChecklistItems" style="margin-top:1rem;"></div>
@@ -3684,7 +3810,7 @@ function cargarSesion(authUser, _reintento){
         if(sb) sb.auth.signOut();
         var errLog = document.getElementById('loginError');
         if(errLog){
-          errLog.textContent = 'Tu cuenta está suspendida. Escribinos a mercateckinfo@gmail.com para regularizarla.';
+          errLog.textContent = 'Tu cuenta está suspendida. Escribinos a germanmercado@mercateck.com.ar para regularizarla.';
           errLog.style.display = 'block';
         }
         showToast('🔒 Cuenta suspendida. Contactanos para reactivarla.','error');
@@ -3696,7 +3822,7 @@ function cargarSesion(authUser, _reintento){
         email: authUser.email,
         name: (p.nombre||'')+' '+(p.apellido||''),
         company: emp.nombre || 'Mi Empresa',
-        plan: emp.plan || 'basico',
+        plan: emp.plan || 'demo',
         role: (p.rol==='superadmin') ? 'admin' : 'user',
         empresa_id: p.empresa_id,
         rol_real: p.rol,
@@ -3708,7 +3834,7 @@ function cargarSesion(authUser, _reintento){
       // Email de bienvenida: se manda UNA vez, al entrar por primera vez
       // (o sea, después de confirmar el email). La marca evita repetirlo.
       if(p.rol !== 'superadmin' && emp.bienvenida_enviada === false && typeof enviarEmailBienvenida==='function'){
-        enviarEmailBienvenida(authUser.email, (p.nombre||''), emp.nombre||'', emp.plan||'basico');
+        enviarEmailBienvenida(authUser.email, (p.nombre||''), emp.nombre||'', emp.plan||'demo');
         sb.rpc('marcar_bienvenida_enviada').then(function(){}).catch(function(){});
         // Dejar listo el destinatario de avisos con el email que eligió al registrarse
         _crearDestinatarioInicial(authUser);
@@ -4190,14 +4316,14 @@ function applyPlanRestrictions(plan){
 
   // ══ BÁSICO ══
   // Sin Compras/Arreglos, sin email notif, sin checklist app (solo manual).
-  if(plan==='basico'){
+  if(plan==='demo'){
     if(mantItem){
       mantItem.setAttribute('onclick','showPlanUpgrade("mantenimiento")');
       mantItem.style.opacity='.5';
       addLock(mantItem);
     }
     if(clItem){
-      // El Básico no puede sumar el check-list como add-on: necesita pasar a Pro
+      // El Demo no puede sumar el check-list como add-on: necesita pasar a Pro
       clItem.setAttribute('onclick','showPlanUpgrade("checklist")');
       clItem.style.opacity='.5';
       addLock(clItem);
@@ -4233,8 +4359,8 @@ function applyPlanRestrictions(plan){
 
   // ══ ADD-ON CHECK-LIST ══
   // Solo para PRO (en Enterprise ya viene incluido).
-  // El plan Básico NO puede tenerlo: el check-list genera fallas y observaciones
-  // que van al panel de Mantenimiento, y el Básico no tiene ese panel.
+  // El plan Demo NO puede tenerlo: el check-list genera fallas y observaciones
+  // que van al panel de Mantenimiento, y el Demo no tiene ese panel.
   // Si lo habilitáramos, esas fallas quedarían en un lugar que el cliente no puede ver.
   if(plan==='pro' && window._addonChecklist===true){
     window._checklistIncluded = true;
@@ -4293,7 +4419,7 @@ function logout(){
 // ══════════════════════════════════════════════════════
 //  PANEL SUPERADMIN — cargar empresas reales de Supabase
 // ══════════════════════════════════════════════════════
-var PLAN_PRECIO = { basico:19000, pro:39000, enterprise:79000 };
+var PLAN_PRECIO = { demo:0, pro:39000, enterprise:79000 }; // OJO: pro y enterprise tienen los precios viejos
 
 // ── Datos bancarios (se leen de la base; solo con sesión iniciada) ──
 function cargarDatosBancarios(){
@@ -4302,7 +4428,7 @@ function cargarDatosBancarios(){
   if(!sb){ box.innerHTML = '<span style="color:var(--gray);">Iniciá sesión para ver los datos.</span>'; return; }
   sb.from('datos_bancarios').select('*').eq('id',1).single().then(function(res){
     if(res.error || !res.data){
-      box.innerHTML = '<span style="color:var(--gray);">No se pudieron cargar los datos. Escribinos a mercateckinfo@gmail.com.</span>';
+      box.innerHTML = '<span style="color:var(--gray);">No se pudieron cargar los datos. Escribinos a germanmercado@mercateck.com.ar.</span>';
       return;
     }
     var d = res.data;
@@ -4335,13 +4461,13 @@ function _copiarDato(valor, label){
 
 // ══════════════════════════════════════════════════════
 //  LÍMITE DE VEHÍCULOS POR PLAN
-//  Básico 20 · Pro 50 · Enterprise sin límite
+//  Demo 5 · Pro 50 · Enterprise sin límite
 //  Bajar de plan NO borra vehículos: solo impide cargar más.
 // ══════════════════════════════════════════════════════
-var LIMITES_VEHICULOS = { basico:20, pro:50, enterprise:0 }; // 0 = sin límite
+var LIMITES_VEHICULOS = { demo:5, pro:50, enterprise:0 }; // 0 = sin límite
 
 function _limiteVehiculos(){
-  var plan = (currentUser && currentUser.plan) ? currentUser.plan : 'basico';
+  var plan = (currentUser && currentUser.plan) ? currentUser.plan : 'demo';
   var limite = LIMITES_VEHICULOS.hasOwnProperty(plan) ? LIMITES_VEHICULOS[plan] : 20;
   var usados = (window._vehiculosCache||[]).length;
   return { plan:plan, limite:limite, usados:usados, libres: (limite>0 ? Math.max(0, limite-usados) : 999999) };
@@ -4369,7 +4495,7 @@ function actualizarContadorVehiculos(){
   var cont = document.getElementById('limVehBox');
   if(!cont) return;
   var lim = _limiteVehiculos();
-  var planLbl = {basico:'Básico', pro:'Pro', enterprise:'Enterprise'};
+  var planLbl = {demo:'Demo', pro:'Pro', enterprise:'Enterprise'};
   if(lim.limite === 0){
     cont.innerHTML = '<div style="font-size:13px;color:var(--white);">Tenés <strong style="color:var(--gold);">'+lim.usados+'</strong> vehículos cargados.</div>'
       +'<div style="font-size:12px;color:#4ADE80;margin-top:4px;">✓ Tu plan '+(planLbl[lim.plan]||lim.plan)+' no tiene límite de vehículos.</div>';
@@ -4399,11 +4525,11 @@ function actualizarContadorVehiculos(){
 function renderGuia(){
   var cont = document.getElementById('guiaContenido');
   if(!cont) return;
-  var plan = (currentUser && currentUser.plan) ? currentUser.plan : 'basico';
+  var plan = (currentUser && currentUser.plan) ? currentUser.plan : 'demo';
   var tieneMant = (plan==='pro' || plan==='enterprise');
   var tieneCl   = (plan==='enterprise') || (plan==='pro' && window._addonChecklist===true);
   var tieneInf  = (plan==='pro' || plan==='enterprise');
-  var limite    = {basico:'20', pro:'50', enterprise:'sin límite'}[plan] || '20';
+  var limite    = {demo:'5', pro:'50', enterprise:'sin límite'}[plan] || '5';
 
   var secciones = [];
 
@@ -4499,7 +4625,8 @@ function renderGuia(){
     html:'<p><strong>Si cambio de plan, ¿pierdo mis datos?</strong><br>'
       +'<span style="color:var(--gray);">No. No se borra nada. Al bajar de plan, algunas secciones se bloquean, pero tus datos quedan intactos. Si volvés a subir, está todo como lo dejaste.</span></p>'
       +'<p><strong>¿Cómo pago?</strong><br>'
-      +'<span style="color:var(--gray);">En Configuración → Mi suscripción están los datos para transferir. Enviá el comprobante a mercateckinfo@gmail.com y confirmamos tu pago.</span></p>'
+      +'<span style="color:var(--gray);">El pago es por <strong>transferencia bancaria</strong>. En Configuración → Mi suscripción están los datos para transferir. Enviá el comprobante a <strong>germanmercado@mercateck.com.ar</strong>: es el único canal por el que recibimos comprobantes.</span></p>'
+      +(plan==='demo' ? '<p><strong>¿Cuánto dura la demo?</strong><br><span style="color:var(--gray);">La demo es sin cargo, con hasta 5 vehículos y 1 mes de uso. Cuando quieras seguir, escribinos a germanmercado@mercateck.com.ar y pasamos tu cuenta a Pro o Enterprise sin perder nada de lo cargado.</span></p>' : '')
       +'<p style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:6px;padding:.7rem .9rem;font-size:13px;color:#FCD34D;">'
       +'⚠️ <strong>Cuidado con las estafas:</strong> nunca te vamos a mandar un CBU por email ni WhatsApp. Los datos reales están solo en tu panel.</p>'
       +'<p><strong>¿Olvidé mi contraseña?</strong><br>'
@@ -4569,7 +4696,7 @@ function _plantillaEmail(titulo, cuerpoHtml){
     // Pie
     +'<tr><td style="background:#faf7f0;padding:18px 28px;border-top:1px solid #eee;font-size:11px;color:#888;line-height:1.6;">'
       +'<strong style="color:#C49A3A;">GesFlota by MercaTeck</strong><br>'
-      +'🌐 mercateck.com.ar · 📸 @mercateck_ · 📨 mercateckinfo@gmail.com'
+      +'🌐 mercateck.com.ar · 📸 @mercateck_ · 📨 germanmercado@mercateck.com.ar'
       +'<div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee;color:#aaa;">'
       +'Nunca te vamos a pedir datos bancarios por email. Si te llegan, no transfieras.'
       +'</div>'
@@ -4578,11 +4705,25 @@ function _plantillaEmail(titulo, cuerpoHtml){
 }
 
 // ── 1) EMAIL DE BIENVENIDA ──
+// ── Avisos internos de MercaTeck: van a las dos casillas ──
+var EMAILS_INTERNOS = ['mercateckinfo@gmail.com','germanmercado@mercateck.com.ar'];
+function enviarEmailInterno(subject, cuerpo, opts){
+  if(!sb) return;
+  opts = opts || {};
+  EMAILS_INTERNOS.forEach(function(dest){
+    var body = { to: dest, subject: subject };
+    if(opts.html){ body.html = opts.html; }
+    body.text = cuerpo;
+    if(opts.empresa_id){ body.empresa_id = opts.empresa_id; }
+    sb.functions.invoke('enviar-email-flota', { body: body }).then(function(){}).catch(function(){});
+  });
+}
+
 function enviarEmailBienvenida(email, nombre, empresa, plan){
   if(!sb) return;
-  var planLbl = {basico:'Básico', pro:'Pro', enterprise:'Enterprise'}[plan] || 'Básico';
+  var planLbl = {demo:'Demo', pro:'Pro', enterprise:'Enterprise'}[plan] || 'Demo';
   var cuerpo =
-    '<p>¡Hola <strong>'+escapeHtml(nombre||'')+'</strong>! Bienvenido a GesFlota. Tu cuenta de <strong>'+escapeHtml(empresa||'')+'</strong> ya está lista, con <strong>14 días de prueba gratis</strong> del plan '+planLbl+'.</p>'
+    '<p>¡Hola <strong>'+escapeHtml(nombre||'')+'</strong>! Bienvenido a GesFlota. Tu cuenta de <strong>'+escapeHtml(empresa||'')+'</strong> ya está lista, con el plan '+planLbl+'.</p>'
     +'<div style="background:#faf7f0;border-left:3px solid #C49A3A;padding:14px 16px;margin:18px 0;border-radius:0 6px 6px 0;">'
       +'<div style="font-weight:700;color:#1a1a1a;margin-bottom:8px;">Empezá en 3 pasos</div>'
       +'<div style="margin-bottom:8px;"><strong style="color:#C49A3A;">1.</strong> <strong>Cargá tu flota.</strong> Subí tus vehículos de a uno o con la plantilla de Excel. Con la patente, la categoría y el sector ya empezás a ver todo.</div>'
@@ -4591,8 +4732,8 @@ function enviarEmailBienvenida(email, nombre, empresa, plan){
     +'</div>'
     +'<div style="background:#f0f7ff;border:1px solid #d4e6f7;padding:14px 16px;margin:18px 0;border-radius:6px;">'
       +'<div style="font-weight:700;color:#1a1a1a;margin-bottom:6px;">💳 Cómo activar tu cuenta</div>'
-      +'<div>Cuando termine tu prueba, entrá a tu panel en <strong>Configuración → Mi suscripción</strong>. Ahí vas a ver los datos para transferir y tu historial de pagos.</div>'
-      +'<div style="margin-top:8px;">Enviá el comprobante a <strong>mercateckinfo@gmail.com</strong> y confirmamos tu pago.</div>'
+      +'<div>Entrá a tu panel en <strong>Configuración → Mi suscripción</strong>. Ahí vas a ver los datos para transferir y tu historial de pagos.</div>'
+      +'<div style="margin-top:8px;">Enviá el comprobante a <strong>germanmercado@mercateck.com.ar</strong> y confirmamos tu pago. Es el único canal por el que recibimos comprobantes.</div>'
       +'<div style="margin-top:10px;padding:8px 10px;background:#fff8e1;border:1px solid #ffe082;border-radius:4px;font-size:12px;color:#8a6d1f;">'
         +'⚠️ Los datos bancarios están <strong>únicamente dentro de tu panel</strong>. Nunca te los vamos a mandar por email ni WhatsApp. Si te llegan por otro medio, es un intento de estafa.'
       +'</div>'
@@ -4613,6 +4754,180 @@ function enviarEmailBienvenida(email, nombre, empresa, plan){
   }).then(function(){}).catch(function(){});
 }
 
+
+// ══════════════════════════════════════════════════════
+//  DEMO: solicitud desde el sitio y alta desde el panel central
+// ══════════════════════════════════════════════════════
+
+// Fecha de fin de demo: 1 mes desde hoy
+function _finDeDemo(){
+  var d = new Date(); d.setMonth(d.getMonth()+1);
+  return d;
+}
+function _fechaISO(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function _fechaAR(d){
+  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+}
+function _emailValido(e){
+  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(e||'').trim());
+}
+
+// ── 1) SOLICITUD DE DEMO (sitio público) ──
+function abrirSolicitudDemo(){
+  var m = document.getElementById('demoModal');
+  if(!m) return;
+  ['demoError','demoOk'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.style.display='none'; el.textContent=''; } });
+  var btn = document.getElementById('demoBtn');
+  if(btn){ btn.disabled=false; btn.textContent='Enviar solicitud'; }
+  m.classList.add('open');
+}
+function cerrarSolicitudDemo(){
+  var m = document.getElementById('demoModal');
+  if(m) m.classList.remove('open');
+}
+function enviarSolicitudDemo(){
+  var err = document.getElementById('demoError');
+  var ok  = document.getElementById('demoOk');
+  var btn = document.getElementById('demoBtn');
+  function fallo(msg){ if(err){ err.textContent=msg; err.style.display='block'; } }
+  if(err) err.style.display='none';
+
+  var empresa = (document.getElementById('demoEmpresa').value||'').trim();
+  var cant    = (document.getElementById('demoCant').value||'').trim();
+  var tipo    = (document.getElementById('demoTipo').value||'').trim();
+  var email   = (document.getElementById('demoEmail').value||'').trim();
+  var tel     = (document.getElementById('demoTel').value||'').trim();
+
+  if(empresa.length < 2) return fallo('Escribí el nombre de la empresa.');
+  if(!cant || Number(cant) < 1) return fallo('Escribí cuántos vehículos tenés.');
+  if(!tipo) return fallo('Elegí el tipo de flota.');
+  if(!_emailValido(email)) return fallo('Revisá el email de contacto.');
+  if(tel.length < 6) return fallo('Escribí un teléfono de contacto.');
+  if(!sb) return fallo('No hay conexión. Escribinos a germanmercado@mercateck.com.ar.');
+
+  btn.disabled = true; btn.textContent = 'Enviando...';
+
+  var cuerpo = 'Nueva solicitud de DEMO desde el sitio\n\n'
+    + 'Empresa: '+empresa+'\n'
+    + 'Cantidad de vehículos: '+cant+'\n'
+    + 'Tipo de flota: '+tipo+'\n'
+    + 'Email de contacto: '+email+'\n'
+    + 'Teléfono: '+tel+'\n';
+  var html = _plantillaEmail('Nueva solicitud de demo 🎁',
+      '<p>Entró un pedido de demo desde el sitio:</p>'
+    + '<table width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0;border:1px solid #eee;border-radius:6px;overflow:hidden;">'
+    +   '<tr><td style="padding:10px 14px;background:#faf7f0;font-size:13px;color:#666;">Empresa</td><td style="padding:10px 14px;background:#faf7f0;font-size:13px;text-align:right;"><strong>'+escapeHtml(empresa)+'</strong></td></tr>'
+    +   '<tr><td style="padding:10px 14px;font-size:13px;color:#666;">Vehículos</td><td style="padding:10px 14px;font-size:13px;text-align:right;">'+escapeHtml(cant)+'</td></tr>'
+    +   '<tr><td style="padding:10px 14px;background:#faf7f0;font-size:13px;color:#666;">Tipo de flota</td><td style="padding:10px 14px;background:#faf7f0;font-size:13px;text-align:right;">'+escapeHtml(tipo)+'</td></tr>'
+    +   '<tr><td style="padding:10px 14px;font-size:13px;color:#666;">Email</td><td style="padding:10px 14px;font-size:13px;text-align:right;">'+escapeHtml(email)+'</td></tr>'
+    +   '<tr><td style="padding:10px 14px;background:#faf7f0;font-size:13px;color:#666;">Teléfono</td><td style="padding:10px 14px;background:#faf7f0;font-size:13px;text-align:right;">'+escapeHtml(tel)+'</td></tr>'
+    + '</table>'
+    + '<p style="color:#888;">Para darle el alta: panel central → Alta de demo.</p>');
+
+  enviarEmailInterno('[Demo] '+empresa, cuerpo, { html: html });
+
+  setTimeout(function(){
+    if(ok){
+      ok.innerHTML = '✓ Recibimos tu pedido. Te escribimos a <strong>'+escapeHtml(email)+'</strong> dentro de 24 a 48 hs hábiles.';
+      ok.style.display='block';
+    }
+    btn.textContent = 'Solicitud enviada';
+    ['demoEmpresa','demoCant','demoEmail','demoTel'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+    var t=document.getElementById('demoTipo'); if(t) t.value='';
+    setTimeout(cerrarSolicitudDemo, 2600);
+  }, 700);
+}
+
+// ── 2) ALTA DE DEMO (panel central de MercaTeck) ──
+function generarPassDemo(){
+  var abc = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var out = '';
+  var arr = new Uint32Array(12);
+  (window.crypto || window.msCrypto).getRandomValues(arr);
+  for(var i=0;i<12;i++){ out += abc[arr[i] % abc.length]; }
+  var el = document.getElementById('adPass');
+  if(el) el.value = out;
+}
+
+function crearCuentaDemo(){
+  var err = document.getElementById('altaDemoError');
+  var ok  = document.getElementById('altaDemoOk');
+  var btn = document.getElementById('adBtn');
+  function fallo(msg){ if(err){ err.textContent=msg; err.style.display='block'; } if(btn){ btn.disabled=false; btn.textContent='Crear cuenta demo'; } }
+  if(err) err.style.display='none';
+  if(ok) ok.style.display='none';
+
+  var empresa = (document.getElementById('adEmpresa').value||'').trim();
+  var nombre  = (document.getElementById('adNombre').value||'').trim();
+  var email   = (document.getElementById('adEmail').value||'').trim().toLowerCase();
+  var pass    = (document.getElementById('adPass').value||'').trim();
+
+  if(empresa.length < 2) return fallo('Escribí el nombre de la empresa.');
+  if(!_emailValido(email)) return fallo('Revisá el email de acceso.');
+  if(pass.length < 8) return fallo('La contraseña necesita al menos 8 caracteres.');
+  if(!sb || !window.supabase || !window.supabase.createClient) return fallo('No hay conexión con la base.');
+
+  btn.disabled = true; btn.textContent = 'Creando...';
+
+  // Cliente aparte: así el alta no reemplaza tu sesión de superadmin
+  var sbAlta;
+  try {
+    sbAlta = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: { persistSession:false, autoRefreshToken:false, detectSessionInUrl:false, storageKey:'gesflota-alta-demo' }
+    });
+  } catch(e){ return fallo('No se pudo preparar el alta.'); }
+
+  sbAlta.auth.signUp({
+    email: email,
+    password: pass,
+    options: { data: { empresa: empresa, nombre: nombre, apellido: '', plan: 'demo', version_terminos: '2025-06', user_agent: 'alta-demo-mercateck' } }
+  }).then(function(res){
+    if(res.error){
+      var msg = res.error.message || 'No se pudo crear la cuenta.';
+      if(msg.indexOf('already registered')>=0) msg = 'Ese email ya tiene cuenta en GesFlota.';
+      return fallo(msg);
+    }
+    var vence = _finDeDemo();
+    enviarEmailAltaDemo(email, nombre, empresa, vence);
+    if(ok){
+      ok.innerHTML = '✓ Cuenta demo creada para <strong>'+escapeHtml(empresa)+'</strong>. Le mandamos el acceso a '+escapeHtml(email)+'. Vence el '+_fechaAR(vence)+'.<br>'
+        + '<span style="color:var(--gray);font-size:12px;">Tiene que confirmar el email del sistema antes de poder entrar.</span>';
+      ok.style.display='block';
+    }
+    btn.disabled=false; btn.textContent='Crear cuenta demo';
+    ['adEmpresa','adNombre','adEmail','adPass'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+    if(typeof cargarPanelAdmin==='function'){ try{ cargarPanelAdmin(); }catch(e){} }
+  }).catch(function(e){ fallo('No se pudo crear la cuenta: '+e); });
+}
+
+// Email que recibe la empresa cuando MercaTeck le da el alta de la demo
+function enviarEmailAltaDemo(email, nombre, empresa, vence){
+  if(!sb) return;
+  var link = window.location.origin + window.location.pathname;
+  var cuerpo =
+    '<p>¡Hola'+(nombre?(' <strong>'+escapeHtml(nombre)+'</strong>'):'')+'!</p>'
+    +'<p><strong>MercaTeck</strong> le dio de alta a <strong>'+escapeHtml(empresa||'')+'</strong> la opción <strong>Demo</strong> de GesFlota: podés cargar hasta <strong>5 vehículos</strong> y usar el sistema durante <strong>1 mes</strong>, con todas las funciones.</p>'
+    +'<div style="background:#faf7f0;border-left:3px solid #C49A3A;padding:14px 16px;margin:18px 0;border-radius:0 6px 6px 0;">'
+      +'<div style="font-weight:700;color:#1a1a1a;margin-bottom:8px;">Para empezar</div>'
+      +'<div style="margin-bottom:6px;">Ingresá a GesFlota con el email <strong>'+escapeHtml(email)+'</strong> y la contraseña que te pasamos.</div>'
+      +'<div style="font-size:13px;color:#666;">Tu demo está disponible hasta el <strong>'+_fechaAR(vence)+'</strong>.</div>'
+    +'</div>'
+    +'<p style="text-align:center;margin:24px 0;"><a href="'+link+'" style="display:inline-block;background:#C49A3A;color:#1a1a1a;font-weight:700;text-decoration:none;padding:12px 28px;border-radius:6px;">Ingresar a GesFlota</a></p>'
+    +'<p style="font-size:13px;color:#666;">Si es la primera vez que entrás, confirmá tu email con el mensaje que te llega del sistema y después usá el botón de arriba.</p>'
+    +'<p>Cualquier duda, respondé este email o escribinos a <strong>germanmercado@mercateck.com.ar</strong>.</p>'
+    +'<p style="color:#888;">Gracias por probar GesFlota.<br><strong style="color:#C49A3A;">El equipo de MercaTeck</strong></p>';
+  sb.functions.invoke('enviar-email-flota', {
+    body: {
+      to: email,
+      subject: 'MercaTeck te dio de alta la demo de GesFlota',
+      html: _plantillaEmail('Tu demo ya está activa 🎁', cuerpo),
+      text: 'MercaTeck le dio de alta a '+(empresa||'')+' la opción Demo de GesFlota: hasta 5 vehículos durante 1 mes. Ingresá en '+link+' con el email '+email+' y la contraseña que te pasamos. La demo vence el '+_fechaAR(vence)+'.'
+    }
+  }).then(function(){}).catch(function(){});
+}
+
 // ── 2) EMAIL DE COMPROBANTE (al confirmar un pago) ──
 function enviarEmailComprobante(empresaId, datos){
   if(!sb) return;
@@ -4621,7 +4936,7 @@ function enviarEmailComprobante(empresaId, datos){
     if(res.error || !res.data) return;
     _emailDeUsuario(res.data.id, function(email){
       if(!email) return;
-      var planLbl = {basico:'Básico', pro:'Pro', enterprise:'Enterprise'}[datos.plan] || datos.plan;
+      var planLbl = {demo:'Demo', pro:'Pro', enterprise:'Enterprise'}[datos.plan] || datos.plan;
       var periodo = datos.meses===12 ? 'Anual (12 meses)' : (datos.meses+' mes'+(datos.meses>1?'es':''));
       var cuerpo =
         '<p>¡Recibimos tu pago! Ya está todo en orden. 🎉</p>'
@@ -4667,7 +4982,7 @@ function cargarMiSuscripcion(){
   sb.from('empresas').select('plan,estado_pago,addon_checklist,prox_pago').eq('id', window._empresaId).single().then(function(res){
     if(res.error || !res.data) return;
     var e = res.data;
-    var planLbl = {basico:'Básico', pro:'Pro', enterprise:'Enterprise'};
+    var planLbl = {demo:'Demo', pro:'Pro', enterprise:'Enterprise'};
     function set(id,v,color){ var el=document.getElementById(id); if(el){ el.textContent=v; if(color) el.style.color=color; } }
     set('susPlan', planLbl[e.plan]||e.plan||'—');
 
@@ -4713,7 +5028,7 @@ function cargarMiSuscripcion(){
         body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:1.25rem;">Todavía no hay pagos registrados.</td></tr>';
         return;
       }
-      var planLbl = {basico:'Básico', pro:'Pro', enterprise:'Enterprise'};
+      var planLbl = {demo:'Demo', pro:'Pro', enterprise:'Enterprise'};
       body.innerHTML = '';
       lista.forEach(function(p){
         var fecha = p.fecha ? new Date(p.fecha+'T00:00:00').toLocaleDateString('es-AR') : '—';
@@ -4735,7 +5050,7 @@ function cargarMiSuscripcion(){
 
 // ── Pedido de cambio de plan ──
 function abrirCambioPlan(){
-  var actual = (currentUser && currentUser.plan) ? currentUser.plan : 'basico';
+  var actual = (currentUser && currentUser.plan) ? currentUser.plan : 'demo';
   var sel = document.getElementById('cpPlan');
   if(sel) sel.value = actual;
   var chk = document.getElementById('cpAddon');
@@ -4748,17 +5063,17 @@ function abrirCambioPlan(){
 function cerrarCambioPlan(){ document.getElementById('cambioPlanModal').classList.remove('open'); }
 
 function _actualizarPrecioCambio(){
-  var plan = (document.getElementById('cpPlan')||{}).value || 'basico';
+  var plan = (document.getElementById('cpPlan')||{}).value || 'demo';
   var chk = document.getElementById('cpAddon');
   var lbl = document.getElementById('cpAddonLabel');
-  // El add-on es solo para Pro (Enterprise ya lo incluye; Básico no puede tenerlo)
+  // El add-on es solo para Pro (Enterprise ya lo incluye; Demo no puede tenerlo)
   if(chk){
-    if(plan==='basico'){ chk.checked=false; chk.disabled=true; if(lbl) lbl.style.opacity='.4'; }
+    if(plan==='demo'){ chk.checked=false; chk.disabled=true; if(lbl) lbl.style.opacity='.4'; }
     else if(plan==='enterprise'){ chk.checked=true; chk.disabled=true; if(lbl) lbl.style.opacity='.6'; }
     else { chk.disabled=false; if(lbl) lbl.style.opacity='1'; }
   }
   var addon = chk ? chk.checked : false;
-  var precios = {basico:45400, pro:87800, enterprise:178800};
+  var precios = {demo:45400, pro:87800, enterprise:178800};
   var ars = (precios[plan]||0) + ((addon && plan==='pro') ? 30000 : 0);
   var el = document.getElementById('cpPrecio');
   if(el) el.textContent = '$'+ars.toLocaleString('es-AR')+'/mes';
@@ -4787,15 +5102,13 @@ function enviarCambioPlan(){
   }).then(function(res){
     if(res.error){ showToast('No se pudo enviar el pedido. Reintentá.','error'); return; }
     // Avisarte por email además del aviso en tu panel
-    var planLbl = {basico:'Básico', pro:'Pro', enterprise:'Enterprise'};
+    var planLbl = {demo:'Demo', pro:'Pro', enterprise:'Enterprise'};
     var cuerpo = 'Pedido de cambio de plan — GesFlota by MercaTeck\n\n'
       + 'Empresa: '+(window._currentCompany||'—')+'\n'
       + 'Plan actual: '+(planLbl[actual]||actual||'—')+'\n'
       + 'Plan pedido: '+(planLbl[plan]||plan)+(addon?' + add-on check-list':'')+'\n'
       + (mensaje ? ('\nMensaje del cliente:\n'+mensaje+'\n') : '');
-    sb.functions.invoke('enviar-email-flota', {
-      body: { to:'mercateckinfo@gmail.com', subject:'[Cambio de plan] '+(window._currentCompany||''), text:cuerpo, empresa_id: window._empresaId }
-    }).then(function(){}).catch(function(){});
+    enviarEmailInterno('[Cambio de plan] '+(window._currentCompany||''), cuerpo, { empresa_id: window._empresaId });
     showToast('✓ Pedido enviado. Te contactamos para coordinar el pago.','success');
     cerrarCambioPlan();
   });
@@ -4825,7 +5138,7 @@ function renderSolicitudes(){
     body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:1.25rem;">No hay pedidos pendientes.</td></tr>';
     return;
   }
-  var planLbl = {basico:'Básico', pro:'Pro', enterprise:'Enterprise'};
+  var planLbl = {demo:'Demo', pro:'Pro', enterprise:'Enterprise'};
   body.innerHTML = '';
   _solicitudes.forEach(function(s){
     var fecha = new Date(s.creado_en).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
@@ -4859,7 +5172,7 @@ function resolverSolicitud(id, estado){
 // ══════════════════════════════════════════════════════
 var _pagos = [];
 var _empresasFac = [];
-var PRECIOS_ARS_ADMIN = { basico:45400, pro:87800, enterprise:178800 };
+var PRECIOS_ARS_ADMIN = { demo:45400, pro:87800, enterprise:178800 };
 var ADDON_ARS = 30000;
 
 function cargarPagos(){
@@ -4906,7 +5219,7 @@ function renderPagos(){
       + (_pagos.length ? 'No hay pagos con ese filtro.' : 'Todavía no registraste ningún pago.') + '</td></tr>';
     return;
   }
-  var planLbl = {basico:'Básico', pro:'Pro', enterprise:'Enterprise'};
+  var planLbl = {demo:'Demo', pro:'Pro', enterprise:'Enterprise'};
   body.innerHTML = '';
   lista.forEach(function(p){
     var fecha = p.fecha ? new Date(p.fecha+'T00:00:00').toLocaleDateString('es-AR') : '—';
@@ -4940,7 +5253,7 @@ function renderRenovaciones(){
     return;
   }
   var hoy = new Date(); hoy.setHours(0,0,0,0);
-  var planLbl = {basico:'Básico', pro:'Pro', enterprise:'Enterprise'};
+  var planLbl = {demo:'Demo', pro:'Pro', enterprise:'Enterprise'};
   var lista = _empresasFac.slice().sort(function(a,b){
     if(!a.prox_pago) return 1;
     if(!b.prox_pago) return -1;
@@ -5001,14 +5314,14 @@ function abrirFormPago(empresaId){
   sel.innerHTML = '';
   _empresasFac.forEach(function(e){
     var o=document.createElement('option'); o.value=e.id; o.textContent=e.nombre;
-    o.setAttribute('data-plan', e.plan||'basico');
+    o.setAttribute('data-plan', e.plan||'demo');
     o.setAttribute('data-addon', e.addon_checklist?'1':'0');
     sel.appendChild(o);
   });
   if(empresaId) sel.value = empresaId;
   var opt = sel.options[sel.selectedIndex];
   if(opt){
-    document.getElementById('pgPlan').value = opt.getAttribute('data-plan')||'basico';
+    document.getElementById('pgPlan').value = opt.getAttribute('data-plan')||'demo';
     document.getElementById('pgAddon').checked = opt.getAttribute('data-addon')==='1';
   }
   var h = new Date();
@@ -5021,13 +5334,13 @@ function abrirFormPago(empresaId){
 function cerrarFormPago(){ document.getElementById('pagoModal').classList.remove('open'); }
 
 function _recalcularMontoPago(){
-  var plan = (document.getElementById('pgPlan')||{}).value || 'basico';
+  var plan = (document.getElementById('pgPlan')||{}).value || 'demo';
   var meses = parseInt((document.getElementById('pgMeses')||{}).value || '1');
   var chkAddon = document.getElementById('pgAddon');
-  // El add-on solo aplica a Pro. Básico no puede tenerlo; Enterprise ya lo incluye.
+  // El add-on solo aplica a Pro. Demo no puede tenerlo; Enterprise ya lo incluye.
   var lblAddon = chkAddon ? chkAddon.parentElement : null;
   if(chkAddon){
-    if(plan==='basico'){
+    if(plan==='demo'){
       chkAddon.checked = false; chkAddon.disabled = true;
       if(lblAddon){ lblAddon.style.opacity='.4'; lblAddon.title='El add-on necesita plan Pro'; }
     } else if(plan==='enterprise'){
@@ -5110,6 +5423,8 @@ function confirmarPago(pagoId){
 }
 
 function cargarPanelAdmin(){
+  var elVence = document.getElementById('adVence');
+  if(elVence) elVence.textContent = _fechaAR(_finDeDemo());
   if(!sb){ return; }
   if(typeof cargarTicketsAdmin==='function'){ cargarTicketsAdmin(); }
   if(typeof cargarPagos==='function'){ cargarPagos(); }
@@ -5151,7 +5466,7 @@ function cargarPanelAdmin(){
     empresas.forEach(function(e){
       var planBadge = e.plan==='enterprise' ? '<span class="badge badge-gold">Enterprise</span>'
         : e.plan==='pro' ? '<span class="badge badge-gold">Pro</span>'
-        : '<span class="badge" style="background:rgba(255,255,255,.06);color:var(--gray);border:1px solid var(--bdr);">Básico</span>';
+        : '<span class="badge" style="background:rgba(255,255,255,.06);color:var(--gray);border:1px solid var(--bdr);">Demo</span>';
       var estadoBadge = e.estado_pago==='al_dia' ? '<span class="badge badge-ok">Al día</span>'
         : e.estado_pago==='vencido' ? '<span class="badge badge-red">Vencido</span>'
         : e.estado_pago==='suspendido' ? '<span class="badge badge-red">Suspendido</span>'
@@ -5250,11 +5565,11 @@ function cambiarEmailEmpresa(empresaId, nombre){
 function toggleAddonChecklist(empresaId, estaActivo){
   var nuevoEstado = !estaActivo;
   // El add-on de check-list requiere plan Pro (en Enterprise ya viene incluido).
-  // Un Básico no puede tenerlo: las fallas del check-list irían al panel de
+  // Un Demo no puede tenerlo: las fallas del check-list irían al panel de
   // Mantenimiento, que su plan no incluye.
   if(nuevoEstado){
     var emp = (_empresasFac||[]).filter(function(e){ return e.id===empresaId; })[0];
-    if(emp && emp.plan==='basico'){
+    if(emp && emp.plan==='demo'){
       showToast('⚠️ El add-on de check-list necesita plan Pro. Primero cambiá el plan de la empresa.','error');
       return;
     }
@@ -5277,7 +5592,7 @@ function toggleAddonChecklist(empresaId, estaActivo){
 function cambiarPlanEmpresa(empresaId){
   genPrompt('Cambiar plan de la empresa', [
     {id:'plan', label:'Nuevo plan', type:'select', options:[
-      {v:'basico',t:'Básico'},{v:'pro',t:'Pro'},{v:'enterprise',t:'Enterprise'}
+      {v:'demo',t:'Demo'},{v:'pro',t:'Pro'},{v:'enterprise',t:'Enterprise'}
     ]}
   ], function(v){
     sb.from('empresas').update({ plan:v.plan }).eq('id', empresaId).then(function(res){
@@ -5690,8 +6005,10 @@ function animateCounter(id, from, to, duration, suffix){
 var currentPayMethod = 'transfer';
 
 function openPayment(plan, amount){
+  // El Demo no se paga: lo activa MercaTeck
+  if(String(plan).toLowerCase()==='demo'){ abrirSolicitudDemo(); return; }
   // Precios base EN PESOS (mensual)
-  var arsMesBase = {'Básico':45400,'Pro':87800,'Enterprise':178800}[plan] || 0;
+  var arsMesBase = {'Demo':0,'Pro':87800,'Enterprise':178800}[plan] || 0;
   var periodoTxt, pesos;
   if(_periodoAnual){
     pesos = Math.round(arsMesBase*12*0.85/100)*100; // anual: -15%
@@ -5712,21 +6029,19 @@ function openPayment(plan, amount){
 function closePayment(){ document.getElementById('payModal').classList.remove('open'); }
 
 function selectPayMethod(method){
-  currentPayMethod = method;
-  document.getElementById('pm-transfer').classList.toggle('selected', method==='transfer');
-  document.getElementById('pm-mp').classList.toggle('selected', method==='mp');
-  document.getElementById('transferInfo').classList.toggle('show', method==='transfer');
-  document.getElementById('mpInfo').classList.toggle('show', method==='mp');
-  document.getElementById('payBtnTxt').textContent = method==='mp' ? 'Ir a Mercado Pago' : 'Confirmar transferencia';
+  // MP-OCULTO: el único medio es transferencia
+  currentPayMethod = 'transfer';
+  var tr = document.getElementById('pm-transfer');
+  if(tr) tr.classList.add('selected');
+  var info = document.getElementById('transferInfo');
+  if(info) info.classList.add('show');
+  var txt = document.getElementById('payBtnTxt');
+  if(txt) txt.textContent = 'Confirmar transferencia';
 }
 
 function confirmPayment(){
   closePayment();
-  if(currentPayMethod==='mp'){
-    showToast('Redirigiendo a Mercado Pago...','warning');
-  } else {
-    showToast('Datos de transferencia guardados. Enviá el comprobante a pagos@gesflota.com.ar','success');
-  }
+  showToast('Enviá el comprobante de la transferencia a germanmercado@mercateck.com.ar','success');
 }
 
 // ══════════════════════════════════════════════════════
@@ -6533,13 +6848,13 @@ var GES_RESPUESTAS = [
   // ── Qué es / general ──
   { k:['que es','qué es','para que sirve','para qué sirve','plataforma','de que se trata','información','que hace'], r:"GesFlota es una plataforma para gestionar tu flota de vehículos desde un solo lugar: controlás VTV, seguros, mantenimiento y check-lists. Está pensada para empresas de construcción e infraestructura que necesitan tener todo bajo control y evitar imprevistos. 🚛" },
   // ── Planes ──
-  { k:['plan','precio','cuesta','vale','cuanto','cuánto','tarifa','valor','mensual','anual'], r:"Tenemos 3 planes (precio en pesos):\n\n• Básico $45.400/mes — hasta 20 vehículos\n• Pro $87.800/mes — hasta 50 vehículos\n• Enterprise $178.800/mes — vehículos ilimitados\n\nCon pago anual tenés 15% de descuento. La app de check-list se puede sumar como add-on en el plan Pro ($30.000/mes); en Enterprise ya viene incluida. 💼" },
-  { k:['diferencia','comparar','cual elijo','cuál elijo','que plan','qué plan','recomendas','recomendás'], r:"Te oriento rápido:\n\n• Si tenés pocos vehículos y querés orden básico → Básico (hasta 20, panel de inicio, VTV/seguro/ruta con alertas)\n• Si necesitás cargar mantenimiento, informes y recibir avisos por email → Pro (hasta 50)\n• Si querés check-list para operarios con reglas por puesto y categoría, cumplimiento, alertas automáticas y marca propia → Enterprise (ilimitado)\n\nEl check-list se puede activar como add-on en el plan Pro ($30.000/mes), y viene incluido en Enterprise. El panel de inicio con resumen semanal está en los 3 planes. 👍" },
+  { k:['plan','precio','cuesta','vale','cuanto','cuánto','tarifa','valor','mensual','anual'], r:"Tenemos 2 planes pagos (precio en pesos):\n\n• Pro $87.800/mes — hasta 50 vehículos\n• Enterprise $178.800/mes — vehículos ilimitados\n\nY una Demo sin cargo: 5 vehículos por 1 mes, que activa MercaTeck a pedido. Con pago anual tenés 15% de descuento. La app de check-list se puede sumar como add-on en el plan Pro ($30.000/mes); en Enterprise ya viene incluida. 💼" },
+  { k:['diferencia','comparar','cual elijo','cuál elijo','que plan','qué plan','recomendas','recomendás'], r:"Te oriento rápido:\n\n• Si querés probarlo primero → Demo sin cargo (5 vehículos por 1 mes, la activamos nosotros)\n• Si necesitás cargar mantenimiento, informes y recibir avisos por email → Pro (hasta 50)\n• Si querés check-list para operarios con reglas por puesto y categoría, cumplimiento, alertas automáticas y marca propia → Enterprise (ilimitado)\n\nEl check-list se puede activar como add-on en el plan Pro ($30.000/mes), y viene incluido en Enterprise. El panel de inicio con resumen semanal está en los 3 planes. 👍" },
   // ── Cargar flota ──
   { k:['cargo','cargar','subir','flota','importar','excel','planilla','agregar vehiculo','agregar vehículo','sumar vehiculo'], r:"Para cargar tu flota tenés 2 formas:\n\n1️⃣ Cargar vehículos de a uno con el botón '+ Cargar vehículo'\n2️⃣ Subir un Excel con la plantilla (botón 'Descargar plantilla', lo completás y lo subís)\n\nTip: cargá las patentes sin guiones (AF45632). Para máquinas sin patente (autoelevador) usá el N° interno. 📊" },
   { k:['patente','dominio','sin guion','sin guión','formato patente'], r:"Cargá las patentes sin guiones ni espacios (ej: AF45632 o AB123CD). Si el vehículo no tiene patente, como un autoelevador, podés identificarlo por su N° interno. 🔢" },
   // ── Check-lists ──
-  { k:['check','checklist','check-list','control de vehiculo','revision','revisión'], r:"El check-list te permite registrar el estado de cada vehículo con reglas por puesto y categoría. Lo podés cargar vos desde el panel, o tu personal desde el celular escaneando un QR o con un link (entran con un PIN). Definís frecuencias (diario, X por semana, días específicos, X por mes) y ves el cumplimiento con gráficos. Viene incluido en Enterprise y como add-on en el plan Pro ($30.000/mes). En Básico no está disponible. ✅" },
+  { k:['check','checklist','check-list','control de vehiculo','revision','revisión'], r:"El check-list te permite registrar el estado de cada vehículo con reglas por puesto y categoría. Lo podés cargar vos desde el panel, o tu personal desde el celular escaneando un QR o con un link (entran con un PIN). Definís frecuencias (diario, X por semana, días específicos, X por mes) y ves el cumplimiento con gráficos. Viene incluido en Enterprise y como add-on en el plan Pro ($30.000/mes). En la Demo no está disponible. ✅" },
   { k:['qr','link','operario','chofer','personal','pin','acceso personal'], r:"Tu personal carga check-lists sin entrar a tu panel: en Configuración → 'Personal y accesos', das de alta a cada persona (nombre + puesto) y el sistema genera un PIN. Les pasás el QR o el link, ellos entran con su nombre y PIN, y solo pueden cargar check-lists. No ven tus datos ni costos. 🔐" },
   { k:['frecuencia','cada cuanto','cada cuánto','cuantas veces','cuántas veces'], r:"Con el motor de reglas configurás cada cuánto se debe cargar el check-list: diario, X veces por semana, días específicos (ej. martes y viernes), X veces por mes o cada X días. Podés tener reglas distintas por puesto y categoría de vehículo. Después en el panel ves si cada vehículo está al día o pendiente, con gráficos de cumplimiento. 📅" },
   { k:['regla','reglas','motor de reglas','por categoria','por categoría','por puesto','por sector'], r:"El motor de reglas (Enterprise, o add-on en Pro) te deja crear reglas de check-list específicas: elegís el puesto responsable (chofer, operario, mantenimiento, etc.), a qué se aplica (una categoría de vehículos, un sector u obra, o vehículos puntuales) y con qué frecuencia. Cada regla cuenta para el cumplimiento y los gráficos. Podés crear varias reglas para el mismo puesto en distintas categorías. 🎯" },
@@ -6553,7 +6868,7 @@ var GES_RESPUESTAS = [
   // ── Informes ──
   { k:['informe','reporte','exportar','pdf','descargar informe','word'], r:"En Informes (Pro y Enterprise) generás reportes de tu flota, vencimientos y check-lists. Los podés exportar a Excel y PDF. En Enterprise, los informes pueden incluir recomendaciones por IA. 📈" },
   // ── Pagos ──
-  { k:['pago','pagar','transferencia','mercado pago','factura','abonar','cobro'], r:"Podés pagar por transferencia o Mercado Pago. Por seguridad, los datos de pago aparecen dentro de tu panel ya logueado. ⚠️ Importante: MercaTeck nunca pide pagos por WhatsApp ni por fuera de la plataforma. 💳" },
+  { k:['comprobante de pago','mando el comprobante','envio el comprobante','pagar con tarjeta','con mercado pago','medio de pago','forma de pago','comprobante','comprobantes','transferencia','transferir','cbu','alias','mercado pago','mercadopago','tarjeta','factura','abonar','cobro','pago','pagar'], r:"El pago es por transferencia bancaria. Por seguridad, los datos para transferir aparecen dentro de tu panel ya logueado, en Configuración → Mi suscripción. El comprobante se manda a germanmercado@mercateck.com.ar, que es el único canal por el que lo recibimos. ⚠️ Importante: MercaTeck nunca pide pagos por WhatsApp ni por fuera de la plataforma. 🏦" },
   // ── Seguridad / datos ──
   { k:['seguridad','aislamiento','privacidad','mis datos seguros','proteccion','protección','hackeo','backup','respaldo'], r:"Cada empresa ve solo su propia información: los datos están aislados a nivel de base de datos. Usamos control de acceso y respaldos. Vos sos el dueño de tus datos y los podés exportar cuando quieras. 🔒" },
   // ── White-label / IA ──
@@ -6563,11 +6878,12 @@ var GES_RESPUESTAS = [
   { k:['tema','oscuro','claro','modo noche','color de fondo'], r:"Podés cambiar entre tema claro y oscuro con el botón 🌙/☀️ arriba a la derecha. Tu preferencia queda guardada para la próxima vez. 🎨" },
   { k:['como uso','cómo uso','empezar','primeros pasos','arrancar','tutorial','como funciona el panel'], r:"Para arrancar:\n\n1️⃣ Cargá tu flota (botón '+ Cargar vehículo' o subiendo un Excel)\n2️⃣ Completá las fechas de VTV y seguro de cada uno\n3️⃣ Si tenés check-list, configurá tu personal en Configuración\n4️⃣ Mirá el panel: te muestra vencimientos, alertas y estado de cada vehículo\n\n¿Querés que profundice en alguno? 🚀" },
   // ── Soporte ──
-  { k:['soporte','contacto','hablar con alguien','atencion','atención','telefono','teléfono','mail','email'], r:"Para soporte, abrí un ticket desde el panel (sección Soporte) eligiendo el tema: ventas, soporte técnico, capacitación o pagos. Te responden por email a mercateckinfo@gmail.com dentro de 24-48hs hábiles. 📨" },
+  { k:['soporte','contacto','hablar con alguien','atencion','atención','telefono','teléfono','mail','email'], r:"Para soporte, abrí un ticket desde el panel (sección Soporte) eligiendo el tema: ventas, soporte técnico, capacitación o pagos. Te responden por email a germanmercado@mercateck.com.ar dentro de 24-48hs hábiles. 📨" },
   // ── Cancelar / baja ──
   { k:['cancelar','baja','dar de baja','dejar de usar','suspender mi cuenta'], r:"Podés cancelar cuando quieras, sin permanencia. Escribinos un ticket desde Soporte (tema Pagos) y lo gestionamos. Tus datos los podés exportar antes de irte. 👋" },
   // ── Saludos / cortesía ──
   { k:['gracias','genial','perfecto','buenisimo','buenísimo','dale','barbaro','bárbaro','joya'], r:"¡De nada! 😊 Cualquier otra cosa, acá estoy. Si querés probar GesFlota, podés empezar gratis." },
+  { k:['demo','prueba','probar','demostracion','demostración','gratis','sin cargo','solicitar demo'], r:"Podés pedir una demo sin cargo: hasta 5 vehículos y 1 mes de uso, con todas las funciones. La activa MercaTeck. Dejanos los datos de tu empresa con el botón 'Solicitá tu demo' en la sección Cómo funciona, o escribinos a germanmercado@mercateck.com.ar. Te damos de alta y te mandamos el acceso por email. 🎁" },
   { k:['hola','buenas','buen dia','buen día','hey','que tal','qué tal','holaa'], r:"¡Hola! 👋 ¿En qué te puedo ayudar? Te puedo contar de los planes, cómo cargar tu flota, los check-lists, o ayudarte si algo no te funciona." },
   // ── PASOS DETALLADOS de uso del sitio ──
   { k:['paso a paso','pasos para','como hago para','cómo hago para','explicame como','explicame paso','guia','guía','no se como','no sé cómo'], r:"Te doy los pasos según lo que necesites. ¿Qué querés hacer?\n\n• Cargar un vehículo\n• Cargar la VTV o el seguro\n• Crear un check-list\n• Dar acceso a mi personal\n• Ver vencimientos y alertas\n\nDecime el tema y te paso el paso a paso. 📋" },
@@ -6577,7 +6893,7 @@ var GES_RESPUESTAS = [
   { k:['dar acceso','acceso a mi personal','que mi personal','crear pin','agregar personal','dar de alta personal','como agrego personal'], r:"Para que tu personal cargue check-lists:\n\n1. Andá a Configuración → 'Personal y accesos'\n2. Tocá '+ Agregar persona': nombre, puesto y cada cuánto debe cargar\n3. El sistema genera un PIN\n4. Compartiles el QR o el link\n\nEllos entran con su nombre y PIN, y solo cargan check-lists. 👷" },
   // ── Cómo surge MercaTeck ──
   { k:['mercateck','quien hizo','quién hizo','quien creo','quién creó','como surge','cómo surge','historia','quien esta detras','quién está detrás','desarrollador','origen'], r:"GesFlota es un producto de MercaTeck, un estudio de desarrollo y diseño web enfocado en soluciones para empresas argentinas. MercaTeck nació de la experiencia real en gestión de flotas y mantenimiento: la idea fue transformar ese conocimiento del día a día en una herramienta simple y potente. 🚀\n\nPodés conocer más en nuestro sitio y redes:\n🌐 mercateck.com.ar\n📸 Instagram: @mercateck_" },
-  { k:['sitio web','pagina web','página web','web de mercateck','instagram','redes','red social','seguir','contacto redes'], r:"Estos son nuestros canales:\n\n🌐 Sitio: mercateck.com.ar\n📸 Instagram: @mercateck_\n📨 Email: mercateckinfo@gmail.com\n\nEscribinos por cualquier consulta. 😊" },
+  { k:['sitio web','pagina web','página web','web de mercateck','instagram','redes','red social','seguir','contacto redes'], r:"Estos son nuestros canales:\n\n🌐 Sitio: mercateck.com.ar\n📸 Instagram: @mercateck_\n📨 Email: germanmercado@mercateck.com.ar\n\nEscribinos por cualquier consulta. 😊" },
   // ── Dónde está cada función ──
   { k:['donde esta','dónde está','donde encuentro','dónde encuentro','donde veo','dónde veo','en que parte','en qué parte','ubicacion','ubicación','como llego a'], r:"Te ubico según lo que busques:\n\n• Flota, VTV, seguro y filtros → panel 'Flota'\n• Arreglos, compras y fallas → 'Mantenimiento'\n• Cargar controles → 'Check-lists'\n• Reportes y análisis → 'Informes'\n• Días laborables, personal, alertas, exportar Excel → 'Configuración'\n• Ayuda → 'Soporte'\n\n¿Cuál te muestro con más detalle? 🧭" }
 ];
@@ -6855,6 +7171,699 @@ window.addEventListener('online', function(){
 
 function hayPendientesOffline(){
   return _colaOffline().length;
+}
+
+
+// ══════════════════════════════════════════════════════
+//  CHECK-LIST POR AUDIO · Motor de voz y lectura del texto
+//  El audio NUNCA se guarda: el navegador devuelve texto y el archivo
+//  no existe. Nada de esto reemplaza al formulario: lo completa, y el
+//  guardado sigue siendo exactamente el mismo que a mano.
+// ══════════════════════════════════════════════════════
+
+var _VozRec = null, _vozEscuchando = false, _vozCbs = null;
+
+function vozDisponible(){
+  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+}
+
+// Arranca una tanda de escucha. onTexto(textoFinal), onParcial(texto), onFin(), onError(msg)
+function vozEscuchar(cbs){
+  if(!vozDisponible()){ if(cbs.onError) cbs.onError('Este celular no reconoce voz. Completá a mano.'); return; }
+  if(_vozEscuchando) { vozFrenar(); return; }
+  var R = window.SpeechRecognition || window.webkitSpeechRecognition;
+  _VozRec = new R();
+  _VozRec.lang = 'es-AR';
+  _VozRec.continuous = false;        // tandas cortas: más preciso
+  _VozRec.interimResults = true;
+  _VozRec.maxAlternatives = 1;
+  _vozCbs = cbs;
+  _VozRec.onresult = function(ev){
+    var fin = '', parcial = '';
+    for(var i=ev.resultIndex; i<ev.results.length; i++){
+      if(ev.results[i].isFinal) fin += ev.results[i][0].transcript;
+      else parcial += ev.results[i][0].transcript;
+    }
+    if(parcial && cbs.onParcial) cbs.onParcial(parcial);
+    if(fin && cbs.onTexto) cbs.onTexto(fin);
+  };
+  _VozRec.onerror = function(ev){
+    var m = 'No se pudo escuchar.';
+    if(ev.error==='not-allowed' || ev.error==='service-not-allowed') m = 'Tenés que permitir el micrófono en el navegador.';
+    else if(ev.error==='no-speech') m = 'No se escuchó nada. Probá de nuevo.';
+    else if(ev.error==='network') m = 'Sin internet: el reconocimiento de voz necesita conexión.';
+    else if(ev.error==='audio-capture') m = 'No se encontró el micrófono.';
+    if(cbs.onError) cbs.onError(m);
+  };
+  _VozRec.onend = function(){
+    _vozEscuchando = false;
+    if(cbs.onFin) cbs.onFin();
+  };
+  try{ _VozRec.start(); _vozEscuchando = true; }
+  catch(e){ if(cbs.onError) cbs.onError('No se pudo abrir el micrófono.'); }
+}
+
+function vozFrenar(){
+  try{ if(_VozRec) _VozRec.stop(); }catch(e){}
+  _vozEscuchando = false;
+}
+
+// ── Normalizar: minúsculas, sin tildes, sin signos ──
+function vozNorm(t){
+  return String(t||'').toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9ñ\s]/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
+
+// ── Números dichos en palabras o en dígitos ──
+var _VOZ_UNID = {cero:0,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,
+  once:11,doce:12,trece:13,catorce:14,quince:15,dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,
+  veinte:20,veintiuno:21,veintidos:22,veintitres:23,veinticuatro:24,veinticinco:25,veintiseis:26,
+  veintisiete:27,veintiocho:28,veintinueve:29,treinta:30,cuarenta:40,cincuenta:50,sesenta:60,
+  setenta:70,ochenta:80,noventa:90,cien:100,ciento:100,doscientos:200,trescientos:300,cuatrocientos:400,
+  quinientos:500,seiscientos:600,setecientos:700,ochocientos:800,novecientos:900};
+
+// Convierte "doce mil quinientos" o "12500" en 12500. Devuelve null si no hay número.
+function vozNumero(texto){
+  var t = vozNorm(texto);
+  var dig = t.replace(/\./g,'').match(/\b\d{1,9}\b/);
+  var palabras = t.split(' ');
+  var hayPalabra = palabras.some(function(p){ return _VOZ_UNID[p]!==undefined || p==='mil' || p==='millon' || p==='millones'; });
+  if(dig && !hayPalabra) return parseInt(dig[0],10);
+  if(!hayPalabra) return dig ? parseInt(dig[0],10) : null;
+  var total = 0, parcial = 0, encontrado = false;
+  palabras.forEach(function(p){
+    if(/^\d+$/.test(p)){ parcial += parseInt(p,10); encontrado = true; return; }
+    if(_VOZ_UNID[p] !== undefined){ parcial += _VOZ_UNID[p]; encontrado = true; return; }
+    if(p==='mil'){ parcial = (parcial || 1) * 1000; total += parcial; parcial = 0; encontrado = true; return; }
+    if(p==='millon' || p==='millones'){ parcial = (parcial || 1) * 1000000; total += parcial; parcial = 0; encontrado = true; return; }
+  });
+  if(!encontrado) return null;
+  return total + parcial;
+}
+
+// ── Palabras que marcan cada estado, por tipo de respuesta ──
+// El valor devuelto es el MISMO que usa el formulario a mano.
+var VOZ_ESTADOS = {
+  estado: [
+    {v:'mal',     p:['mal','malo','mala','roto','rota','dañado','dañada','pesimo','destruido','no anda','no funciona','fuera de servicio']},
+    {v:'regular', p:['regular','mas o menos','medio','masomenos','aceptable','gastado','algo gastado','para revisar']},
+    {v:'bien',    p:['bien','bueno','buena','ok','okey','correcto','perfecto','sin novedad','sin novedades','todo bien','normal','en condiciones']}
+  ],
+  siNo: [
+    {v:'no', p:['no','negativo','no tiene','falta','sin']},
+    {v:'si', p:['si','afirmativo','correcto','tiene','suficiente','lleno','completo']}
+  ],
+  presencia: [
+    {v:'na',      p:['no aplica','no corresponde','na']},
+    {v:'noTiene', p:['no tiene','falta','faltante','ausente','no esta','sin','no lleva','vencida','vencido']},
+    {v:'tiene',   p:['tiene','esta','presente','completa','completo','al dia','ok','si','lleva']}
+  ],
+  nivel: [
+    {v:'critico', p:['critico','critica','vacio','vacia','en cero','muy bajo','rojo']},
+    {v:'bajo',    p:['bajo','baja','poco','poca','falta','medio','amarillo']},
+    {v:'ok',      p:['ok','okey','bien','lleno','llena','normal','correcto','completo','verde','al maximo']}
+  ],
+  estadoFisico: [
+    {v:'na',    p:['no aplica','no corresponde','na']},
+    {v:'roto',  p:['roto','rota','mal','malo','mala','gastado','gastada','pinchado','pinchada','liso','lisos','dañado','dañada','para cambiar','desgastado']},
+    {v:'bueno', p:['bueno','buena','bien','ok','okey','buen estado','perfecto','correcto','nuevo','nuevos','sin novedad']}
+  ],
+  vigencia: [
+    {v:'vencida',   p:['vencida','vencido','vencidas','vencidos','fuera de fecha']},
+    {v:'porvencer', p:['por vencer','pronto','esta por vencer','proximo a vencer','por vencerse']},
+    {v:'aldia',     p:['al dia','vigente','ok','bien','en regla','todo en orden','correcta','correcto']}
+  ]
+};
+
+// ¿Aparece 'patron' en el texto? Tolera plurales y terminaciones
+// ("gastadas" encuentra "gastado", "rotos" encuentra "roto").
+function vozContiene(textoNorm, patron){
+  if(!patron) return -1;
+  if(patron.indexOf(' ')>=0) return textoNorm.indexOf(patron);   // frase: tal cual
+  var palabras = textoNorm.split(' ');
+  var pos = 0;
+  for(var i=0;i<palabras.length;i++){
+    var w = palabras[i];
+    if(w === patron) return pos;
+    if(patron.length>=4 && w.length>=4){
+      var comun = 0;
+      while(comun<w.length && comun<patron.length && w[comun]===patron[comun]) comun++;
+      if(comun >= Math.max(4, patron.length-1)) return pos;
+    }
+    pos += w.length + 1;
+  }
+  return -1;
+}
+
+// Busca el estado nombrado en un pedazo de texto. Devuelve el valor o null.
+function vozEstadoDe(tipo, texto){
+  var lista = VOZ_ESTADOS[tipo];
+  if(!lista) return null;
+  var t = vozNorm(texto);
+  for(var i=0;i<lista.length;i++){
+    for(var j=0;j<lista[i].p.length;j++){
+      if(vozContiene(t, lista[i].p[j]) >= 0) return lista[i].v;
+    }
+  }
+  return null;
+}
+
+// Palabritas que no identifican nada por sí solas
+var VOZ_VACIAS = ['de','del','la','el','los','las','un','una','y','o','en','por','con','al','su','sus','desea','cargar','esta','estan'];
+
+// Palabras con las que se reconoce un ítem: el nombre completo, las palabras
+// clave que cargó el administrador de flota, y cada palabra suelta del nombre.
+function vozPalabrasDeItem(item){
+  var ps = [];
+  var nombre = vozNorm(item.texto);
+  if(nombre) ps.push(nombre);
+  (String(item.palabras||'').split(',')).forEach(function(p){
+    var n = vozNorm(p); if(n) ps.push(n);
+  });
+  nombre.split(' ').forEach(function(p){
+    if(p.length>=3 && VOZ_VACIAS.indexOf(p)<0) ps.push(p);
+  });
+  return ps.filter(function(p,i,a){ return p && a.indexOf(p)===i; });
+}
+
+// Dónde aparece el ítem y con cuánta fuerza.
+// Gana el que coincide con más letras, así "estado general del vehículo"
+// no se confunde con otro ítem que solo comparta la palabra "estado".
+function vozBuscarItem(textoNorm, item){
+  var ps = vozPalabrasDeItem(item);
+  var mejorPos = -1, puntaje = 0;
+  ps.forEach(function(p){
+    var i = vozContiene(textoNorm, p);
+    if(i<0) return;
+    // La posición es la de la coincidencia MÁS LARGA, no la más temprana:
+    // así "Documentación del vehículo" no se engancha con la palabra
+    // "vehículo" que aparece dentro del nombre de otro ítem.
+    if(p.length > puntaje){ puntaje = p.length; mejorPos = i; }
+    else if(p.length === puntaje && (mejorPos<0 || i<mejorPos)) mejorPos = i;
+  });
+  return { pos:mejorPos, puntaje:puntaje };
+}
+
+// ── Lectura principal ──
+// Recibe el texto y la lista de ítems activos. Devuelve qué entendió:
+//   { items:[{idx, valor, texto}], km:{idx,valor}, observacion:{tipo,detalle}, patente:'...' }
+// Lo que no entiende NO lo inventa: queda afuera.
+function vozLeerChecklist(texto, items, vehiculos){
+  var t = vozNorm(texto);
+  var res = { items:[], km:null, observacion:null, patente:null, nada:true };
+  if(!t) return res;
+
+  // 1) Patente o identificador del vehículo (se dicta primero)
+  (vehiculos||[]).forEach(function(v){
+    if(res.patente) return;
+    [v.patente, v.identificador].forEach(function(ident){
+      if(res.patente || !ident) return;
+      var n = vozNorm(ident);
+      if(n && n.length>=4 && t.indexOf(n)>=0) res.patente = ident;
+      else if(n && n.length>=4 && t.replace(/ /g,'').indexOf(n.replace(/ /g,''))>=0) res.patente = ident;
+    });
+  });
+
+  // 2) Dónde aparece cada ítem, para partir la frase en pedazos
+  var marcas = [];
+  (items||[]).forEach(function(item, idx){
+    if(item.tipo==='firma') return;
+    var m = vozBuscarItem(t, item);
+    if(m.pos>=0) marcas.push({ idx:idx, pos:m.pos, puntaje:m.puntaje, item:item });
+  });
+  // Si dos ítems se pisan, queda el que coincidió con más letras.
+  // Esto evita que "Documentación del vehículo" se cuelgue de la palabra
+  // "vehículo" que está DENTRO de "Estado general del vehículo".
+  marcas.sort(function(a,b){ return b.puntaje - a.puntaje; });
+  var aceptadas = [];
+  marcas.forEach(function(m){
+    var pisada = aceptadas.some(function(a){ return m.pos >= a.pos && m.pos < (a.pos + a.puntaje); });
+    if(!pisada) aceptadas.push(m);
+  });
+  marcas = aceptadas;
+  // La observación también se puede nombrar sola
+  var posObs = t.indexOf('observacion');
+  if(posObs<0) posObs = t.indexOf('observaciones');
+
+  marcas.sort(function(a,b){ return a.pos-b.pos; });
+
+  // 3) Cada ítem se queda con el pedazo de frase que va hasta el ítem siguiente
+  marcas.forEach(function(m, i){
+    var hasta = (i+1<marcas.length) ? marcas[i+1].pos : t.length;
+    var pedazo = t.slice(m.pos, hasta);
+    var item = m.item;
+    if(item.tipo==='numero'){
+      var n = vozNumero(pedazo);
+      if(n!==null){ res.km = { idx:m.idx, valor:n }; res.nada=false; }
+      return;
+    }
+    if(item.tipo==='observacion' || item.tipo==='observacionTipo') return; // se maneja aparte
+    var val = vozEstadoDe(item.tipo, pedazo);
+    if(val){ res.items.push({ idx:m.idx, valor:val, texto:item.texto }); res.nada=false; }
+  });
+
+  // 4) Número suelto sin nombrar el ítem (ej: "kilometraje 12500" ya entró arriba;
+  //    acá cubrimos "12500 kilómetros" cuando el ítem numérico existe y está vacío)
+  if(!res.km){
+    var idxNum = -1;
+    (items||[]).forEach(function(item, idx){ if(idxNum<0 && item.tipo==='numero') idxNum = idx; });
+    if(idxNum>=0 && /\b(kilometro|kilometros|kilometraje|km|horas|hora)\b/.test(t)){
+      var n2 = vozNumero(t);
+      if(n2!==null){ res.km = { idx:idxNum, valor:n2 }; res.nada=false; }
+    }
+  }
+
+  // 5) Observación: tipo (de los que configuró el administrador) + detalle
+  if(posObs>=0){
+    var resto = t.slice(posObs);
+    var tipoEncontrado = null;
+    (window.TIPOS_OBSERVACION||[]).forEach(function(to){
+      if(tipoEncontrado) return;
+      var n = vozNorm(to);
+      if(n && resto.indexOf(n)>=0) tipoEncontrado = to;
+    });
+    // El detalle es lo que viene después de decir "observación" y el tipo
+    var crudo = String(texto);
+    var mDet = crudo.match(/observaci[oó]n(?:es)?\s*/i);
+    var detalle = mDet ? crudo.slice(crudo.indexOf(mDet[0]) + mDet[0].length) : crudo;
+    if(tipoEncontrado){
+      var reTipo = new RegExp('^\\s*' + tipoEncontrado.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\s*[:,-]?\\s*','i');
+      detalle = detalle.replace(reTipo,'');
+    }
+    detalle = detalle.replace(/^[\s:,.-]+/,'').trim();
+    res.observacion = { tipo: tipoEncontrado, detalle: detalle };
+    res.nada = false;
+  }
+  return res;
+}
+
+
+// ══════════════════════════════════════════════════════
+//  DEMO DE CHECK-LIST POR VOZ (sitio público)
+//  Solo para mostrar cómo funciona. No guarda nada en ningún lado:
+//  vive en memoria y se borra al recargar la página.
+// ══════════════════════════════════════════════════════
+var DEMO_VOZ_ITEMS = [
+  { clave:'patente',  texto:'Vehículo',              tipo:'patente' },
+  { clave:'km',       texto:'Kilometraje',           tipo:'numero' },
+  { clave:'estado',   texto:'Estado del vehículo',   tipo:'estado' },
+  { clave:'docs',     texto:'Documentación',         tipo:'vigencia' }
+];
+var _demoVozDatos = {};   // en memoria, nada más
+
+function demoVozRender(){
+  var cont = document.getElementById('dvLista');
+  if(!cont) return;
+  var html = '';
+  DEMO_VOZ_ITEMS.forEach(function(it){
+    var v = _demoVozDatos[it.clave];
+    var ok = (v!==undefined && v!==null && v!=='');
+    var muestra = '—';
+    if(ok){
+      if(it.tipo==='numero') muestra = '🔢 ' + Number(v).toLocaleString('es-AR');
+      else if(it.tipo==='patente') muestra = '🚚 ' + v;
+      else {
+        var t = (typeof TIPOS_RESPUESTA!=='undefined') ? TIPOS_RESPUESTA[it.tipo] : null;
+        var op = t ? t.opciones.filter(function(o){ return o.v===v; })[0] : null;
+        muestra = op ? (op.ic+' '+op.t) : v;
+      }
+    }
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 13px;border-radius:8px;'
+      + 'background:'+(ok?'rgba(74,222,128,.08)':'var(--input-bg)')+';border:1px solid '+(ok?'rgba(74,222,128,.35)':'var(--bdr)')+';transition:all .2s;">'
+      + '<span style="font-size:13px;color:'+(ok?'var(--white)':'var(--gray)')+';">'+it.texto+'</span>'
+      + '<span style="font-size:13px;font-weight:600;color:'+(ok?'#4ADE80':'var(--gray)')+';">'+muestra+'</span></div>';
+  });
+  cont.innerHTML = html;
+}
+
+function demoVozLimpiar(){
+  _demoVozDatos = {};
+  demoVozRender();
+  var e = document.getElementById('dvEscuchado'); if(e){ e.style.display='none'; e.textContent=''; }
+  var x = document.getElementById('dvError'); if(x) x.style.display='none';
+}
+
+function demoVozToggle(){
+  var btn = document.getElementById('dvBtn');
+  var txt = document.getElementById('dvBtnTxt');
+  var esc = document.getElementById('dvEscuchado');
+  var err = document.getElementById('dvError');
+  if(err) err.style.display='none';
+  if(!vozDisponible()){
+    if(err){ err.style.display='block'; err.textContent='Tu navegador no reconoce voz. Probá desde Chrome en Android o Safari en iPhone.'; }
+    return;
+  }
+  if(_vozEscuchando){ vozFrenar(); return; }
+  if(btn) btn.style.background = '#F87171';
+  if(txt) txt.textContent = 'Escuchando… tocá para frenar';
+  if(esc){ esc.style.display='block'; esc.textContent='…'; }
+  vozEscuchar({
+    onParcial: function(p){ if(esc) esc.textContent = p; },
+    onTexto: function(t){ if(esc) esc.textContent = t; demoVozAplicar(t); },
+    onFin: function(){
+      if(btn) btn.style.background='var(--gold)';
+      if(txt) txt.textContent = 'Tocá y seguí hablando';
+    },
+    onError: function(m){
+      if(btn) btn.style.background='var(--gold)';
+      if(txt) txt.textContent = 'Tocá y hablá';
+      if(err){ err.style.display='block'; err.textContent = m; }
+    }
+  });
+}
+
+// Usa el mismo motor que el sistema real
+function demoVozAplicar(texto){
+  var t = vozNorm(texto);
+  var algo = false;
+
+  // Dominio: lo que viene después de "dominio" o "patente", hasta que
+  // aparezca otra palabra del check-list (para no comerse "kilometraje")
+  var CORTES = ['kilometraje','kilometros','kilometro','km','horas','estado','documentacion','documentos','papeles','vtv','seguro','cedula','observacion'];
+  var palabras = t.split(' ');
+  var iDom = -1;
+  palabras.forEach(function(w,i){ if(iDom<0 && ['dominio','patente','movil'].indexOf(w)>=0) iDom = i; });
+  if(iDom>=0){
+    var partes = [];
+    for(var k=iDom+1; k<palabras.length && partes.length<4; k++){
+      var w = palabras[k];
+      if(CORTES.indexOf(w)>=0) break;
+      if(!/^[a-z0-9]{1,8}$/.test(w)) break;
+      partes.push(w);
+    }
+    var dom = partes.join('').toUpperCase();
+    if(dom.length>=5 && dom.length<=10){ _demoVozDatos.patente = dom; algo = true; }
+  }
+
+  // Kilometraje
+  if(/\b(kilometraje|kilometros|kilometro|km|horas)\b/.test(t)){
+    var pos = t.search(/\b(kilometraje|kilometros|kilometro|km|horas)\b/);
+    var n = vozNumero(t.slice(pos));
+    if(n!==null){ _demoVozDatos.km = n; algo = true; }
+  }
+
+  // Estado y documentación, cada uno con el pedazo de frase que le toca
+  var items = [
+    { clave:'estado', tipo:'estado',   palabras:['estado del vehiculo','estado general','estado','vehiculo'] },
+    { clave:'docs',   tipo:'vigencia', palabras:['documentacion','documentos','papeles','vtv','seguro','cedula'] }
+  ];
+  var marcas = [];
+  items.forEach(function(it){
+    var mejor = -1, punt = 0;
+    it.palabras.forEach(function(p){
+      var i = vozContiene(t, p);
+      if(i>=0 && p.length>punt){ punt=p.length; mejor=i; }
+    });
+    if(mejor>=0) marcas.push({it:it, pos:mejor, punt:punt});
+  });
+  marcas.sort(function(a,b){ return b.punt-a.punt; });
+  var acept = [];
+  marcas.forEach(function(m){
+    if(!acept.some(function(a){ return m.pos>=a.pos && m.pos < a.pos+a.punt; })) acept.push(m);
+  });
+  acept.sort(function(a,b){ return a.pos-b.pos; });
+  acept.forEach(function(m, i){
+    var hasta = (i+1<acept.length) ? acept[i+1].pos : t.length;
+    var val = vozEstadoDe(m.it.tipo, t.slice(m.pos, hasta));
+    if(val){ _demoVozDatos[m.it.clave] = val; algo = true; }
+  });
+
+  demoVozRender();
+  var err = document.getElementById('dvError');
+  if(!algo && err){ err.style.display='block'; err.textContent='No reconocí nada de eso. Probá nombrando los campos de la lista.'; }
+}
+
+// ══════════════════════════════════════════════════════
+//  MODO AUDIO DEL CHECK-LIST (operario)
+//  El panel de audio NO es otro formulario: completa el de siempre.
+//  Por eso el guardado, las reglas, los gráficos y las observaciones
+//  que van a Mantenimiento funcionan exactamente igual que a mano.
+// ══════════════════════════════════════════════════════
+var _clModo = 'manual';
+var _clObsPendiente = null;   // {detalle} esperando que elijan el tipo
+
+// Muestra el selector de modo cuando el formulario ya está armado
+function _mostrarSelectorModo(){
+  var wrap = document.getElementById('clModoWrap');
+  if(!wrap) return;
+  wrap.style.display = 'block';
+  var aviso = document.getElementById('clAudioNoDisponible');
+  var btnA = document.getElementById('clModoAudioBtn');
+  if(!vozDisponible()){
+    if(btnA){ btnA.disabled = true; btnA.style.opacity = '.45'; btnA.style.cursor = 'not-allowed'; }
+    if(aviso){ aviso.style.display='block'; aviso.textContent = 'El audio no está disponible en este navegador. Completalo a mano.'; }
+  } else if(navigator.onLine === false){
+    if(btnA){ btnA.disabled = true; btnA.style.opacity = '.45'; btnA.style.cursor = 'not-allowed'; }
+    if(aviso){ aviso.style.display='block'; aviso.textContent = 'Sin internet no se puede usar el audio. Completalo a mano.'; }
+  } else {
+    if(btnA){ btnA.disabled = false; btnA.style.opacity = '1'; btnA.style.cursor = 'pointer'; }
+    if(aviso){ aviso.style.display='none'; }
+  }
+}
+
+function elegirModoChecklist(modo){
+  _clModo = modo;
+  var bm = document.getElementById('clModoManualBtn');
+  var ba = document.getElementById('clModoAudioBtn');
+  var panel = document.getElementById('clAudioPanel');
+  var cont = document.getElementById('clChecklistItems');
+  function pinta(btn, activo){
+    if(!btn) return;
+    btn.style.borderColor = activo ? 'var(--gold)' : 'var(--bdr)';
+    btn.style.background  = activo ? 'var(--gold-dim)' : 'var(--card)';
+  }
+  pinta(bm, modo==='manual'); pinta(ba, modo==='audio');
+  if(modo==='audio'){
+    if(panel) panel.style.display = 'block';
+    _audioMostrarSoloFirma(true);
+    _audioRefrescarLista();
+  } else {
+    vozFrenar();
+    if(panel) panel.style.display = 'none';
+    _audioMostrarSoloFirma(false);
+  }
+}
+
+// En modo audio el formulario largo se oculta, menos la firma (que se hace con el dedo)
+function _audioMostrarSoloFirma(soloFirma){
+  var items = window._clItemsActivos || [];
+  document.querySelectorAll('#clChecklistItems .cl-item-card').forEach(function(card){
+    var i = parseInt(card.getAttribute('data-item'));
+    var it = items[i];
+    var esFirma = it && it.tipo==='firma';
+    card.style.display = (soloFirma && !esFirma) ? 'none' : '';
+  });
+}
+
+// Lee del formulario real qué valor tiene cada ítem (para mostrarlo en la lista)
+function _audioValorDe(i){
+  var nm = 'cli_'+i;
+  var btn = document.querySelector('.cl-opt-btn[data-name="'+nm+'"][data-selected="1"]');
+  if(btn){
+    var it = (window._clItemsActivos||[])[i];
+    var t = TIPOS_RESPUESTA[it.tipo] || TIPOS_RESPUESTA.estado;
+    var val = btn.getAttribute('data-val');
+    var op = t.opciones.filter(function(o){ return o.v===val; })[0];
+    return op ? (op.ic+' '+op.t) : val;
+  }
+  var sel = document.querySelector('select[data-name="'+nm+'"]');
+  if(sel && sel.value){
+    var txt = document.querySelector('[data-name="'+nm+'_txt"]');
+    return '📋 '+sel.value + (txt && txt.value ? ': '+txt.value : '');
+  }
+  var inp = document.querySelector('input[data-name="'+nm+'"], textarea[data-name="'+nm+'"]');
+  if(inp && inp.value) return '🔢 '+inp.value;
+  var can = document.querySelector('canvas[data-name="'+nm+'"]');
+  if(can && can.getAttribute('data-firmado')==='1') return '✍️ Firmado';
+  return null;
+}
+
+// Dibuja la lista compacta: qué está completo y qué falta
+function _audioRefrescarLista(){
+  var cont = document.getElementById('clAudioLista');
+  if(!cont) return;
+  var items = window._clItemsActivos || [];
+  var html = '', hechos = 0, faltan = [];
+
+  // El dominio y el kilometraje van primero, en el mismo orden del check-list
+  var selVeh = document.getElementById('clPatente');
+  var dom = selVeh ? selVeh.value : '';
+  html += _audioFila('Dominio', dom ? ('🚚 '+dom) : null);
+  if(dom) hechos++; else faltan.push('dominio');
+
+  var kmField = document.getElementById('clKmHsField');
+  var kmVisible = kmField && kmField.style.display !== 'none';
+  if(kmVisible){
+    var km = (document.getElementById('clKmHs')||{}).value;
+    var lblKm = (document.getElementById('clKmHsLabel')||{}).textContent || 'Kilometraje';
+    html += _audioFila(lblKm, km ? ('🔢 '+km) : null);
+    if(km) hechos++; else faltan.push('kilometraje');
+  }
+
+  items.forEach(function(it, i){
+    var val = _audioValorDe(i);
+    var nombre = it.texto;
+    if(it.tipo==='observacionTipo') nombre = 'Observación (si hay)';
+    html += _audioFila(nombre, val);
+    if(val) hechos++;
+    else if(it.obligatorio!==false) faltan.push(nombre.toLowerCase());
+  });
+
+  cont.innerHTML = html;
+  var total = items.length + 1 + (kmVisible?1:0);
+  var cEl = document.getElementById('clAudioContador');
+  if(cEl) cEl.textContent = hechos+' de '+total;
+  var fEl = document.getElementById('clAudioFaltan');
+  if(fEl){
+    if(faltan.length){ fEl.style.display='block'; fEl.textContent = 'Falta: ' + faltan.slice(0,6).join(', ') + (faltan.length>6?'…':''); }
+    else { fEl.style.display='block'; fEl.style.color='#4ADE80'; fEl.textContent = '✓ Está todo. Revisalo y tocá Guardar.'; }
+  }
+}
+
+function _audioFila(nombre, valor){
+  var ok = !!valor;
+  return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;'
+    + 'background:'+(ok?'rgba(74,222,128,.08)':'var(--card)')+';border:1px solid '+(ok?'rgba(74,222,128,.3)':'var(--bdr)')+';">'
+    + '<span style="font-size:12px;color:'+(ok?'var(--white)':'var(--gray)')+';">'+escapeHtml(nombre)+'</span>'
+    + '<span style="font-size:12px;color:'+(ok?'#4ADE80':'var(--gray)')+';text-align:right;">'+(ok?escapeHtml(valor):'—')+'</span></div>';
+}
+
+// ── Botón del micrófono ──
+function audioChecklistToggle(){
+  var btn = document.getElementById('clAudioBtn');
+  var txt = document.getElementById('clAudioBtnTxt');
+  var err = document.getElementById('clAudioError');
+  var esc = document.getElementById('clAudioEscuchado');
+  if(err) err.style.display='none';
+  if(_vozEscuchando){ vozFrenar(); return; }
+  if(btn){ btn.style.background='#F87171'; }
+  if(txt) txt.textContent = 'Escuchando… tocá para frenar';
+  if(esc){ esc.style.display='block'; esc.textContent='…'; }
+  vozEscuchar({
+    onParcial: function(p){ if(esc) esc.textContent = p; },
+    onTexto: function(t){
+      if(esc) esc.textContent = t;
+      _audioAplicarTexto(t);
+    },
+    onFin: function(){
+      if(btn) btn.style.background='var(--gold)';
+      if(txt) txt.textContent = 'Tocá y seguí hablando';
+    },
+    onError: function(m){
+      if(btn) btn.style.background='var(--gold)';
+      if(txt) txt.textContent = 'Tocá y hablá';
+      if(err){ err.style.display='block'; err.textContent = m; }
+    }
+  });
+}
+
+// ── Pasa lo que entendió al formulario real ──
+function _audioAplicarTexto(texto){
+  var items = window._clItemsActivos || [];
+  var vehs = (window._vehCacheChecklist || window._opVehiculos || []);
+  var r = vozLeerChecklist(texto, items, vehs);
+
+  // ¿Estaba esperando el tipo de observación? Entonces esto es el tipo o el detalle
+  if(_clObsPendiente){
+    var tipoDicho = null;
+    (window.TIPOS_OBSERVACION||[]).forEach(function(to){
+      if(!tipoDicho && vozNorm(texto).indexOf(vozNorm(to))>=0) tipoDicho = to;
+    });
+    if(tipoDicho){ _audioGuardarObservacion(tipoDicho, _clObsPendiente.detalle || texto); return; }
+    _clObsPendiente.detalle = (_clObsPendiente.detalle ? _clObsPendiente.detalle+' ' : '') + texto;
+    _audioPedirTipoObs(_clObsPendiente.detalle);
+    return;
+  }
+
+  // Dominio
+  if(r.patente){
+    var sel = document.getElementById('clPatente');
+    if(sel){
+      var encontrado = false;
+      Array.prototype.forEach.call(sel.options, function(o){
+        if(!encontrado && vozNorm(o.value)===vozNorm(r.patente)){ sel.value=o.value; encontrado=true; }
+      });
+      if(encontrado && typeof onClVehiculoChange==='function'){
+        onClVehiculoChange();
+        setTimeout(function(){ _audioMostrarSoloFirma(true); _audioRefrescarLista(); }, 60);
+      }
+    }
+  }
+  // Kilometraje / horas
+  if(r.km){
+    var inpKm = document.getElementById('clKmHs');
+    var itNum = items[r.km.idx];
+    if(inpKm && document.getElementById('clKmHsField') && document.getElementById('clKmHsField').style.display!=='none'){
+      inpKm.value = r.km.valor;
+    }
+    if(itNum && itNum.tipo==='numero'){
+      var inpIt = document.querySelector('input[data-name="cli_'+r.km.idx+'"]');
+      if(inpIt){ inpIt.value = r.km.valor; marcarItemCompleto(r.km.idx); }
+    }
+  }
+  // Ítems con estado
+  r.items.forEach(function(x){
+    var b = document.querySelector('.cl-opt-btn[data-name="cli_'+x.idx+'"][data-val="'+x.valor+'"]');
+    if(b) selectClOpt(b, 'cli_'+x.idx, x.idx);
+  });
+  // Observación: primero el tipo, después el detalle
+  if(r.observacion){
+    if(r.observacion.tipo) _audioGuardarObservacion(r.observacion.tipo, r.observacion.detalle);
+    else _audioPedirTipoObs(r.observacion.detalle);
+  }
+
+  if(r.nada){
+    var err = document.getElementById('clAudioError');
+    if(err){ err.style.display='block'; err.textContent='No reconocí ningún ítem en eso. Probá nombrándolo como figura en la lista.'; }
+  }
+  _audioRefrescarLista();
+}
+
+// Muestra los tipos de observación que configuró MercaTeck para que elija uno
+function _audioPedirTipoObs(detalle){
+  _clObsPendiente = { detalle: detalle || '' };
+  var wrap = document.getElementById('clAudioObsWrap');
+  var cont = document.getElementById('clAudioObsTipos');
+  var det  = document.getElementById('clAudioObsDetalle');
+  if(!wrap || !cont) return;
+  wrap.style.display = 'block';
+  cont.innerHTML = '';
+  (window.TIPOS_OBSERVACION||[]).forEach(function(to){
+    var b = document.createElement('button');
+    b.type='button'; b.textContent = to;
+    b.style.cssText='font-size:12px;padding:7px 11px;border-radius:14px;border:1px solid var(--gold-border);background:var(--card);color:var(--white);cursor:pointer;';
+    b.onclick = function(){ _audioGuardarObservacion(to, _clObsPendiente ? _clObsPendiente.detalle : ''); };
+    cont.appendChild(b);
+  });
+  if(det) det.textContent = detalle ? ('Detalle: "'+detalle+'"') : 'Decí el tipo, o tocalo acá arriba.';
+}
+
+// Escribe la observación en el formulario real (select + detalle),
+// que es de donde sale el registro que va al panel de Mantenimiento
+function _audioGuardarObservacion(tipo, detalle){
+  var items = window._clItemsActivos || [];
+  var idx = -1;
+  items.forEach(function(it,i){ if(idx<0 && it.tipo==='observacionTipo') idx = i; });
+  if(idx<0){ items.forEach(function(it,i){ if(idx<0 && it.tipo==='observacion') idx = i; }); }
+  if(idx<0){ _clObsPendiente=null; return; }
+  var nm = 'cli_'+idx;
+  var sel = document.querySelector('select[data-name="'+nm+'"]');
+  if(sel){
+    sel.value = tipo;
+    if(typeof _toggleDetalleObs==='function') _toggleDetalleObs(sel);
+    var txt = document.querySelector('[data-name="'+nm+'_txt"]');
+    if(txt){ txt.disabled=false; txt.style.opacity='1'; txt.value = (detalle||tipo); }
+    marcarItemCompleto(idx);
+  } else {
+    var ta = document.querySelector('textarea[data-name="'+nm+'"]');
+    if(ta){ ta.value = (detalle||tipo); marcarItemCompleto(idx); }
+  }
+  _clObsPendiente = null;
+  var wrap = document.getElementById('clAudioObsWrap');
+  if(wrap) wrap.style.display='none';
+  _audioRefrescarLista();
 }
 
 // ══════════════════════════════════════════════════════
@@ -7331,6 +8340,24 @@ function renderChecklistBuilder(){
     oblWrap.appendChild(obl); oblWrap.appendChild(document.createTextNode('Obligatorio'));
     fila2.appendChild(oblWrap);
     wrap.appendChild(fila2);
+
+    // Fila 3: palabras con las que tu gente nombra este ítem (para el check-list por audio)
+    if(item.tipo!=='firma'){
+      var fila3 = document.createElement('div');
+      fila3.style.cssText='margin-top:.45rem;display:flex;align-items:center;gap:.5rem;';
+      var lblPal = document.createElement('span');
+      lblPal.textContent='🎤';
+      lblPal.title='Palabras con las que tu equipo nombra este ítem al hablar';
+      lblPal.style.cssText='font-size:13px;';
+      var inpPal = document.createElement('input');
+      inpPal.type='text'; inpPal.value = item.palabras || '';
+      inpPal.maxLength = 160;
+      inpPal.placeholder = 'Cómo lo nombran al hablar: gomas, cubiertas, ruedas';
+      inpPal.style.cssText='flex:1;font-size:11px;padding:6px 8px;background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);color:var(--white);';
+      inpPal.oninput=(function(txt){ return function(e){ var it=_clbItems.find(function(x){return x.texto===txt;}); if(it) it.palabras=e.target.value; }; })(item.texto);
+      fila3.appendChild(lblPal); fila3.appendChild(inpPal);
+      wrap.appendChild(fila3);
+    }
     cont.appendChild(wrap);
   });
 }
@@ -8260,6 +9287,9 @@ function abrirChecklistOperario(){
   // Render completo desde el inicio: muestra km/horas, tilde de servicio y barra
   // de progreso ya al abrir (no solo al cambiar de vehículo).
   onClVehiculoChange();
+  // El modo arranca siempre a mano; el operario elige si quiere audio
+  if(typeof elegirModoChecklist==='function'){ _clObsPendiente=null; elegirModoChecklist('manual'); }
+  if(typeof _mostrarSelectorModo==='function') _mostrarSelectorModo();
 }
 
 // ══════════════════════════════════════════════════════
@@ -8293,9 +9323,7 @@ function enviarTicket(){
       var cuerpo = 'Nuevo ticket de soporte — GesFlota by MercaTeck\n\n'
         + 'Empresa: '+(window._currentCompany||'—')+'\n'
         + 'Tema: '+tema+'\nPrioridad: '+prioridad+'\nAsunto: '+asunto+'\n\nMensaje:\n'+mensaje+'\n';
-      sb.functions.invoke('enviar-email-flota', {
-        body: { to:'mercateckinfo@gmail.com', subject:'[Soporte '+prioridad+'] '+asunto, text:cuerpo, empresa_id: window._empresaId }
-      }).then(function(){}).catch(function(){});
+      enviarEmailInterno('[Soporte '+prioridad+'] '+asunto, cuerpo, { empresa_id: window._empresaId });
       showToast('✓ Ticket enviado. Te respondemos por acá y por email.','success');
       document.getElementById('tkAsunto').value = '';
       document.getElementById('tkMensaje').value = '';
@@ -9453,7 +10481,9 @@ function cargarMantPendientesFlota(){
 // Filtro: ver check-lists cargados por un operario específico
 function cargarOperariosFiltro(){
   if(!sb || !window._empresaId) return;
-  sb.from('checklists').select('operario').eq('empresa_id', window._empresaId).then(function(res){
+  _clTraerPaginado(function(){
+    return sb.from('checklists').select('operario').eq('empresa_id', window._empresaId);
+  }, 'Operarios con check-list', function(res){
     if(res.error || !res.data) return;
     var operarios = {};
     res.data.forEach(function(c){ if(c.operario) operarios[c.operario]=true; });
@@ -9477,7 +10507,9 @@ function filterPorOperario(){
     return;
   }
   if(!sb || !window._empresaId) return;
-  sb.from('checklists').select('patente, fecha').eq('empresa_id', window._empresaId).eq('operario', op).then(function(res){
+  _clTraerPaginado(function(){
+    return sb.from('checklists').select('patente, fecha').eq('empresa_id', window._empresaId).eq('operario', op);
+  }, 'Check-lists por operario', function(res){
     if(res.error){ return; }
     var conteo = {};
     (res.data||[]).forEach(function(c){ conteo[c.patente] = (conteo[c.patente]||0)+1; });
@@ -9515,7 +10547,9 @@ function filterPorPuesto(){
       return;
     }
     // 2. Traer los checklists y filtrar por esos nombres
-    sb.from('checklists').select('patente, operario, fecha').eq('empresa_id', window._empresaId).then(function(resC){
+    _clTraerPaginado(function(){
+      return sb.from('checklists').select('patente, operario, fecha').eq('empresa_id', window._empresaId);
+    }, 'Check-lists por puesto', function(resC){
       if(resC.error){ return; }
       var delPuesto = (resC.data||[]).filter(function(c){ return c.operario && nombres.indexOf(c.operario.toLowerCase())>=0; });
       var puestoLabel = {jefe:'Jefes',supervisor:'Supervisores',operario:'Operarios',chofer:'Choferes',mantenimiento:'Mantenimiento'};
@@ -9906,6 +10940,9 @@ function onClTipoChange(){
   cont.innerHTML = html;
   // Inicializar los canvas de firma
   setTimeout(initFirmas, 50);
+  // Modo de carga: a mano o por audio
+  if(typeof _mostrarSelectorModo==='function') _mostrarSelectorModo();
+  if(_clModo==='audio'){ _audioMostrarSoloFirma(true); _audioRefrescarLista(); }
 }
 
 function selectClOpt(btn, name, itemIdx){
@@ -10593,6 +11630,106 @@ function marcarChecklistRealizado(patente, freq, fecha){
 var _checklistsCargados = []; // cache de los checklists reales
 var _personalPuestos = {};    // mapa nombre->puesto para filtrar por puesto
 
+
+// ══════════════════════════════════════════════════════
+//  CARGA LIVIANA DE CHECK-LISTS
+//  No se trae el detalle (items) en la lista: pesa ~6 KB por registro
+//  y solo hace falta al abrir uno. Y se trae por período, no todo el
+//  historial. Las reglas, los gráficos y los rankings siguen igual:
+//  el período mínimo es de 30 días, que cubre hasta las reglas mensuales.
+// ══════════════════════════════════════════════════════
+var _CL_DIAS = 30;          // período que se trae de la base
+var _CL_PAGINA = 1000;      // Supabase corta cada consulta en 1000 filas
+var _CL_MAX_PAGINAS = 10;   // tope de seguridad: 10.000 registros por período
+
+// Fecha (YYYY-MM-DD, hora local) de hace N días
+function _clDesde(dias){
+  if(!dias) return null;
+  var d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - dias);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+// Deja el selector mostrando el período que está activo
+function _sincronizarSelectorPeriodo(){
+  var sel = document.getElementById('clFiltroHistorial');
+  if(sel) sel.value = String(_CL_DIAS);
+}
+
+function cambiarPeriodoChecklists(){
+  var sel = document.getElementById('clFiltroHistorial');
+  _CL_DIAS = sel ? (parseInt(sel.value)||0) : 30;
+  loadChecklistRegistros();
+}
+
+// Aplica el filtro de período a cualquier consulta de check-lists
+function _clConPeriodo(q){
+  var desde = _clDesde(_CL_DIAS);
+  if(desde) q = q.gte('fecha', desde);
+  return q;
+}
+
+// Trae TODAS las filas del período en páginas de 1000.
+// Supabase corta cada consulta en 1000 filas; pidiendo de a páginas no se
+// pierde nada. 'armarConsulta' tiene que devolver una consulta NUEVA cada vez.
+function _clTraerPaginado(armarConsulta, queConsulta, listo){
+  var PAGINA = _CL_PAGINA, acumulado = [], pagina = 0;
+  function siguiente(){
+    var q = _clConPeriodo(armarConsulta()).range(pagina*PAGINA, pagina*PAGINA + PAGINA - 1);
+    q.then(function(res){
+      if(res.error){ listo(res, acumulado); return; }
+      var filas = res.data || [];
+      acumulado = acumulado.concat(filas);
+      pagina++;
+      if(filas.length === PAGINA && pagina < _CL_MAX_PAGINAS){ siguiente(); return; }
+      if(filas.length === PAGINA && pagina >= _CL_MAX_PAGINAS){
+        // Llegamos al tope de seguridad: hay más datos de los que trajimos
+        _avisarSiSeCorto(acumulado, acumulado.length, queConsulta);
+      }
+      listo({ error:null, data:acumulado }, acumulado);
+    });
+  }
+  siguiente();
+}
+
+function _clLabelPeriodo(){
+  if(!_CL_DIAS) return 'todo el historial';
+  if(_CL_DIAS===365) return 'el último año';
+  return 'los últimos '+_CL_DIAS+' días';
+}
+
+
+// ══════════════════════════════════════════════════════
+//  AVISO INTERNO: una consulta se cortó por el límite de filas
+//  Supabase corta las consultas en una cantidad máxima de filas.
+//  Si vuelven exactamente las que pedimos, quedaron registros afuera.
+//  El cliente NO ve nada: su panel sigue funcionando con su período.
+//  El aviso va solo a las casillas internas de MercaTeck, una vez por
+//  empresa, consulta y día, para no llenar la casilla.
+// ══════════════════════════════════════════════════════
+function _avisarSiSeCorto(datos, tope, queConsulta){
+  try{
+    if(!datos || !tope) return;
+    if(datos.length < tope) return;                 // no se cortó
+    if(datos.length < _CL_PAGINA) return;           // ni siquiera llenó una página
+    var hoy = new Date().toISOString().slice(0,10);
+    var clave = 'gesflota_corte_' + (window._empresaId||'?') + '_' + queConsulta + '_' + hoy;
+    try{ if(localStorage.getItem(clave)) return; localStorage.setItem(clave,'1'); }catch(e){}
+    console.warn('[GesFlota] Consulta cortada por límite de filas:', queConsulta, tope);
+    if(typeof enviarEmailInterno !== 'function') return;
+    var cuerpo = 'Una consulta llegó al límite de filas y quedaron registros afuera.\n\n'
+      + 'Empresa: ' + (window._currentCompany || '—') + '\n'
+      + 'ID de empresa: ' + (window._empresaId || '—') + '\n'
+      + 'Consulta: ' + queConsulta + '\n'
+      + 'Filas devueltas: ' + datos.length + ' (tope ' + tope + ')\n'
+      + 'Período pedido: ' + (typeof _clLabelPeriodo==='function' ? _clLabelPeriodo() : '—') + '\n'
+      + 'Fecha: ' + new Date().toLocaleString('es-AR') + '\n\n'
+      + 'Qué significa: el panel de esa empresa está mostrando datos incompletos en esa consulta.\n'
+      + 'Qué hacer: achicar el período por defecto o paginar esa consulta.\n'
+      + 'El cliente no recibió ningún aviso.';
+    enviarEmailInterno('[GesFlota · Límite de filas] ' + (window._currentCompany || 'empresa'), cuerpo);
+  }catch(e){ console.warn('No se pudo avisar del corte:', e); }
+}
+
 function loadChecklistRegistros(){
   if(sb && window._empresaId){
     // Traer los checklists reales con todos los datos
@@ -10617,21 +11754,26 @@ function loadChecklistRegistros(){
     // Intentamos traer con 'puesto'. Si la columna no existe en la base (o falla),
     // reintentamos SIN 'puesto' para no dejar la lista vacía. Robustez ante bases
     // que todavía no corrieron el SQL que agrega la columna.
-    sb.from('checklists').select('id, patente, identificador, frecuencia, fecha, operario, puesto, items, creado_en')
-      .eq('empresa_id', window._empresaId)
-      .order('creado_en', {ascending:false})
-      .then(function(res){
+    // Sin 'items': el detalle se pide recién al abrir un check-list.
+    _clTraerPaginado(function(){
+      return sb.from('checklists').select('id, patente, identificador, frecuencia, fecha, operario, puesto, creado_en')
+        .eq('empresa_id', window._empresaId)
+        .order('creado_en', {ascending:false});
+    }, 'Listado de check-lists', function(res){
         if(res.error){
-          console.warn('Reintento sin columna puesto:', res.error.message);
-          sb.from('checklists').select('id, patente, identificador, frecuencia, fecha, operario, items, creado_en')
-            .eq('empresa_id', window._empresaId)
-            .order('creado_en', {ascending:false})
-            .then(function(res2){
+          console.warn('Reintento sin la columna puesto:', res.error.message);
+          _clTraerPaginado(function(){
+            return sb.from('checklists').select('id, patente, identificador, frecuencia, fecha, operario, creado_en')
+              .eq('empresa_id', window._empresaId)
+              .order('creado_en', {ascending:false});
+          }, 'Listado de check-lists', function(res2){
               if(res2.error){ console.warn('Error checklists:', res2.error); _mostrarErrorChecklists(); return; }
+              _sincronizarSelectorPeriodo();
               _procesarChecklists(res2.data);
             });
           return;
         }
+        _sincronizarSelectorPeriodo();
         _procesarChecklists(res.data);
       });
   } else {
@@ -11671,7 +12813,8 @@ function renderChecklistsCargados(){
   }
 
   var cnt = document.getElementById('clCargadosCount');
-  if(cnt) cnt.textContent = filtrados.length + ' registro' + (filtrados.length===1?'':'s');
+  if(cnt) cnt.textContent = filtrados.length + ' registro' + (filtrados.length===1?'':'s')
+    + ' · ' + (typeof _clLabelPeriodo==='function' ? _clLabelPeriodo() : '');
 
   if(!filtrados.length){
     body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:1.5rem;">'
@@ -11899,6 +13042,22 @@ function actualizarStatsChecklist(){
 function verDetalleChecklist(idx){
   var c = (window._checklistsFiltrados||_checklistsCargados)[idx];
   if(!c){ return; }
+  // El detalle no viaja en el listado (pesa). Si no lo tenemos, lo pedimos ahora.
+  if(c.items === undefined && sb && c.id){
+    var cargando = document.getElementById('detalleChecklistContent');
+    if(cargando) cargando.innerHTML = '<div style="text-align:center;color:var(--gray);padding:2rem;">Cargando el detalle...</div>';
+    var modalC = document.getElementById('detalleChecklistModal');
+    if(modalC) modalC.classList.add('open');
+    sb.from('checklists').select('items').eq('id', c.id).eq('empresa_id', window._empresaId).limit(1).then(function(rd){
+      c.items = (rd && !rd.error && rd.data && rd.data[0]) ? (rd.data[0].items || {}) : {};
+      _pintarDetalleChecklist(c);
+    }).catch(function(){ c.items = {}; _pintarDetalleChecklist(c); });
+    return;
+  }
+  _pintarDetalleChecklist(c);
+}
+
+function _pintarDetalleChecklist(c){
   var cont = document.getElementById('detalleChecklistContent');
   var freqLabel = {diario:'Diario','3sem':'3x semana','2sem':'2x semana',semanal:'Semanal',mensual:'Mensual'};
   var fecha = c.fecha ? new Date(c.fecha+'T00:00:00').toLocaleDateString('es-AR') : '—';
@@ -13766,12 +14925,14 @@ var _dolarBNA = 1515; // valor por defecto; se actualiza solo desde la API al ca
 function _fmtPesos(n){ return Math.round(n/100)*100; }
 
 // Precios fijos EN PESOS (mensual). El anual aplica -15%.
-// (Se pasó de USD a pesos hasta configurar Mercado Pago.)
-var PRECIOS_ARS = { precioBasico:45400, precioPro:87800, precioEnt:178800 };
+// (Precios fijos en pesos.)
+var PRECIOS_ARS = { precioPro:87800, precioEnt:178800 }; // el Demo no tiene precio
 
 // Actualiza los 3 precios en pesos, según mensual/anual
+try{ if(typeof demoVozRender==='function') demoVozRender(); }catch(e){}
+
 function actualizarPreciosPlanes(){
-  var mapa = [['precioBasico','periodoBasico','arsBasico'],['precioPro','periodoPro','arsPro'],['precioEnt','periodoEnt','arsEnt']];
+  var mapa = [['precioPro','periodoPro','arsPro'],['precioEnt','periodoEnt','arsEnt']];
   mapa.forEach(function(par){
     var elP = document.getElementById(par[0]);
     var elPer = document.getElementById(par[1]);
