@@ -2244,6 +2244,7 @@ body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
             <div class="app-card-hdr">
               <h3>Check-lists cargados</h3>
               <span style="font-size:12px;color:var(--gray);" id="clCargadosCount"></span>
+              <button id="btnMarcarVistos" style="display:none;font-size:11px;padding:5px 10px;background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-border);border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="marcarTodosChecklistsVistos()">👁️ Marcar como visto</button>
               <button class="btn-edit-veh" style="font-size:11px;padding:5px 10px;color:#F87171;border-color:rgba(239,68,68,.25);" title="Borrar todos los check-list del filtro actual" onclick="borrarChecklistsFiltrados()">🗑️ Borrar filtrados</button>
             </div>
             <div style="overflow-x:auto;">
@@ -3682,6 +3683,24 @@ try {
   }
 } catch(e){ console.warn('Supabase no disponible:', e); }
 
+// Si la librería de Supabase no cargó (CDN caído, bloqueador, sin internet un
+// segundo), ANTES la página mostraba la landing y no decía nada: no se podía
+// ingresar y no había forma de saber por qué. Ahora se avisa en pantalla.
+function _avisarSinConexionBase(){
+  if(sb) return;
+  if(document.getElementById('avisoSinBase')) return;
+  var d = document.createElement('div');
+  d.id = 'avisoSinBase';
+  d.setAttribute('role','alert');
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99998;background:#7A1F1F;color:#fff;'
+    + 'padding:10px 16px;font:600 13px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;'
+    + 'box-shadow:0 2px 12px rgba(0,0,0,.45);text-align:center;';
+  d.textContent = '\u26A0\uFE0F No se pudo cargar la conexi\u00F3n con la base de datos. '
+    + 'Revis\u00E1 tu internet y record\u00E1 la p\u00E1gina (Ctrl+Shift+R).';
+  if(document.body) document.body.appendChild(d);
+  console.error('[GesFlota] La libreria de Supabase no cargo: el sistema no puede funcionar.');
+}
+
 // ══════════════════════════════════════════════════════
 //  AUTH
 // ══════════════════════════════════════════════════════
@@ -3791,6 +3810,7 @@ function cargarSesion(authUser, _reintento){
     .eq('id', authUser.id)
     .single()
     .then(function(res){
+     try{
       if(res.error || !res.data){
         // Si es un usuario recién creado (ej: primer login con Google), el
         // trigger que crea empresa+perfil puede tardar un instante. Reintentamos.
@@ -3839,7 +3859,39 @@ function cargarSesion(authUser, _reintento){
         // Dejar listo el destinatario de avisos con el email que eligió al registrarse
         _crearDestinatarioInicial(authUser);
       }
+     }catch(e){
+      // Si algo explota acá adentro, antes quedabas en la nada: ni panel ni aviso.
+      console.error('[GesFlota] Error restaurando la sesion:', e);
+      _sesionCaida('Hubo un problema al abrir tu panel. Volvé a ingresar.');
+     }
+    }, function(e){
+      // La consulta falló (red, RLS, permisos). Tampoco te dejamos colgado.
+      console.error('[GesFlota] Error consultando el perfil:', e);
+      if(!_reintento){ setTimeout(function(){ cargarSesion(authUser, true); }, 1500); return; }
+      _sesionCaida('No pudimos conectar con la base. Revisá tu internet y volvé a ingresar.');
     });
+}
+
+// ══════════════════════════════════════════════════════
+//  SESIÓN CAÍDA — nunca más una pantalla muda
+//  Si la sesión venció o la restauración falló, limpiamos el token
+//  viejo, mostramos el login y DECIMOS por qué. Antes: landing muda.
+// ══════════════════════════════════════════════════════
+function _sesionCaida(motivo){
+  try{
+    // Barremos los tokens viejos para que el próximo F5 arranque limpio
+    var matar = [];
+    for(var i=0;i<localStorage.length;i++){
+      var k = localStorage.key(i);
+      if(k && k.indexOf('-auth-token')>=0) matar.push(k);
+    }
+    matar.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+  }catch(e){}
+  try{ if(typeof frenarVigilanteChecklists==='function') frenarVigilanteChecklists(); }catch(e){}
+  try{ if(typeof showView==='function') showView('login'); }catch(e){}
+  var err = document.getElementById('loginError');
+  if(err){ err.textContent = motivo; err.style.display = 'block'; }
+  try{ if(typeof showToast==='function') showToast(motivo,'warning'); }catch(e){}
 }
 
 // ══════════════════════════════════════════════════════
@@ -4141,6 +4193,17 @@ function _captchaValido(){
 
 function doGoogleLogin(){
   if(!sb){ showToast('Sin conexión con el servidor. Reintentá en un momento.','error'); return; }
+  // Desde el disco (file://) Google RECHAZA el redirect: da 400 siempre.
+  // Mejor decirlo que dejar que falle sin explicación.
+  if(_abiertoDesdeDisco()){
+    var e1 = document.getElementById('loginError');
+    if(e1){
+      e1.textContent = 'El ingreso con Google no funciona abriendo el archivo desde el disco. Entrá por la dirección web del sitio, o usá tu email y contraseña.';
+      e1.style.display = 'block';
+    }
+    showToast('Con el archivo abierto desde el disco, Google no puede validar. Usá email y contraseña.','warning');
+    return;
+  }
   showToast('Redirigiendo a Google...','info');
   // Supabase maneja todo el flujo OAuth. Al volver, la sesión se detecta sola.
   sb.auth.signInWithOAuth({
@@ -4153,6 +4216,39 @@ function doGoogleLogin(){
       showToast('No se pudo conectar con Google: '+(res.error.message||''),'error');
     }
   });
+}
+
+// ══════════════════════════════════════════════════════
+//  ¿ESTÁ ABIERTO DESDE EL DISCO?
+//  Si abrís el .html con doble clic, el navegador usa el origen
+//  "file://", que NO es el mismo que el del hosting. Consecuencias:
+//    · la sesión del sitio no está → no te reingresa solo
+//    · el login con Google da 400 (el redirect file:// es inválido)
+//  Antes esto fallaba en silencio. Ahora se avisa.
+// ══════════════════════════════════════════════════════
+function _abiertoDesdeDisco(){
+  try{ return window.location.protocol === 'file:'; }catch(e){ return false; }
+}
+
+function _avisarAbiertoDesdeDisco(){
+  if(!_abiertoDesdeDisco()) return;
+  if(document.getElementById('avisoDisco')) return;
+  var d = document.createElement('div');
+  d.id = 'avisoDisco';
+  d.setAttribute('role','alert');
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#7A1F1F;color:#fff;'
+    + 'padding:10px 44px 10px 16px;font:600 13px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;'
+    + 'box-shadow:0 2px 12px rgba(0,0,0,.45);text-align:center;';
+  d.innerHTML = '\u26A0\uFE0F Est\u00E1s abriendo GesFlota <b>desde el disco</b> (file://), no desde el sitio. '
+    + 'As\u00ED no se guarda la sesi\u00F3n ni funciona el ingreso con Google. '
+    + 'Abr\u00ED la direcci\u00F3n web del sitio para probar de verdad.'
+    + '<button type="button" aria-label="Cerrar aviso" style="position:absolute;top:6px;right:10px;'
+    + 'background:rgba(255,255,255,.18);border:none;color:#fff;width:26px;height:26px;border-radius:50%;'
+    + 'cursor:pointer;font-size:15px;line-height:1;">\u00D7</button>';
+  var btn = d.querySelector('button');
+  if(btn) btn.onclick = function(){ try{ d.remove(); }catch(e){ d.style.display='none'; } };
+  document.body.appendChild(d);
+  console.warn('[GesFlota] Abierto desde file:// — la sesion no persiste y Google login no puede funcionar.');
 }
 
 // ── Pop-up de novedades: se muestra una sola vez por versión ──
@@ -4189,6 +4285,8 @@ function cerrarNovedades(){
 }
 
 function loginSuccess(user){
+  if(typeof arrancarVigilanteChecklists==='function') arrancarVigilanteChecklists();
+
   currentUser = user;
   isAdmin = user.role === 'admin';
   window._currentCompany = (user.company||user.email||'demo').replace(/[^a-zA-Z0-9]/g,'_');
@@ -4406,6 +4504,8 @@ function showAddonInfo(){
 }
 
 function logout(){
+  if(typeof frenarVigilanteChecklists==='function') frenarVigilanteChecklists();
+
   if(sb){ sb.auth.signOut(); }
   currentUser = null; isAdmin = false;
   if(typeof restaurarLogoOriginal==='function'){ restaurarLogoOriginal(); }
@@ -7807,6 +7907,186 @@ function demoVozAplicar(texto){
 }
 
 // ══════════════════════════════════════════════════════
+//  NOTIFICACIONES DE CHECK-LIST NUEVO
+//  "Nuevo" = un check-list que entró y todavía nadie de la empresa miró.
+//  El visto se guarda en la base (columna 'visto'), así que si lo apaga
+//  una persona se apaga para todas y en cualquier dispositivo.
+//  OJO: esto NO tiene nada que ver con los check-list que FALTAN cargar.
+//  Son dos contadores distintos y conviven.
+// ══════════════════════════════════════════════════════
+var _clNuevos = [];            // check-lists sin ver [{id, patente, identificador, operario}]
+var _clNuevosPorVeh = {};      // identificador -> cuántos sin ver
+var _clYaAvisados = {};        // ids que ya mostraron cartel en esta sesión
+var _clSoportaVisto = true;    // se apaga solo si todavía no corrieron el SQL
+
+// Trae los check-lists sin ver (son pocos: van con índice propio)
+function cargarChecklistsNuevos(cb){
+  if(!sb || !window._empresaId || !_clSoportaVisto){ if(cb) cb(); return; }
+  sb.from('checklists')
+    .select('id, patente, identificador, operario, fecha')
+    .eq('empresa_id', window._empresaId)
+    .eq('visto', false)
+    .order('creado_en', {ascending:false})
+    .limit(500)
+    .then(function(res){
+      if(res.error){
+        // Todavía no corrieron el SQL que agrega la columna: no rompemos nada
+        if(String(res.error.message||'').indexOf('visto')>=0){
+          _clSoportaVisto = false;
+          console.warn('[GesFlota] Falta correr el SQL de notificaciones de check-list.');
+        }
+        if(cb) cb();
+        return;
+      }
+      _clNuevos = res.data || [];
+      _clNuevosPorVeh = {};
+      _clNuevos.forEach(function(c){
+        var k = _clIdentDe(c);
+        _clNuevosPorVeh[k] = (_clNuevosPorVeh[k]||0) + 1;
+      });
+      _avisarChecklistsNuevos();
+      _pintarNuevosEnFlota();
+      if(cb) cb();
+    }, function(){ if(cb) cb(); });
+}
+
+// Con qué nombre se muestra la unidad (patente o interno)
+function _clIdentDe(c){
+  return (c.identificador || c.patente || '—').split(' + semi')[0];
+}
+
+// Carteles de arriba: salen y se van solos, uno por check-list nuevo
+function _avisarChecklistsNuevos(){
+  var sinAvisar = _clNuevos.filter(function(c){ return !_clYaAvisados[c.id]; });
+  if(!sinAvisar.length) return;
+  sinAvisar.forEach(function(c){ _clYaAvisados[c.id] = true; });
+  var muestro = sinAvisar.slice(0, 3);
+  muestro.forEach(function(c, i){
+    setTimeout(function(){
+      showToast('📋 Check-list ' + _clIdentDe(c), 'success');
+    }, i * 450);
+  });
+  if(sinAvisar.length > 3){
+    setTimeout(function(){
+      showToast('📋 Y ' + (sinAvisar.length-3) + ' check-list más sin ver', 'success');
+    }, 3 * 450);
+  }
+}
+
+// El contador va en las notificaciones de arriba del panel de Flota,
+// al lado de VTV, Seguro, Filtros y Ruta. En la fila del vehículo no va nada.
+function _pintarNuevosEnFlota(){
+  if(typeof actualizarBadgesSidebar==='function'){ /* no toca la sidebar */ }
+  var cont = document.getElementById('flotaNotis');
+  if(!cont) return;
+  var viejo = cont.querySelector('.chip-cl-nuevos');
+  if(viejo) viejo.remove();
+  var n = _clNuevos.length;
+  if(!n) return;
+  var chip = document.createElement('span');
+  chip.className = 'chip-cl-nuevos';
+  chip.style.cssText = 'background:rgba(196,154,58,.1);border:1px solid var(--gold-border);color:var(--gold);padding:5px 12px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;';
+  chip.innerHTML = '📋 Check-list ' + n;
+  chip.title = n + (n===1?' check-list nuevo sin ver':' check-lists nuevos sin ver') + '. Se apaga al tocar la fila en el panel de Check-lists.';
+  chip.onclick = function(){
+    var el = document.querySelector('[onclick*="checklist"]');
+    if(el) el.click();
+  };
+  cont.appendChild(chip);
+}
+
+// Revisa cada tanto si entró un check-list nuevo, esté la persona en el panel
+// que esté. El cartel sale solo y se va solo.
+var _clVigilante = null;
+function arrancarVigilanteChecklists(){
+  if(_clVigilante) return;
+  _clVigilante = setInterval(function(){
+    if(!sb || !window._empresaId || !_clSoportaVisto) return;
+    if(document.hidden) return;           // pestaña en segundo plano: no molestamos
+    cargarChecklistsNuevos();
+  }, 60000);
+}
+function frenarVigilanteChecklists(){
+  if(_clVigilante){ clearInterval(_clVigilante); _clVigilante = null; }
+  _clNuevos = []; _clNuevosPorVeh = {}; _clYaAvisados = {};
+}
+
+// ¿Este check-list está sin ver?
+function _clEsNuevo(id){
+  if(!id) return false;
+  return _clNuevos.some(function(c){ return c.id === id; });
+}
+
+// Marca uno como visto (en la base) y apaga sus dos señales
+function marcarChecklistVisto(id, filaEl){
+  if(!id || !_clEsNuevo(id)) return;
+  // Se apaga en pantalla al instante; si la base falla, vuelve
+  var antes = _clNuevos.slice();
+  _clNuevos = _clNuevos.filter(function(c){ return c.id !== id; });
+  _recalcularNuevosPorVeh();
+  if(filaEl){
+    var chip = filaEl.querySelector('.chip-cl-nuevo');
+    if(chip) chip.remove();
+    filaEl.removeAttribute('data-nuevo');
+  }
+  _pintarNuevosEnFlota();
+  if(!sb || !window._empresaId || !_clSoportaVisto) return;
+  sb.from('checklists').update({ visto:true })
+    .eq('id', id).eq('empresa_id', window._empresaId)
+    .then(function(res){
+      if(res.error){
+        _clNuevos = antes; _recalcularNuevosPorVeh(); _pintarNuevosEnFlota();
+        showToast('No se pudo marcar como visto. Probá de nuevo.','error');
+      }
+    }, function(){
+      _clNuevos = antes; _recalcularNuevosPorVeh(); _pintarNuevosEnFlota();
+    });
+}
+
+function _recalcularNuevosPorVeh(){
+  _clNuevosPorVeh = {};
+  _clNuevos.forEach(function(c){
+    var k = _clIdentDe(c);
+    _clNuevosPorVeh[k] = (_clNuevosPorVeh[k]||0) + 1;
+  });
+}
+
+// Botón "Marcar todo como visto"
+function marcarTodosChecklistsVistos(){
+  if(!_clNuevos.length){ showToast('No hay check-lists nuevos sin ver.','warning'); return; }
+  var cuantos = _clNuevos.length;
+  var ids = _clNuevos.map(function(c){ return c.id; });
+  var antes = _clNuevos.slice();
+  _clNuevos = []; _recalcularNuevosPorVeh();
+  _pintarNuevosEnFlota();
+  document.querySelectorAll('#checklistsCargadosBody .chip-cl-nuevo').forEach(function(ch){ ch.remove(); });
+  document.querySelectorAll('#checklistsCargadosBody tr[data-nuevo]').forEach(function(tr){ tr.removeAttribute('data-nuevo'); });
+  _actualizarBotonMarcarTodo();
+  if(!sb || !window._empresaId || !_clSoportaVisto) return;
+  sb.from('checklists').update({ visto:true })
+    .in('id', ids).eq('empresa_id', window._empresaId)
+    .then(function(res){
+      if(res.error){
+        _clNuevos = antes; _recalcularNuevosPorVeh(); _pintarNuevosEnFlota();
+        showToast('No se pudieron marcar como vistos. Probá de nuevo.','error');
+        return;
+      }
+      showToast('✓ '+cuantos+(cuantos===1?' check-list marcado':' check-lists marcados')+' como visto','success');
+    }, function(){
+      _clNuevos = antes; _recalcularNuevosPorVeh(); _pintarNuevosEnFlota();
+    });
+}
+
+// Muestra u oculta el botón según haya o no nuevos
+function _actualizarBotonMarcarTodo(){
+  var btn = document.getElementById('btnMarcarVistos');
+  if(!btn) return;
+  var n = _clNuevos.length;
+  btn.style.display = n ? 'inline-block' : 'none';
+  btn.textContent = '👁️ Marcar ' + n + (n===1?' nuevo':' nuevos') + ' como visto';
+}
+
+// ══════════════════════════════════════════════════════
 //  MODO AUDIO DEL CHECK-LIST (operario)
 //  El panel de audio NO es otro formulario: completa el de siempre.
 //  Por eso el guardado, las reglas, los gráficos y las observaciones
@@ -10546,6 +10826,8 @@ function _renderNotisFlota(conteos){
     }; })(c);
     cont.appendChild(chip);
   });
+  // Check-lists nuevos sin ver (contador aparte del de pendientes)
+  if(typeof _pintarNuevosEnFlota==='function') _pintarNuevosEnFlota();
 }
 
 // Estado de filtros por km/horas usando la fórmula: inicial + frecuencia = objetivo.
@@ -10726,6 +11008,8 @@ function _pintarVehiculos(){
     actualizarPanelesDerivados(activos);
     actualizarBadgesSidebar();
     cargarMantPendientesFlota();
+    // Contador de check-lists nuevos al lado de los otros badges de la fila
+    if(typeof _pintarNuevosEnFlota==='function') _pintarNuevosEnFlota();
   });
 }
 
@@ -12080,6 +12364,10 @@ function loadChecklistRegistros(){
         }
         _sincronizarSelectorPeriodo();
         _procesarChecklists(res.data);
+        // Avisos de check-list nuevo (es un contador aparte del de pendientes)
+        if(typeof cargarChecklistsNuevos==='function'){
+          cargarChecklistsNuevos(function(){ renderChecklistsCargados(); });
+        }
       });
   } else {
     renderChecklistsCargados();
@@ -13120,6 +13408,7 @@ function renderChecklistsCargados(){
   var cnt = document.getElementById('clCargadosCount');
   if(cnt) cnt.textContent = filtrados.length + ' registro' + (filtrados.length===1?'':'s')
     + ' · ' + (typeof _clLabelPeriodo==='function' ? _clLabelPeriodo() : '');
+  if(typeof _actualizarBotonMarcarTodo==='function') _actualizarBotonMarcarTodo();
 
   if(!filtrados.length){
     body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:1.5rem;">'
@@ -13156,7 +13445,26 @@ function renderChecklistsCargados(){
     var pbSector = (c.patente||'').split(' + semi')[0];
     var sector = escapeHtml(sectorDe[pbSector] || sectorDe[c.patente] || 'Sin sector');
     var tr = document.createElement('tr');
-    tr.innerHTML = '<td><strong>'+id+'</strong></td>'
+    // ¿Es un check-list que todavía nadie miró?
+    var esNuevo = (typeof _clEsNuevo==='function') && _clEsNuevo(c.id);
+    var chipNuevo = esNuevo
+      ? ' <span class="chip-cl-nuevo badge" style="background:rgba(196,154,58,.18);color:var(--gold);border:1px solid var(--gold-border);font-size:10px;margin-left:5px;">Nuevo</span>'
+      : '';
+    if(esNuevo){
+      tr.setAttribute('data-nuevo','1');
+      tr.style.cursor = 'pointer';
+      tr.title = 'Tocá la fila para marcarlo como visto';
+      tr.addEventListener('click', (function(idCl){
+        return function(ev){
+          // El ojito y los botones siguen haciendo lo suyo
+          if(ev.target.closest('button')) return;
+          marcarChecklistVisto(idCl, tr);
+          tr.style.cursor=''; tr.removeAttribute('title');
+          if(typeof _actualizarBotonMarcarTodo==='function') _actualizarBotonMarcarTodo();
+        };
+      })(c.id));
+    }
+    tr.innerHTML = '<td><strong>'+id+'</strong>'+chipNuevo+'</td>'
       +'<td style="font-size:13px;color:var(--gold);">📍 '+sector+'</td>'
       +'<td style="font-size:13px;">'+quien+'</td>'
       +'<td style="font-size:13px;color:var(--gray);">'+fecha+'</td>'
@@ -15430,8 +15738,8 @@ window.addEventListener('load', function(){
   if(sb && sb.auth && sb.auth.getSession){
     // Anti-parpadeo (punto 6): si hay un token guardado, ocultamos la landing
     // de entrada así no se ve "volver 1 segundo al inicio" mientras carga el panel.
+    var _hayToken = false;
     try{
-      var _hayToken = false;
       for(var i=0;i<localStorage.length;i++){
         var k = localStorage.key(i);
         if(k && k.indexOf('-auth-token')>=0 && localStorage.getItem(k)){ _hayToken = true; break; }
@@ -15442,19 +15750,43 @@ window.addEventListener('load', function(){
       }
     }catch(e){}
 
+    // Red de seguridad: si había token pero a los 8 segundos no entramos a
+    // ningún panel, destrabamos la pantalla y explicamos. Antes te quedabas
+    // mirando la landing (o la nada) sin saber qué pasó.
+    var _restaurado = false;
+    if(_hayToken && !window._modoRecuperacion){
+      setTimeout(function(){
+        if(_restaurado) return;
+        if(document.querySelector('.view.active')) return;
+        console.warn('[GesFlota] La restauracion de sesion no termino en 8s.');
+        _sesionCaida('No pudimos abrir tu panel. Volvé a ingresar.');
+      }, 8000);
+    }
+
     sb.auth.getSession().then(function(res){
       if(window._modoRecuperacion) return; // no entrar al panel si está cambiando la clave
       if(res && res.data && res.data.session && res.data.session.user){
         // Hay sesión activa → restaurar el panel del usuario
+        _restaurado = true;
         cargarSesion(res.data.session.user);
+      } else if(_hayToken){
+        // Había un token guardado pero Supabase dice que no hay sesión:
+        // venció o el refresh token ya se usó. Lo limpiamos y avisamos,
+        // en vez de dejarte en una landing muda sin explicación.
+        _restaurado = true;
+        _sesionCaida('Tu sesión venció. Volvé a ingresar con tu email y contraseña.');
       } else {
-        // No hay sesión: mostramos la landing (por si la habíamos ocultado)
+        // No hay sesión ni token: landing normal.
+        _restaurado = true;
         var _land = document.getElementById('view-landing');
         if(_land && !document.querySelector('.view.active')) _land.classList.add('active');
       }
-    }).catch(function(){
+    }).catch(function(e){
+      _restaurado = true;
+      console.error('[GesFlota] getSession fallo:', e);
       var _land = document.getElementById('view-landing');
       if(_land && !document.querySelector('.view.active')) _land.classList.add('active');
+      if(_hayToken) _sesionCaida('No pudimos validar tu sesión. Volvé a ingresar.');
     });
   }
 });
@@ -15515,6 +15847,10 @@ window.addEventListener('load', function(){
   document.addEventListener('DOMContentLoaded', function(){
     var c=document.querySelector('.app-main'); if(c) c.addEventListener('scroll', _onScroll);
     _onScroll();
+    // Avisos de arranque: archivo abierto desde el disco / sin conexión a la base
+    try{ if(typeof _avisarAbiertoDesdeDisco==='function') _avisarAbiertoDesdeDisco(); }catch(e){}
+    try{ if(typeof _avisarSinConexionBase==='function') _avisarSinConexionBase(); }catch(e){}
+    try{ if(typeof _verificarArchivoCompleto==='function') _verificarArchivoCompleto(); }catch(e){}
   });
   setTimeout(_onScroll, 500);
 })();
@@ -15546,5 +15882,27 @@ window.addEventListener('load', function(){
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     MARCA DE ARCHIVO COMPLETO
+     Si el archivo se sube cortado (FTP a medias, sincronización de
+     OneDrive sin terminar, caché a medio bajar), este script nunca
+     corre y la función de abajo lo detecta: antes el sistema fallaba
+     de formas raras sin decir que el archivo estaba incompleto.
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+  window._ARCHIVO_COMPLETO = true;
+  window._GESFLOTA_BUILD = '2026-10-13-fix-carga';
+  function _verificarArchivoCompleto(){
+    if(window._ARCHIVO_COMPLETO) return true;
+    var d = document.createElement('div');
+    d.setAttribute('role','alert');
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99997;background:#7A1F1F;color:#fff;'
+      + 'padding:10px 16px;font:600 13px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;text-align:center;';
+    d.textContent = '\u26A0\uFE0F El archivo se carg\u00F3 incompleto. Volv\u00E9 a subirlo al hosting '
+      + 'y record\u00E1 con Ctrl+Shift+R.';
+    if(document.body) document.body.appendChild(d);
+    return false;
+  }
+</script>
 </body>
 </html>
