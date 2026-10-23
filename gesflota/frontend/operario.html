@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <title>GesFlota — Check-list de Flota</title>
+  
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/gesflota.css"/>
+
+  <style>
+    #view-operario { display: block !important; min-height: 100vh; padding: 1.5rem 1rem; }
+    body { background: var(--black); color: var(--white); min-height: 100vh; }
+  </style>
+</head>
+<body>
+
+<div class="view" id="view-operario">
+  <div class="auth-view">
+    <div class="auth-box" id="operarioLoginBox">
+      <div class="auth-logo">
+        <div class="logo-text"><span>GES</span><span>FLOTA</span><span>.</span></div>
+        <div style="font-size:11px;color:var(--gray);letter-spacing:.1em;text-transform:uppercase;margin-top:4px;">Check-list de flota</div>
+      </div>
+      <h2 style="font-size:20px;color:var(--white);text-align:center;margin:1.5rem 0 .25rem;">Acceso de personal</h2>
+      <p style="font-size:13px;color:var(--gray);text-align:center;margin-bottom:1.5rem;" id="operarioEmpresaNombre">Ingresá con tu nombre y PIN</p>
+      <div class="field"><label>Nombre</label><input type="text" id="opNombre" placeholder="Tu nombre"/></div>
+      <div class="field"><label>PIN</label><input type="text" id="opPin" placeholder="Tu PIN de 6 dígitos" inputmode="numeric"/></div>
+      <div id="opError" style="display:none;font-size:13px;color:var(--red);margin-bottom:.75rem;"></div>
+      <button class="btn-gold" style="width:100%;padding:12px;" onclick="loginOperario()">Ingresar</button>
+      <p style="font-size:11px;color:var(--gray);text-align:center;margin-top:1rem;">Solo podés cargar check-lists. No accedés al panel de la empresa.</p>
+    </div>
+
+    <!-- Panel del operario (después del login) -->
+    <div class="auth-box" id="operarioPanelBox" style="display:none;max-width:560px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <div>
+          <div style="font-size:16px;color:var(--white);font-weight:600;" id="opSaludo">Hola</div>
+          <div style="font-size:12px;color:var(--gray);" id="opPuesto"></div>
+        </div>
+        <button class="btn-outline" style="font-size:12px;padding:6px 12px;" onclick="logoutOperario()">Salir</button>
+      </div>
+      <div id="opBienvenida" style="display:none;padding:.85rem 1rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);margin-bottom:1rem;font-size:13px;color:var(--cream);line-height:1.5;"></div>
+      <button class="btn-gold" style="width:100%;padding:12px;margin-bottom:1rem;" onclick="opNuevoChecklist()">📋 Cargar nuevo check-list</button>
+      <!-- Botones de mantenimiento (solo puesto mantenimiento) -->
+      <div id="opMantBox" style="display:none;">
+        <button class="btn-outline" style="width:100%;padding:12px;margin-bottom:.75rem;border-color:var(--gold-border);color:var(--gold);" onclick="opNuevoMantenimiento()">🔧 Cargar mantenimiento</button>
+        <button class="btn-outline" style="width:100%;padding:12px;margin-bottom:1rem;" onclick="opBuscarMantenimiento()">🔍 Buscar vehículo cargado</button>
+      </div>
+      <!-- Historial (solo jefe/supervisor) -->
+      <div id="opHistorialBox" style="display:none;">
+        <div style="font-size:13px;font-weight:600;color:var(--gold);margin:1rem 0 .5rem;">Últimos check-lists cargados</div>
+        <div id="opHistorial" style="display:flex;flex-direction:column;gap:.5rem;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modales de inspección y taller del operario -->
+<div class="modal-overlay" id="checklistFormModal">
+  <div class="modal-box" style="max-width:520px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-hdr">
+      <h3>📋 Cargar Check-list</h3>
+      <button class="modal-close" onclick="closeChecklistForm()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- Mensaje de bienvenida / motivación -->
+      <div id="clBienvenida" style="display:none;padding:.85rem 1rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);margin-bottom:1rem;font-size:13px;color:var(--cream);line-height:1.5;"></div>
+
+      <div class="field">
+        <label>¿Qué vehículo estás revisando?</label>
+        <select id="clPatente" onchange="onClVehiculoChange()" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"></select>
+      </div>
+      <!-- Tipo detectado automáticamente (oculto, se setea solo) -->
+      <input type="hidden" id="clTipoVeh" value="liviano"/>
+      <input type="hidden" id="clFreqVeh" value="semanal"/>
+      <div id="clTipoDetectado" style="display:none;font-size:12px;color:var(--gray);margin:-.5rem 0 .75rem;"></div>
+      <div id="clYaCargado" style="display:none;font-size:12px;padding:8px 12px;border:1px solid var(--gold-border);border-radius:var(--r);margin:0 0 .75rem;"></div>
+      <!-- KM / Horas actuales (siempre al inicio del check-list) -->
+      <div class="field" id="clKmHsField" data-obligatorio="0">
+        <label id="clKmHsLabel">Kilómetros actuales <span style="color:var(--gold);">*</span></label>
+        <input type="number" id="clKmHs" min="0" placeholder="Ej: 85000" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+        <label style="display:flex;align-items:flex-start;gap:8px;margin-top:.6rem;font-size:12px;color:var(--gray);cursor:pointer;line-height:1.4;">
+          <input type="checkbox" id="clServiceRealizado" style="accent-color:var(--gold);flex:0 0 auto;width:16px;height:16px;margin:1px 0 0 0;"/>
+          <span>✅ Estos valores corresponden a un cambio de filtros recién realizado</span>
+        </label>
+      </div>
+
+      <!-- Dominio del semi (aparece solo si el vehículo lo requiere) -->
+      <div class="field" id="clSemiDominioField" style="display:none;">
+        <label>Dominio del semirremolque</label>
+        <input type="text" id="clSemiDominio" placeholder="Patente del semi" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+      </div>
+
+      <!-- Cómo quiere completar: a mano o por audio -->
+      <div id="clModoWrap" style="display:none;margin-top:1rem;">
+        <div style="font-size:12px;color:var(--gray);margin-bottom:.5rem;">¿Cómo querés completarlo?</div>
+        <div style="display:flex;gap:.5rem;">
+          <button type="button" id="clModoManualBtn" onclick="elegirModoChecklist('manual')" style="flex:1;padding:12px 8px;border-radius:8px;border:1.5px solid var(--gold);background:var(--gold-dim);color:var(--white);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
+            <span style="font-size:22px;">✍️</span><span style="font-size:12px;font-weight:600;">A mano</span>
+          </button>
+          <button type="button" id="clModoAudioBtn" onclick="elegirModoChecklist('audio')" style="flex:1;padding:12px 8px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--card);color:var(--white);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
+            <span style="font-size:22px;">🎤</span><span style="font-size:12px;font-weight:600;">Por audio</span>
+          </button>
+        </div>
+        <div id="clAudioNoDisponible" style="display:none;font-size:11px;color:var(--amber);margin-top:.5rem;"></div>
+      </div>
+
+      <!-- Panel compacto del modo audio (completa el formulario de abajo) -->
+      <div id="clAudioPanel" style="display:none;margin-top:1rem;">
+        <div style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
+            <span style="font-size:12px;font-weight:700;color:var(--gold);">DICTADO</span>
+            <span style="font-size:12px;color:var(--gray);" id="clAudioContador">0 de 0</span>
+          </div>
+          <div id="clAudioLista" style="display:flex;flex-direction:column;gap:4px;max-height:260px;overflow-y:auto;"></div>
+          <div id="clAudioFaltan" style="font-size:11px;color:var(--amber);margin-top:.6rem;"></div>
+        </div>
+
+        <div id="clAudioObsWrap" style="display:none;margin-top:.6rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);padding:.75rem;">
+          <div style="font-size:12px;color:var(--white);font-weight:600;margin-bottom:.5rem;">¿De qué tipo es la observación?</div>
+          <div id="clAudioObsTipos" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+          <div id="clAudioObsDetalle" style="font-size:12px;color:var(--gray);margin-top:.5rem;"></div>
+        </div>
+
+        <div id="clAudioEscuchado" style="display:none;font-size:12px;color:var(--gray);background:var(--card);border:1px dashed var(--bdr);border-radius:var(--r);padding:.6rem .75rem;margin-top:.6rem;"></div>
+        <div id="clAudioError" style="display:none;font-size:12px;color:var(--amber);margin-top:.5rem;"></div>
+
+        <button type="button" id="clAudioBtn" onclick="audioChecklistToggle()" style="width:100%;margin-top:.75rem;padding:16px;border-radius:12px;border:none;background:var(--gold);color:#0B0E14;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+          <span style="font-size:22px;">🎤</span><span id="clAudioBtnTxt">Tocá y hablá</span>
+        </button>
+        <div style="font-size:11px;color:var(--gray);text-align:center;margin-top:.5rem;">Decilo en el orden del check-list. Si se corta, volvé a tocar y seguí donde quedaste.</div>
+      </div>
+
+      <div id="clChecklistItems" style="margin-top:1rem;"></div>
+      <button class="modal-btn" onclick="submitChecklist()">Guardar check-list</button>
+      <div style="font-size:12px;color:var(--gray);text-align:center;margin-top:.75rem;">Se guarda en el panel de tu empresa</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GENÉRICO (prompt/confirm propios) -->
+<div class="modal-overlay" id="opMantModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-hdr">
+      <h3>🔧 Cargar mantenimiento</h3>
+      <button class="modal-close" onclick="cerrarOpMant()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Vehículo <span style="color:#F87171;">*</span></label>
+        <select id="opMantVeh" onchange="opMantAutocompletar()"></select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="field"><label>Interno <span style="font-size:10px;color:var(--gray);">(automático)</span></label><input type="text" id="opMantInterno" placeholder="A-101" readonly style="opacity:.7;cursor:not-allowed;"/></div>
+        <div class="field"><label>Sector <span style="font-size:10px;color:var(--gray);">(automático)</span></label><input type="text" id="opMantSector" placeholder="Sector Norte" readonly style="opacity:.7;cursor:not-allowed;"/></div>
+      </div>
+      <div class="field">
+        <label>Tipo <span style="color:#F87171;">*</span></label>
+        <select id="opMantTipo">
+          <option value="arreglo">Arreglo</option>
+          <option value="compra">Compra</option>
+          <option value="service">Service</option>
+          <option value="incidente">Incidente (choque/imprevisto)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Descripción de la tarea <span style="color:#F87171;">*</span></label>
+        <textarea id="opMantDesc" style="min-height:70px;" placeholder="Detalle del arreglo, compra o incidente..."></textarea>
+      </div>
+      <div class="field">
+        <label>Costo (opcional)</label>
+        <input type="number" id="opMantCosto" placeholder="45000"/>
+      </div>
+      <button class="btn-gold" style="width:100%;padding:12px;margin-top:.5rem;" onclick="guardarOpMantenimiento()">Guardar mantenimiento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BUSCAR MANTENIMIENTO (operario mantenimiento) -->
+<div class="modal-overlay" id="opBuscarMantModal">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-hdr">
+      <h3>🔍 Vehículos con mantenimiento</h3>
+      <button class="modal-close" onclick="cerrarOpBuscarMant()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="text" id="opBuscarMantInput" onkeyup="renderOpMantList()" placeholder="🔍 Buscar por patente..." style="width:100%;padding:9px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;margin-bottom:1rem;"/>
+      <div id="opMantList" style="display:flex;flex-direction:column;gap:.5rem;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE + OBSERVACIÓN (operario mantenimiento) -->
+<div class="modal-overlay" id="opMantDetalleModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-hdr">
+      <h3>Detalle del mantenimiento</h3>
+      <button class="modal-close" onclick="cerrarOpMantDetalle()">×</button>
+    </div>
+    <div class="modal-body" id="opMantDetalleContent"></div>
+  </div>
+</div>
+<div class="modal-overlay" id="detalleChecklistModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-hdr">
+      <h3>Detalle del check-list</h3>
+      <button class="modal-close" onclick="cerrarDetalleChecklist()">×</button>
+    </div>
+    <div class="modal-body" id="detalleChecklistContent"></div>
+  </div>
+</div>
+
+<!-- MODAL CONFIGURAR CHECK-LIST (constructor + personal) -->
+<!-- Botón flotante: volver arriba (aparece al bajar) -->
+<button id="btnVolverArriba" onclick="_scrollArriba()" title="Volver arriba" aria-label="Volver arriba">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+</button>
+
+  <!-- Backend y Servicios -->
+  <script src="../backend/config/supabase.js"></script>
+  <script src="../backend/services/checklistService.js"></script>
+  <script src="../backend/services/flotaService.js"></script>
+  <script src="../backend/services/mantenimientoService.js"></script>
+
+  <!-- Lógica Frontend -->
+  <script src="js/utils.js"></script>
+  <script src="js/ui-dashboard.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Activar vista operario
+      showView('operario');
+      // Detectar link checklist con ?cl=
+      if (typeof detectarLinkChecklist === 'function') {
+        detectarLinkChecklist();
+      }
+    });
+  </script>
+  <script>
+// Muestra el botón "volver arriba" y el chat de IA solo cuando el usuario baja.
+(function(){
+  // Detecta cuál elemento tiene el scroll REAL (puede ser app-main, o el body/window).
+  function _cont(){
+    var main = document.querySelector('.app-main');
+    if(main && main.scrollHeight > main.clientHeight + 5) return main;  // app-main scrollea
+    return document.scrollingElement || document.documentElement;       // si no, la página
+  }
+  function _scrollTop(){
+    var c=_cont();
+    if(c===document.documentElement||c===document.body||c===document.scrollingElement){
+      return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    }
+    return c.scrollTop;
+  }
+  window._scrollArriba = function(){
+    // Sube TODO lo que pueda estar scrolleado (página y contenedor), por las dudas
+    window.scrollTo({top:0,behavior:'smooth'});
+    var main = document.querySelector('.app-main');
+    if(main && main.scrollTop>0) main.scrollTo({top:0,behavior:'smooth'});
+  };
+  var _mouseEnEsquina = false;  // true cuando el mouse está en la esquina inferior derecha
+
+  function _onScroll(){
+    var y = _scrollTop();
+    var btn = document.getElementById('btnVolverArriba');
+    var ges = document.getElementById('gesBtn');
+    var mostrar = (y > 250) || _mouseEnEsquina;
+    if(btn) btn.classList.toggle('visible', (y>250) || _mouseEnEsquina);
+    // El chat de IA: se ve solo al bajar. PERO si el chat está abierto, siempre visible.
+    if(ges){
+      var gc = document.getElementById('gesChat');
+      var chatAbierto = gc && gc.style.display && gc.style.display!=='none';
+      var verChat = mostrar || chatAbierto;
+      ges.style.opacity = verChat ? '1' : '0';
+      ges.style.pointerEvents = verChat ? 'auto' : 'none';
+      ges.style.transition = 'opacity .25s';
+    }
+  }
+  // Detectar el mouse en la esquina inferior derecha (para mostrar los botones
+  // aunque no se haya bajado). Zona sensible: 160px x 160px de la esquina.
+  document.addEventListener('mousemove', function(e){
+    var enEsquina = (e.clientX > window.innerWidth - 160) && (e.clientY > window.innerHeight - 160);
+    if(enEsquina !== _mouseEnEsquina){ _mouseEnEsquina = enEsquina; _onScroll(); }
+  });
+
+  // Escuchar scroll en el contenedor principal y en window
+  window.addEventListener('scroll', _onScroll, true);
+  document.addEventListener('DOMContentLoaded', function(){
+    var c=document.querySelector('.app-main'); if(c) c.addEventListener('scroll', _onScroll);
+    _onScroll();
+    // Avisos de arranque: archivo abierto desde el disco / sin conexión a la base
+    try{ if(typeof _avisarAbiertoDesdeDisco==='function') _avisarAbiertoDesdeDisco(); }catch(e){}
+    try{ if(typeof _avisarSinConexionBase==='function') _avisarSinConexionBase(); }catch(e){}
+    try{ if(typeof _verificarArchivoCompleto==='function') _verificarArchivoCompleto(); }catch(e){}
+  });
+  setTimeout(_onScroll, 500);
+})();
+</script>
+  <script>
+  window._ARCHIVO_COMPLETO = true;
+  window._GESFLOTA_BUILD = '2026-10-13-fix-carga';
+  function _verificarArchivoCompleto(){
+    if(window._ARCHIVO_COMPLETO) return true;
+    var d = document.createElement('div');
+    d.setAttribute('role','alert');
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99997;background:#7A1F1F;color:#fff;'
+      + 'padding:10px 16px;font:600 13px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;text-align:center;';
+    d.textContent = '\u26A0\uFE0F El archivo se carg\u00F3 incompleto. Volv\u00E9 a subirlo al hosting '
+      + 'y record\u00E1 con Ctrl+Shift+R.';
+    if(document.body) document.body.appendChild(d);
+    return false;
+  }
+</script>
+</body>
+</html>

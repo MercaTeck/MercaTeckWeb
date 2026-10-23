@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <title>GesFlota — Panel de Control | MercaTeck</title>
+  
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/gesflota.css"/>
+
+  <style>
+    #view-dashboard { display: block !important; padding-top: var(--nav-h); }
+    body { background: var(--black); color: var(--white); min-height: 100vh; }
+  </style>
+</head>
+<body>
+
+<!-- ══════ NAVBAR ══════ -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo" onclick="showView('landing')" style="cursor:pointer;">
+      <span>GES</span><span>FLOTA</span><span>.</span>
+    </div>
+    <div class="nav-links" id="landingLinks" style="display:none;"></div>
+    <div class="nav-actions" id="navActions" style="display:none;"></div>
+    <div class="nav-actions" id="navApp" style="display:flex;margin-left:auto;gap:.6rem;align-items:center;">
+      <span style="font-size:13px;color:var(--gray)" id="navUserName"></span>
+      <button class="btn-outline" id="themeToggle2" onclick="toggleTheme()" title="Cambiar tema" style="padding:8px 12px;">🌙</button>
+      <button class="btn-outline" id="navAdminBtn" style="display:none;" onclick="showView('admin')">Admin</button>
+      <button class="btn-outline" onclick="logout()">Salir</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Menú móvil desplegable -->
+<div class="menu-movil" id="menuMovil">
+  <div class="mm-back" onclick="cerrarMenuMovil()"><a href="https://mercateck.com.ar" style="color:inherit;display:flex;align-items:center;gap:6px;">← Volver a MercaTeck</a></div>
+  <div class="mm-link" onclick="showView('landing');_irA('features');cerrarMenuMovil()"><span class="mm-ico">🔧</span> Funciones</div>
+  <div class="mm-link" onclick="showView('landing');_irA('how');cerrarMenuMovil()"><span class="mm-ico">📋</span> Cómo funciona</div>
+  <div class="mm-link" onclick="showView('landing');_irA('pricing');cerrarMenuMovil()"><span class="mm-ico">💳</span> Planes</div>
+  <div class="mm-link" onclick="showView('landing');_irA('quienes');cerrarMenuMovil()"><span class="mm-ico">👥</span> Quiénes somos</div>
+  <div class="mm-link" onclick="showView('landing');_irA('seguridad');cerrarMenuMovil()"><span class="mm-ico">🔒</span> Seguridad</div>
+  <div class="mm-actions">
+    <button class="btn-outline" onclick="showView('login');cerrarMenuMovil()">Ingresar</button>
+    <button class="btn-outline" onclick="toggleTheme()" style="display:flex;align-items:center;justify-content:center;gap:8px;">🌙 Cambiar tema</button>
+  </div>
+</div>
+
+<div class="view" id="view-dashboard">
+  <div class="app-layout">
+    <aside class="app-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Dashboard</div>
+        <div class="sidebar-item active" onclick="setTab(this,'dash-inicio')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
+          Inicio
+        </div>
+        <div class="sidebar-item" onclick="setTab(this,'dash-flota')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          Flota
+          <span class="sidebar-badge" id="sb-obs" style="display:none;"></span>
+        </div>
+        <div class="sidebar-item" onclick="setTab(this,'dash-mantenimiento')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3-3a1 1 0 000-1.4l-1.6-1.6a1 1 0 00-1.4 0l-3 3z"/><path d="M9.5 11.5L2 19v3h3l7.5-7.5"/></svg>
+          Mantenimiento
+          <span class="sidebar-badge" id="sbMantBadge" style="display:none;"></span>
+        </div>
+        <div class="sidebar-item" onclick="setTab(this,'dash-checklist')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          Check-lists
+          <span class="sidebar-badge" id="sbChecklistBadge" style="display:none;"></span>
+          <span style="font-size:9px;background:var(--gold);color:#000;padding:1px 5px;border-radius:4px;font-weight:700;margin-left:6px;">ADD-ON</span>
+        </div>
+      </div>
+      <div style="height:1px;background:var(--bdr);margin:.25rem .75rem;"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Gestión</div>
+        <div class="sidebar-item" onclick="setTab(this,'dash-informes')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          Informes
+        </div>
+        <div class="sidebar-item" onclick="setTab(this,'dash-soporte')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          Soporte
+        </div>
+        <div class="sidebar-item" onclick="setTab(this,'dash-guia')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Cómo se usa
+        </div>
+        <div class="sidebar-item" onclick="setTab(this,'dash-config')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Configuración
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <!-- Íconos que se ven colapsado (chicos) -->
+        <div class="sf-iconos" style="display:none;flex-direction:column;align-items:center;gap:12px;padding:8px 0;">
+          <span title="Plan" style="font-size:18px;">💳</span>
+          <span title="Seguridad" style="font-size:18px;">🔒</span>
+        </div>
+        <!-- Texto que se ve solo con el menú expandido -->
+        <div class="sf-texto">
+          <div style="font-size:12px;color:var(--gray);margin-bottom:.5rem;">Plan <strong style="color:var(--gold)" id="sidebarPlan">Pro</strong></div>
+          <div style="background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);padding:8px 10px;font-size:11px;color:var(--gold);">
+            ✓ Cuenta activa<br/>
+            <span style="color:var(--gray);" id="sidebarVence">—</span>
+          </div>
+          <div style="margin-top:.5rem;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:var(--r);padding:8px 10px;font-size:10px;color:var(--gray);line-height:1.5;">
+            🔒 <strong style="color:#F87171;">Seguridad:</strong> nunca te pediremos pagos fuera de este panel ni por WhatsApp. Verificá el dominio oficial antes de transferir.
+          </div>
+          <div style="margin-top:.5rem;text-align:center;font-size:10px;color:var(--gray);opacity:.6;">GesFlota by MercaTeck · v2026.07.02</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="app-main">
+      <div class="app-content">
+        <!-- TAB: FLOTA -->
+        <div id="dash-inicio" style="display:none;">
+          <h2 style="font-family:var(--font-display);font-size:28px;color:var(--white);margin-bottom:.25rem;">Inicio</h2>
+          <p style="font-size:13px;color:var(--gray);margin-bottom:1.25rem;">Resumen general de tu flota — Flota, Mantenimiento y Check-list de un vistazo.</p>
+
+          <!-- Resumen general -->
+          <div class="app-card" style="padding:1.5rem;margin-bottom:1rem;background:linear-gradient(135deg,rgba(196,154,58,.08),transparent);border-color:var(--gold-border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+              <div>
+                <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Avance general de la flota</div>
+                <div style="display:flex;align-items:baseline;gap:.75rem;">
+                  <span id="spGeneralPct" style="font-size:42px;font-weight:700;color:var(--gold);font-family:var(--font-display);">—</span>
+                  <span id="spGeneralTend" style="font-size:14px;font-weight:600;"></span>
+                </div>
+              </div>
+              <div style="flex:1;min-width:200px;max-width:340px;">
+                <div id="spGeneralBarra" style="height:12px;background:var(--input-bg);border-radius:6px;overflow:hidden;">
+                  <div style="height:100%;width:0%;background:var(--gold);border-radius:6px;transition:width .4s;"></div>
+                </div>
+                <div id="spGeneralNota" style="font-size:11px;color:var(--gray);margin-top:6px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3 tarjetas: Flota, Mantenimiento, Check-list -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin-bottom:1rem;">
+            <div class="app-card" style="padding:1.25rem;" id="spCardFlota">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;">
+                <span style="font-size:18px;">🚗</span>
+                <span style="font-size:14px;font-weight:600;color:var(--white);">Flota</span>
+                <span id="spFlotaTend" style="margin-left:auto;font-size:12px;font-weight:600;"></span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:.5rem;margin-bottom:.5rem;">
+                <span id="spFlotaActual" style="font-size:32px;font-weight:700;color:var(--gold);font-family:var(--font-display);">—</span>
+                <span style="font-size:12px;color:var(--gray);">al día</span>
+              </div>
+              <div style="font-size:12px;color:var(--gray);">Semana anterior: <span id="spFlotaAnterior">—</span></div>
+              <div id="spFlotaSpark" style="margin-top:.75rem;height:36px;"></div>
+            </div>
+
+            <div class="app-card" style="padding:1.25rem;" id="spCardMant">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;">
+                <span style="font-size:18px;">🔧</span>
+                <span style="font-size:14px;font-weight:600;color:var(--white);">Mantenimiento</span>
+                <span id="spMantTend" style="margin-left:auto;font-size:12px;font-weight:600;"></span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:.5rem;margin-bottom:.5rem;">
+                <span id="spMantActual" style="font-size:32px;font-weight:700;color:var(--gold);font-family:var(--font-display);">—</span>
+                <span style="font-size:12px;color:var(--gray);">finalizado</span>
+              </div>
+              <div style="font-size:12px;color:var(--gray);">Semana anterior: <span id="spMantAnterior">—</span></div>
+              <div id="spMantSpark" style="margin-top:.75rem;height:36px;"></div>
+            </div>
+
+            <div class="app-card" style="padding:1.25rem;" id="spCardChecklist">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;">
+                <span style="font-size:18px;">📋</span>
+                <span style="font-size:14px;font-weight:600;color:var(--white);">Check-list</span>
+                <span id="spChecklistTend" style="margin-left:auto;font-size:12px;font-weight:600;"></span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:.5rem;margin-bottom:.5rem;">
+                <span id="spChecklistActual" style="font-size:32px;font-weight:700;color:var(--gold);font-family:var(--font-display);">—</span>
+                <span style="font-size:12px;color:var(--gray);">cumplimiento</span>
+              </div>
+              <div style="font-size:12px;color:var(--gray);">Semana anterior: <span id="spChecklistAnterior">—</span></div>
+              <div id="spChecklistSpark" style="margin-top:.75rem;height:36px;"></div>
+            </div>
+          </div>
+
+          <!-- Evolución conjunta -->
+          <div class="app-card" style="padding:1.5rem;">
+            <div class="app-card-hdr"><h3>📈 Evolución conjunta</h3><span style="font-size:12px;color:var(--gray);">Últimas semanas</span></div>
+            <div id="spEvolucion" style="padding:1rem 0;"></div>
+            <div id="spEvolucionNota" style="font-size:12px;color:var(--gray);"></div>
+          </div>
+        </div>
+
+        <div id="dash-flota">
+          <!-- Banner conectar fuente de datos -->
+          <div id="dataSourceBanner" style="display:none;background:linear-gradient(135deg,rgba(196,154,58,.1),rgba(196,154,58,.04));border:1px solid var(--gold-border);border-radius:var(--r2);padding:1.25rem;margin-bottom:1.25rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+              <div>
+                <div style="font-size:14px;font-weight:600;color:var(--gold);margin-bottom:3px;">🔗 Cargá tu flota para ver los datos</div>
+                <div style="font-size:13px;color:var(--gray);">Subí un Excel con la estructura correcta para visualizar tu flota.</div>
+              </div>
+              <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                <button class="btn-gold gsheet-only" style="font-size:13px;padding:9px 16px;display:none;" onclick="generarGoogleSheet()">📊 Generar Google Sheet</button>
+                <button class="btn-outline" style="font-size:13px;padding:9px 16px;" onclick="document.getElementById('excelUpload').click()">📁 Subir Excel</button>
+                <button class="btn-outline" style="font-size:13px;padding:9px 16px;" onclick="downloadTemplate('flota')">⬇️ Descargar plantilla</button>
+                <input type="file" id="excelUpload" accept=".xlsx,.xls,.csv,.ods" style="display:none" onchange="handleExcelUpload(this,'flota')"/>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem;">
+            <div>
+              <h2 style="font-family:var(--font-display);font-size:28px;color:var(--white);letter-spacing:.3px;margin-bottom:2px;">Flota</h2>
+              <p style="font-size:13px;color:var(--gray);">Control de estado y mantenimiento</p>
+            </div>
+            <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+              <div id="flotaNotis" style="display:flex;gap:.4rem;flex-wrap:wrap;"></div>
+              <button class="btn-gold" style="font-size:13px;padding:9px 18px;" onclick="abrirResumenFlota()">📋 Ver resumen de flota</button>
+            </div>
+          </div>
+          <!-- Tarjetas principales (datos reales) - todas en una línea -->
+          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:.4rem;margin-bottom:1.25rem;" class="flota-cards-row">
+            <div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:.5rem .55rem;">
+              <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;">Total</div>
+              <span style="font-family:var(--font-display);font-size:18px;color:var(--gold);font-weight:400;" id="flTotalVeh">—</span>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:.5rem .55rem;">
+              <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;">Buen estado</div>
+              <span style="font-family:var(--font-display);font-size:18px;color:var(--green);font-weight:400;" id="flBuenEstado">—</span>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:.5rem .55rem;">
+              <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;">Mant.</div>
+              <span style="font-family:var(--font-display);font-size:18px;color:var(--amber);font-weight:400;" id="flMantRealizar">—</span>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:.5rem .55rem;">
+              <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;">VTV</div>
+              <div style="display:flex;gap:.4rem;align-items:baseline;">
+                <span style="font-size:15px;font-weight:600;color:var(--red);" id="flVtvVenc">—</span>
+                <span style="font-size:15px;font-weight:600;color:var(--amber);" id="flVtvPorVenc">—</span>
+              </div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:.5rem .55rem;">
+              <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;">Seguro</div>
+              <div style="display:flex;gap:.4rem;align-items:baseline;">
+                <span style="font-size:15px;font-weight:600;color:var(--red);" id="flSegVenc">—</span>
+                <span style="font-size:15px;font-weight:600;color:var(--amber);" id="flSegPorVenc">—</span>
+              </div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:.5rem .55rem;">
+              <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;">Filtros</div>
+              <div style="display:flex;gap:.4rem;align-items:baseline;">
+                <span style="font-size:15px;font-weight:600;color:var(--red);" id="flFiltVenc">—</span>
+                <span style="font-size:15px;font-weight:600;color:var(--amber);" id="flFiltPorVenc">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="app-card">
+            <div class="app-card-hdr">
+              <h3>Estado actual de flota</h3>
+              <div style="display:flex;gap:.5rem;align-items:center;">
+                <button class="btn-gold" style="font-size:12px;padding:6px 14px;" onclick="openNewVeh()">+ Cargar vehículo</button>
+                <select id="flotaPeriodo" onchange="cambiarPeriodoFlota()" style="font-size:12px;padding:6px 10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+                  <option value="actual">Semana actual</option>
+                  <option value="ant1">Semana anterior</option>
+                  <option value="ant2">Hace 2 semanas</option>
+                  <option value="ant3">Hace 3 semanas</option>
+                  <option value="mes">Mes actual</option>
+                  <option value="mesant">Mes anterior</option>
+                </select>
+                <span id="flotaPeriodoLabel" style="font-size:12px;color:var(--gray);"></span>
+              </div>
+            </div>
+            <!-- Filtros -->
+            <div style="padding:.85rem 1rem;border-bottom:1px solid var(--bdr);display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;">
+              <input type="text" id="flotaSearch" placeholder="🔍 Buscar por patente..." onkeyup="filterFlota()" style="flex:1;min-width:180px;font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);outline:none;"/>
+              <select id="flotaObra" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+                <option value="">Todas las obras</option>
+                <option>Obra Norte</option><option>Obra Sur</option><option>Obra Este</option><option>Obra Oeste</option>
+              </select>
+              <select id="flotaVtv" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+                <option value="">VTV: todas</option>
+                <option value="venc">VTV vencida</option>
+                <option value="acerca">VTV por vencer</option>
+              </select>
+              <select id="flotaSeguro" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+                <option value="">Seguro: todos</option>
+                <option value="venc">Seguro vencido</option>
+                <option value="acerca">Seguro por vencer</option>
+              </select>
+              <select id="flotaProp" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+                <option value="">Propiedad: todas</option>
+                <option value="Propio">Propio</option>
+                <option value="Alquilado">Alquilado</option>
+              </select>
+              <select id="flotaCheck" onchange="filterFlota()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+                <option value="">Check-list: todos</option>
+                <option value="ok">Al día</option>
+                <option value="pend">Pendiente / Sin cargar</option>
+              </select>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="app-table" id="flotaTable">
+                <thead><tr><th>N°ID</th><th>Patente</th><th>Categoría</th><th>Obra</th><th>Estado</th><th>VTV</th><th>Seguro</th><th>Propiedad</th><th>Check-list</th><th></th></tr></thead>
+                <tbody id="flotaBody">
+                  <tr data-pat="ZC789EF" data-vtvf="10/03/2026" data-segf="15/12/2025" data-ctrl="km" data-actual="85000" data-prox="95000" data-obra="Obra Norte" data-vtv="ok" data-seguro="ok" data-prop="Propio" data-check="ok"><td>A118</td><td><strong>ZC789EF</strong></td><td>Camioneta</td><td>Obra Norte</td><td><span class="badge badge-ok">✓ OK</span></td><td><span class="badge badge-ok">OK</span></td><td><span class="badge badge-ok">Vig.</span></td><td><span class="badge" style="background:rgba(196,154,58,.12);color:var(--gold);border:1px solid var(--gold-border);">Propio</span></td><td><span class="badge badge-ok">✓</span></td><td style="white-space:nowrap;"><button class="btn-edit-veh" onclick="openVehDetail('ZC789EF')" title="Ver detalle">👁️</button> <button class="btn-edit-veh" onclick="openEditVeh('ZC789EF')" title="Editar">✏️</button></td></tr>
+                  <tr data-pat="UF678KL" data-vtvf="05/02/2026" data-segf="20/07/2025" data-ctrl="km" data-actual="42000" data-prox="50000" data-obra="Obra Sur" data-vtv="ok" data-seguro="acerca" data-prop="Alquilado" data-check="ok"><td>A127</td><td><strong>UF678KL</strong></td><td>Camioneta</td><td>Obra Sur</td><td><span class="badge badge-ok">✓ OK</span></td><td><span class="badge badge-ok">OK</span></td><td><span class="badge badge-warn">Vence 20/07</span></td><td><span class="badge" style="background:rgba(59,130,246,.12);color:#60A5FA;border:1px solid rgba(59,130,246,.2);">Alquilado</span></td><td><span class="badge badge-ok">✓</span></td><td style="white-space:nowrap;"><button class="btn-edit-veh" onclick="openVehDetail('UF678KL')" title="Ver detalle">👁️</button> <button class="btn-edit-veh" onclick="openEditVeh('UF678KL')" title="Editar">✏️</button></td></tr>
+                  <tr data-pat="TG901MN" data-vtvf="18/01/2026" data-segf="30/11/2025" data-ctrl="km" data-actual="98500" data-prox="100000" data-obra="Obra Norte" data-vtv="ok" data-seguro="ok" data-prop="Propio" data-check="pend"><td>A130</td><td><strong>TG901MN</strong></td><td>Camioneta</td><td>Obra Norte</td><td><span class="badge badge-warn">⚠ Comunicar</span></td><td><span class="badge badge-ok">OK</span></td><td><span class="badge badge-ok">Vig.</span></td><td><span class="badge" style="background:rgba(196,154,58,.12);color:var(--gold);border:1px solid var(--gold-border);">Propio</span></td><td><span class="badge badge-warn">Pend.</span></td><td style="white-space:nowrap;"><button class="btn-edit-veh" onclick="openVehDetail('TG901MN')" title="Ver detalle">👁️</button> <button class="btn-edit-veh" onclick="openEditVeh('TG901MN')" title="Editar">✏️</button></td></tr>
+                  <tr data-pat="WD012GH" data-vtvf="22/04/2026" data-segf="10/01/2026" data-ctrl="horas" data-actual="3180" data-prox="3200" data-obra="Obra Sur" data-vtv="ok" data-seguro="ok" data-prop="Propio" data-check="ok"><td>50</td><td><strong>WD012GH</strong></td><td>Camión</td><td>Obra Sur</td><td><span class="badge badge-red">🚨 Alerta</span></td><td><span class="badge badge-ok">OK</span></td><td><span class="badge badge-ok">Vig.</span></td><td><span class="badge" style="background:rgba(196,154,58,.12);color:var(--gold);border:1px solid var(--gold-border);">Propio</span></td><td><span class="badge badge-ok">✓</span></td><td style="white-space:nowrap;"><button class="btn-edit-veh" onclick="openVehDetail('WD012GH')" title="Ver detalle">👁️</button> <button class="btn-edit-veh" onclick="openEditVeh('WD012GH')" title="Editar">✏️</button></td></tr>
+                  <tr data-pat="VE345IJ" data-vtvf="15/07/2025" data-segf="10/06/2025" data-ctrl="km" data-actual="120000" data-prox="130000" data-obra="Obra Este" data-vtv="acerca" data-seguro="venc" data-prop="Alquilado" data-check="ok"><td>44</td><td><strong>VE345IJ</strong></td><td>Batea</td><td>Obra Este</td><td><span class="badge">—</span></td><td><span class="badge badge-warn">Se acerca</span></td><td><span class="badge badge-red">Vencido</span></td><td><span class="badge" style="background:rgba(59,130,246,.12);color:#60A5FA;border:1px solid rgba(59,130,246,.2);">Alquilado</span></td><td><span class="badge badge-ok">✓</span></td><td style="white-space:nowrap;"><button class="btn-edit-veh" onclick="openVehDetail('VE345IJ')" title="Ver detalle">👁️</button> <button class="btn-edit-veh" onclick="openEditVeh('VE345IJ')" title="Editar">✏️</button></td></tr>
+                  <tr data-pat="SH234OP" data-vtvf="28/12/2025" data-segf="05/03/2026" data-ctrl="km" data-actual="67000" data-prox="75000" data-obra="Obra Oeste" data-vtv="ok" data-seguro="ok" data-prop="Propio" data-check="pend"><td>A135</td><td><strong>SH234OP</strong></td><td>Camioneta</td><td>Obra Oeste</td><td><span class="badge badge-ok">✓ OK</span></td><td><span class="badge badge-ok">OK</span></td><td><span class="badge badge-ok">Vig.</span></td><td><span class="badge" style="background:rgba(196,154,58,.12);color:var(--gold);border:1px solid var(--gold-border);">Propio</span></td><td><span class="badge badge-red">✗ Sin cargar</span></td><td style="white-space:nowrap;"><button class="btn-edit-veh" onclick="openVehDetail('SH234OP')" title="Ver detalle">👁️</button> <button class="btn-edit-veh" onclick="openEditVeh('SH234OP')" title="Editar">✏️</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: MANTENIMIENTO -->
+        <div id="dash-mantenimiento" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem;">
+            <div>
+              <h2 style="font-family:var(--font-display);font-size:28px;color:var(--white);margin-bottom:2px;">Compras y Arreglos</h2>
+              <p style="font-size:13px;color:var(--gray);">Mantenimiento que llevan los vehículos</p>
+            </div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+              <select id="mantPeriodo" onchange="renderMantenimientos()" style="font-size:13px;padding:9px 14px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+                <option value="semana">Semana actual</option>
+                <option value="anterior">Semana anterior</option>
+                <option value="mes">Este mes</option>
+                <option value="todos">Historial completo</option>
+              </select>
+              <button class="btn-gold" style="font-size:13px;padding:9px 16px;" onclick="openNewMant()">+ Cargar desde panel</button>
+            </div>
+          </div>
+          <div class="app-card">
+            <div class="app-card-hdr">
+              <h3>Registros de mantenimiento</h3>
+              <div style="display:flex;gap:.5rem;" id="mantFiltros">
+                <button style="font-size:12px;padding:4px 12px;border-radius:var(--r);border:1px solid var(--gold-border);background:var(--gold-dim);color:var(--gold);cursor:pointer;" onclick="setMantFiltro('todos',this)">Todos</button>
+                <button style="font-size:12px;padding:4px 12px;border-radius:var(--r);border:1px solid var(--bdr);background:transparent;color:var(--gray);cursor:pointer;" onclick="setMantFiltro('pendiente',this)">Pendientes</button>
+                <button style="font-size:12px;padding:4px 12px;border-radius:var(--r);border:1px solid var(--bdr);background:transparent;color:var(--gray);cursor:pointer;" onclick="setMantFiltro('finalizado',this)">Finalizados</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+              <input type="text" id="mantBuscar" oninput="renderMantenimientos()" placeholder="🔍 Patente o interno..." style="flex:1;min-width:160px;font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);"/>
+              <select id="mantFiltroSector" onchange="renderMantenimientos()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;"><option value="">Todos los sectores</option></select>
+              <select id="mantFiltroTipo" onchange="renderMantenimientos()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+                <option value="">Todo tipo</option>
+                <optgroup label="Tarea Mant">
+                  <option value="arreglo">Arreglo</option><option value="compra">Compra</option><option value="service">Service</option><option value="incidente">Incidente</option>
+                </optgroup>
+                <optgroup label="Observaciones">
+                  <option value="obs:Estado del vehículo">Estado del vehículo</option>
+                  <option value="obs:Documentación">Documentación</option>
+                  <option value="obs:Hidrogrúa">Hidrogrúa</option>
+                  <option value="obs:Semirremolque">Semirremolque</option>
+                  <option value="obs:Elementos obligatorios">Elementos obligatorios</option>
+                  <option value="obs:Otros">Otros</option>
+                </optgroup>
+              </select>
+              <select id="mantFiltroOrigen" onchange="renderMantenimientos()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;"><option value="">Todo origen</option></select>
+              <select id="mantFiltroCosto" onchange="renderMantenimientos()" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+                <option value="">Con o sin costo</option><option value="con">Con costo</option><option value="sin">Sin costo</option>
+              </select>
+              <button id="btnGraficosMant" style="font-size:12px;padding:8px 14px;background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-border);border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="toggleGraficosMant()">📊 Mostrar gráficos</button>
+            </div>
+            <div id="mantGraficosWrap" style="display:none;margin-bottom:1rem;"></div>
+            <div style="overflow-x:auto;">
+              <table class="app-table">
+                <thead><tr><th>Fecha</th><th>Patente</th><th>Interno</th><th>Sector</th><th>Tipo</th><th>Descripción</th><th>Origen</th><th>Costo</th><th>Estado</th><th></th></tr></thead>
+                <tbody id="mantBody">
+                  <tr><td colspan="10" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargando mantenimientos...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: SEGURO -->
+        <div id="dash-seguro" style="display:none;">
+          <h2 style="font-size:26px;color:var(--white);margin-bottom:1.25rem;font-weight:600;letter-spacing:-.02em;">Seguros</h2>
+          <div class="app-stats" style="grid-template-columns:repeat(3,1fr);">
+            <div class="app-stat"><div class="app-stat-val green" id="segVigentes">0</div><div class="app-stat-lbl">Seguros vigentes</div></div>
+            <div class="app-stat"><div class="app-stat-val amber" id="segPorVencer">0</div><div class="app-stat-lbl">Por vencer (30 días)</div></div>
+            <div class="app-stat"><div class="app-stat-val red" id="segVencidos">0</div><div class="app-stat-lbl">Vencidos</div></div>
+          </div>
+          <div class="app-card">
+            <div class="app-card-hdr"><h3>Estado de seguros</h3></div>
+            <div style="overflow-x:auto;">
+              <table class="app-table">
+                <thead><tr><th>Patente</th><th>Obra</th><th>Propiedad</th><th>Vence seguro</th><th>Estado</th><th></th></tr></thead>
+                <tbody id="seguroBody">
+                  <tr><td colspan="6" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargá vehículos con fecha de seguro para ver el estado acá.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: VTV -->
+        <div id="dash-vtv" style="display:none;">
+          <h2 style="font-size:26px;color:var(--white);margin-bottom:1.25rem;font-weight:600;letter-spacing:-.02em;">Control VTV</h2>
+          <div class="app-card">
+            <div class="app-card-hdr"><h3>Vehículos con VTV por vencer o vencida</h3></div>
+            <table class="app-table">
+              <thead><tr><th>Patente</th><th>Obra</th><th>Estado VTV</th><th>Vence</th></tr></thead>
+              <tbody id="vtvBody">
+                <tr><td colspan="4" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargá vehículos con fecha de VTV para ver los vencimientos acá.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB: ALERTAS -->
+        <div id="dash-alertas" style="display:none;">
+          <h2 style="font-size:26px;color:var(--white);margin-bottom:1.25rem;font-weight:600;letter-spacing:-.02em;">Alertas</h2>
+          <div id="alertasBody" style="display:flex;flex-direction:column;gap:.75rem;">
+            <div style="text-align:center;color:var(--gray);padding:2rem;border:1px dashed var(--bdr);border-radius:var(--r2);">No hay alertas activas. Cuando un vehículo tenga VTV, seguro o servicio próximo a vencer, vas a verlo acá.</div>
+          </div>
+        </div>
+
+        <!-- TAB: CHECKLIST -->
+        <div id="dash-checklist" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem;">
+            <div>
+              <h2 style="font-family:var(--font-display);font-size:28px;color:var(--white);letter-spacing:.3px;margin-bottom:2px;">Check-lists</h2>
+              <p style="font-size:13px;color:var(--gray);">Sincronización automática con el panel</p>
+            </div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+              <button id="btnToggleGraficos" style="font-size:12px;padding:6px 14px;background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-border);border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="toggleGraficosChecklist()">📊 Mostrar gráficos</button>
+              <button id="btnConfigChecklist" style="display:none;font-size:12px;padding:6px 14px;background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-border);border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="abrirConfigChecklist()">⚙️ Configurar check-list</button>
+              <button id="btnShareChecklist" style="display:none;font-size:12px;padding:6px 14px;background:var(--gold);color:#000;border:none;border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="openShareChecklist()">📲 Compartir / QR</button>
+            </div>
+          </div>
+
+          <!-- Contenedor de gráficos (oculto por defecto, se muestra con el botón) -->
+          <div id="clGraficosWrap" style="display:none;">
+          <!-- Stats del período (datos reales) -->
+          <div class="app-stats" style="grid-template-columns:repeat(4,1fr);">
+            <div class="app-stat"><div class="app-stat-val" id="clStatActivos">—</div><div class="app-stat-lbl">Vehículos activos</div></div>
+            <div class="app-stat"><div class="app-stat-val green" id="clStatHechos">—</div><div class="app-stat-lbl">Con check-list ✓</div></div>
+            <div class="app-stat"><div class="app-stat-val red" id="clStatFaltan">—</div><div class="app-stat-lbl">Sin cargar</div></div>
+            <div class="app-stat"><div class="app-stat-val amber" id="clStatObs">—</div><div class="app-stat-lbl">Con observaciones</div></div>
+          </div>
+
+          <!-- Gráfico de cumplimiento (dona) + desglose por sector -->
+          <div class="app-card" id="clGraficoCard" style="margin-bottom:1rem;">
+            <div class="app-card-hdr">
+              <h3>Cumplimiento del período</h3>
+              <span style="font-size:12px;color:var(--gray);" id="clGraficoPeriodo"></span>
+            </div>
+            <div style="display:flex;gap:2rem;flex-wrap:wrap;align-items:center;padding:.5rem 0;">
+              <!-- Dona -->
+              <div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:.5rem;">
+                <div id="clDona"></div>
+                <div style="display:flex;gap:1rem;font-size:11px;">
+                  <span style="color:#4ADE80;">● Realizados</span>
+                  <span style="color:#F87171;">● Pendientes</span>
+                </div>
+              </div>
+              <!-- Desglose por sector -->
+              <div style="flex:1;min-width:240px;">
+                <div style="font-size:12px;font-weight:600;color:var(--gold);margin-bottom:.6rem;">Por sector</div>
+                <div id="clDesgloseSectores" style="display:flex;flex-direction:column;gap:.5rem;"></div>
+              </div>
+              <!-- Desglose por puesto (quién carga) -->
+              <div style="flex:1;min-width:240px;">
+                <div style="font-size:12px;font-weight:600;color:var(--gold);margin-bottom:.6rem;">Por puesto (quién carga)</div>
+                <div id="clDesglosePuestos" style="display:flex;flex-direction:column;gap:.5rem;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel NUEVO: cumplimiento por reglas (motor de reglas) -->
+          <!-- No toca los gráficos de arriba; muestra el avance según las reglas. -->
+          <div class="app-card" id="clReglasCumplimientoCard" style="margin-bottom:1rem;display:none;">
+            <div class="app-card-hdr">
+              <h3>📋 Cumplimiento por reglas</h3>
+              <span style="font-size:12px;color:var(--gray);" id="clReglasPeriodo"></span>
+            </div>
+            <div style="display:flex;gap:2rem;flex-wrap:wrap;align-items:center;padding:.5rem 0;">
+              <!-- Números grandes -->
+              <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
+                <div style="text-align:center;">
+                  <div style="font-size:28px;font-weight:700;color:var(--gold);" id="clReglasEsperados">—</div>
+                  <div style="font-size:11px;color:var(--gray);">Esperados</div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="font-size:28px;font-weight:700;color:#4ADE80;" id="clReglasRealizados">—</div>
+                  <div style="font-size:11px;color:var(--gray);">Realizados</div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="font-size:28px;font-weight:700;color:#F87171;" id="clReglasPendientes">—</div>
+                  <div style="font-size:11px;color:var(--gray);">Pendientes</div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="font-size:28px;font-weight:700;color:var(--white);" id="clReglasPorcentaje">—</div>
+                  <div style="font-size:11px;color:var(--gray);">Cumplimiento</div>
+                </div>
+              </div>
+              <!-- Barra de progreso -->
+              <div style="flex:1;min-width:200px;">
+                <div style="height:14px;background:var(--input-bg);border-radius:7px;overflow:hidden;">
+                  <div id="clReglasBarra" style="height:100%;width:0%;background:var(--gold);border-radius:7px;transition:width .3s;"></div>
+                </div>
+                <div id="clReglasDetalle" style="margin-top:.75rem;display:flex;flex-direction:column;gap:.4rem;"></div>
+              </div>
+            </div>
+            <div id="clReglasVacio" style="font-size:12px;color:var(--gray);padding:.5rem 0;display:none;">
+              No hay reglas activas. Creá reglas en Configuración → Check-list → 📋 Reglas para medir el cumplimiento.
+            </div>
+            <!-- Alerta visual + botón de resumen por email -->
+            <div id="clReglasAlerta" style="display:none;margin-top:1rem;padding:12px 14px;border-radius:var(--r);font-size:13px;line-height:1.5;"></div>
+
+            <!-- Tendencia (esta semana vs anterior) -->
+            <div id="clReglasTendencia" style="display:none;margin-top:1rem;font-size:13px;padding:10px 14px;background:var(--input-bg);border-radius:var(--r);"></div>
+
+            <!-- Ranking de cumplimiento (sector y puesto) -->
+            <div id="clReglasRanking" style="display:none;margin-top:1rem;">
+              <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
+                <div style="flex:1;min-width:240px;">
+                  <div style="font-size:12px;font-weight:600;color:var(--gold);margin-bottom:.6rem;">🏆 Ranking por sector</div>
+                  <div id="clRankingSector" style="display:flex;flex-direction:column;gap:.4rem;"></div>
+                </div>
+                <div style="flex:1;min-width:240px;">
+                  <div style="font-size:12px;font-weight:600;color:var(--gold);margin-bottom:.6rem;">🏆 Ranking por puesto</div>
+                  <div id="clRankingPuesto" style="display:flex;flex-direction:column;gap:.4rem;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="clReglasAcciones" style="display:none;margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+              <button class="btn-outline" style="font-size:12px;padding:8px 16px;" onclick="enviarResumenReglasEmail()">📧 Enviar resumen por email</button>
+              <button class="btn-outline" style="font-size:12px;padding:8px 16px;" onclick="exportarCumplimientoExcel()">📊 Exportar a Excel</button>
+            </div>
+          </div>
+          </div><!-- fin clGraficosWrap -->
+
+          <!-- Filtros del panel de check-list -->
+          <div style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem;margin-bottom:1rem;">
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+              <input type="text" id="clFiltroPat" placeholder="🔍 Buscar patente o ID" onkeyup="renderChecklistsCargados()" style="font-size:13px;padding:9px 12px;background:var(--bg2,#0d1117);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);flex:1;min-width:180px;outline:none;"/>
+              <select id="clFiltroPeriodo" onchange="renderChecklistsCargados()" style="font-size:13px;padding:9px 12px;background:var(--bg2,#0d1117);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+                <option value="semana" selected>Esta semana</option>
+                <option value="mes">Mes completo</option>
+                <option value="todo">Histórico</option>
+              </select>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gold);cursor:pointer;padding:9px 12px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);white-space:nowrap;">
+                <input type="checkbox" id="clFiltroPendientes" onchange="renderChecklistsCargados()" style="cursor:pointer;"> ⚠️ Solo en falta
+              </label>
+            </div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem;">
+              <select id="clFiltroCategoria" onchange="renderChecklistsCargados()" style="font-size:13px;padding:8px 12px;background:var(--bg2,#0d1117);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;flex:1;min-width:130px;">
+                <option value="">Todas las categorías</option>
+              </select>
+              <select id="clFiltroSector" onchange="renderChecklistsCargados()" style="font-size:13px;padding:8px 12px;background:var(--bg2,#0d1117);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;flex:1;min-width:130px;">
+                <option value="">Todos los sectores</option>
+              </select>
+              <select id="clFiltroRegla" onchange="renderChecklistsCargados()" style="font-size:13px;padding:8px 12px;background:var(--bg2,#0d1117);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;flex:1;min-width:130px;">
+                <option value="">Todas las reglas</option>
+              </select>
+              <select id="clFiltroPuesto" onchange="renderChecklistsCargados()" style="font-size:13px;padding:8px 12px;background:var(--bg2,#0d1117);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;flex:1;min-width:130px;">
+                <option value="">Todos los puestos</option>
+                <option value="operario">Operarios</option>
+                <option value="chofer">Choferes</option>
+                <option value="mantenimiento">Mantenimiento</option>
+              </select>
+              <select id="clFiltroOperario" onchange="renderChecklistsCargados()" style="font-size:13px;padding:8px 12px;background:var(--bg2,#0d1117);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;flex:1;min-width:130px;">
+                <option value="">Todos los operarios</option>
+              </select>
+              <select id="clFiltroHistorial" onchange="cambiarPeriodoChecklists()" title="Cuánto historial se trae de la base" style="font-size:13px;padding:8px 12px;background:var(--bg2,#0d1117);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;flex:1;min-width:130px;">
+                <option value="30">Últimos 30 días</option>
+                <option value="90">Últimos 90 días</option>
+                <option value="365">Último año</option>
+                <option value="0">Todo el historial</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Tabla de check-lists cargados (datos reales) -->
+          <div class="app-card">
+            <div class="app-card-hdr">
+              <h3>Check-lists cargados</h3>
+              <span style="font-size:12px;color:var(--gray);" id="clCargadosCount"></span>
+              <button id="btnMarcarVistos" style="display:none;font-size:11px;padding:5px 10px;background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-border);border-radius:var(--r);font-weight:600;cursor:pointer;" onclick="marcarTodosChecklistsVistos()">👁️ Marcar como visto</button>
+              <button class="btn-edit-veh" style="font-size:11px;padding:5px 10px;color:#F87171;border-color:rgba(239,68,68,.25);" title="Borrar todos los check-list del filtro actual" onclick="borrarChecklistsFiltrados()">🗑️ Borrar filtrados</button>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="app-table">
+                <thead>
+                  <tr><th>Patente / ID</th><th>Sector</th><th>Cargó</th><th>Fecha</th><th>Frecuencia</th><th></th></tr>
+                </thead>
+                <tbody id="checklistsCargadosBody">
+                  <tr><td colspan="6" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargando check-lists...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: INFORMES -->
+        <div id="dash-informes" style="display:none;">
+          <h2 style="font-family:var(--font-display);font-size:28px;color:var(--white);margin-bottom:1.25rem;">Informes</h2>
+
+          <!-- Filtros del informe -->
+          <div class="app-card" style="padding:1.5rem;margin-bottom:1rem;">
+            <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:1rem;">📊 Generar informe</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem;margin-bottom:1rem;">
+              <div style="grid-column:1/-1;padding:.85rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);margin-bottom:.5rem;">
+                <label style="font-size:13px;color:var(--gold);font-weight:600;display:block;margin-bottom:6px;">1️⃣ Elegí el tipo de informe</label>
+                <select id="infTipo" onchange="_actualizarSubfiltroInforme()" style="width:100%;padding:10px;background:var(--bg2,#0d1117);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
+                  <option value="flota">Flota</option>
+                  <option value="mantenimiento">Mantenimiento</option>
+                  <option value="checklist" id="infTipoChecklistOpt">Check-list</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;" id="infSubfiltroLabel">2️⃣ Detalle</label>
+                <select id="infSubfiltro" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
+                  <option value="general">General</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">Condición</label>
+                <select id="infEstado" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
+                  <option value="todos">Todas</option>
+                  <option value="realizado">Al día / Realizado</option>
+                  <option value="pendiente">Pendiente</option>
+                  <option value="sincargar">Vencido / Sin cargar</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">Período</label>
+                <select id="infPeriodo" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
+                  <option value="semana">Esta semana</option>
+                  <option value="mes" selected>Este mes</option>
+                  <option value="todo">Todo</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">Obra / Sector</label>
+                <select id="infObra" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
+                  <option value="">Todas</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">Categoría</label>
+                <select id="infTipoVeh" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;">
+                  <option value="">Todas</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:5px;">Patente / ID (opcional)</label>
+                <input type="text" id="infPatente" placeholder="XA123BC o A-101" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"/>
+              </div>
+            </div>
+
+            <!-- Opción IA (solo Enterprise, manual) -->
+            <div id="infIaOption" style="display:none;margin-bottom:1rem;padding:.85rem;background:rgba(196,154,58,.06);border:1px solid var(--gold-border);border-radius:var(--r);">
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--white);cursor:pointer;">
+                <input type="checkbox" id="infIa" style="accent-color:var(--gold);"/>
+                <span>🤖 Agregar recomendaciones y mejoras por IA <span style="font-size:11px;color:var(--gold);">(Enterprise)</span></span>
+              </label>
+              <div style="font-size:12px;color:var(--gray);margin-top:5px;margin-left:24px;">La IA analiza los datos del informe y sugiere acciones de mantenimiento preventivo, optimización de costos y priorización de vehículos.</div>
+            </div>
+
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+              <button class="btn-gold" style="font-size:13px;padding:10px 20px;" onclick="generarInforme()">📊 Generar informe</button>
+              <button class="btn-outline" style="font-size:13px;padding:10px 20px;" onclick="generarInforme('pdf')">📄 Descargar PDF</button>
+              <button class="btn-outline" style="font-size:13px;padding:10px 20px;" onclick="generarInforme('csv')">⬇️ Descargar Excel</button>
+            </div>
+          </div>
+
+          <!-- Resultado del informe -->
+          <div id="infResultado"></div>
+        </div>
+
+        <!-- TAB: SOPORTE (tickets) -->
+        <div id="dash-soporte" style="display:none;">
+          <h2 style="font-size:26px;color:var(--white);margin-bottom:.5rem;font-weight:600;letter-spacing:-.02em;">Soporte</h2>
+          <p style="font-size:14px;color:var(--gray);margin-bottom:1.5rem;">Enviá tu consulta y te respondemos acá mismo (y te avisamos por email). Tocá un ticket de "Mis tickets" para ver la respuesta o seguir la conversación.</p>
+
+          <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:1.5rem;align-items:start;">
+            <!-- Formulario de ticket -->
+            <div class="app-card" style="padding:1.5rem;">
+              <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:1rem;">📨 Nuevo ticket</div>
+              <div class="field">
+                <label>Tema</label>
+                <select id="tkTema">
+                  <option value="Soporte técnico">🛠️ Soporte técnico</option>
+                  <option value="Ventas">💼 Ventas</option>
+                  <option value="Capacitación">🎓 Capacitación</option>
+                  <option value="Pagos y facturación">💳 Pagos y facturación</option>
+                  <option value="Sugerencias">💡 Sugerencias</option>
+                  <option value="Otro">📋 Otro</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Asunto</label>
+                <input type="text" id="tkAsunto" placeholder="Resumí tu consulta en una línea"/>
+              </div>
+              <div class="field">
+                <label>Prioridad</label>
+                <select id="tkPrioridad">
+                  <option value="Normal">Normal</option>
+                  <option value="Alta">Alta</option>
+                  <option value="Urgente">Urgente</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Mensaje</label>
+                <textarea id="tkMensaje" style="min-height:120px;resize:vertical;" placeholder="Contanos en detalle qué necesitás..."></textarea>
+              </div>
+              <button class="btn-gold" style="width:100%;padding:12px;font-size:14px;" onclick="enviarTicket()">Enviar ticket</button>
+              <p style="font-size:11px;color:var(--gray);text-align:center;margin-top:.75rem;">Te responderemos al email de tu cuenta dentro de las 24-48hs hábiles.</p>
+            </div>
+
+            <!-- Info de canales -->
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+              <div class="app-card" style="padding:1.25rem;">
+                <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:.75rem;">Canales de atención</div>
+                <div style="display:flex;flex-direction:column;gap:.85rem;font-size:13px;color:var(--gray);">
+                  <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">📧</span><div><div style="color:var(--white);">Email</div><div style="font-size:12px;">germanmercado@mercateck.com.ar</div></div></div>
+                  <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">⏱️</span><div><div style="color:var(--white);">Horario</div><div style="font-size:12px;">Lun a Vie, 9 a 18hs</div></div></div>
+                  <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">💬</span><div><div style="color:var(--white);">Chat con Ges</div><div style="font-size:12px;">Asistente IA, 24/7 (abajo a la derecha)</div></div></div>
+                </div>
+              </div>
+              <!-- Mis tickets -->
+              <div class="app-card" style="padding:1.25rem;">
+                <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:.75rem;">Mis tickets</div>
+                <div id="ticketsList" style="display:flex;flex-direction:column;gap:.5rem;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: CONFIG -->
+        <!-- ══════ CÓMO SE USA (guía) ══════ -->
+        <div id="dash-guia" style="display:none;">
+          <h2 style="font-family:var(--font-display);font-size:28px;color:var(--white);margin-bottom:.5rem;">Cómo se usa GesFlota</h2>
+          <p style="font-size:14px;color:var(--gray);margin-bottom:1.5rem;">Todo lo que necesitás saber, cortito y al pie. Tocá cada sección para abrirla.</p>
+          <div id="guiaContenido"></div>
+        </div>
+
+        <div id="dash-config" style="display:none;">
+          <h2 style="font-family:var(--font-display);font-size:28px;color:var(--white);margin-bottom:1.25rem;">Configuración</h2>
+
+          <!-- Mi suscripción -->
+          <!-- Sincronización -->
+          <div class="app-card" style="padding:1.5rem;">
+            <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:1rem;">🔗 Carga de datos (Panel de Flota)</div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">La carga masiva es subiendo un <strong>Excel</strong> con la plantilla. Descargá la plantilla, completala con tu flota y subila.</div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;display:none;" class="gsheet-only">Al <strong>Generar Google Sheet</strong>, te creamos un sheet en el Gmail que elijas, con la <strong>primera hoja = Flota</strong> y la <strong>segunda hoja = Mantenimiento</strong>. Una vez generado, se sincroniza automáticamente; si no, usá el botón de actualización manual.</div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+              <button class="btn-gold gsheet-only" style="font-size:13px;padding:10px 20px;display:none;" onclick="generarGoogleSheet()">📊 Generar Google Sheet</button>
+              <button class="btn-gold" style="font-size:13px;padding:10px 20px;" onclick="document.getElementById('excelUpload2').click()">📁 Subir Excel (carga masiva)</button>
+              <button class="btn-outline gsheet-only" style="font-size:13px;padding:10px 20px;display:none;" onclick="syncManual()">🔄 Actualizar datos manualmente</button>
+              <button class="btn-outline" style="font-size:13px;padding:10px 20px;" onclick="downloadTemplate('flota')">⬇️ Plantilla Flota</button>
+              <input type="file" id="excelUpload2" accept=".xlsx,.xls,.csv,.ods" style="display:none" onchange="handleExcelUpload(this,'flota')"/>
+            </div>
+            <!-- Aviso formato de datos -->
+            <div style="margin-top:1rem;padding:.85rem;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:var(--r);font-size:12px;color:#FCD34D;">
+              ⚠️ <strong>Importante:</strong> Para que los filtros, informes y alertas funcionen bien, los datos deben ir <strong>sin puntos ni guiones</strong>. Ejemplo: <strong>Obra Norte</strong> (no "Obra_Norte") · Patente <strong>AF45632</strong> (no "AF-456-32"). Estos datos se usan en todo el panel: informes, filtros y campos de avisos para las alertas.
+            </div>
+          </div>
+          <!-- Cambio de filtros por km/horas (TODOS los planes) -->
+          <div class="app-card" style="padding:1.5rem;margin-top:.75rem;">
+            <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:.5rem;">🔧 Cambio de filtros (por km / horas)</div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Definí cada cuánto se cambian los filtros por categoría, y con cuántos km/horas de anticipación querés los 3 avisos. Aplica a: Camión, Camioneta, Máquina vial, Autoelevador y Otro.</div>
+
+            <div style="font-size:12px;font-weight:600;color:var(--white);margin-bottom:.25rem;">Frecuencia de cambio de filtros y cómo se controla cada categoría</div>
+            <div style="font-size:11px;color:var(--gray);margin-bottom:.6rem;">Elegí si esa categoría se controla por kilómetros o por horas, y cada cuánto se le cambian los filtros. Esto reemplaza la columna "Control por" del Excel.</div>
+            <div id="filtrosFrecList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.6rem;margin-bottom:1.25rem;">
+              <div class="field" style="margin:0;"><label style="font-size:11px;">🚗 Camioneta</label>
+                <div style="display:flex;gap:.4rem;">
+                  <input type="number" id="filtroFrec_camioneta" placeholder="10000" min="0" style="flex:1;min-width:0;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+                  <select id="filtroCtrl_camioneta" style="width:88px;padding:9px 6px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"><option value="km">km</option><option value="horas">horas</option></select>
+                </div>
+              </div>
+              <div class="field" style="margin:0;"><label style="font-size:11px;">🚛 Camión</label>
+                <div style="display:flex;gap:.4rem;">
+                  <input type="number" id="filtroFrec_camion" placeholder="15000" min="0" style="flex:1;min-width:0;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+                  <select id="filtroCtrl_camion" style="width:88px;padding:9px 6px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"><option value="km">km</option><option value="horas">horas</option></select>
+                </div>
+              </div>
+              <div class="field" style="margin:0;"><label style="font-size:11px;">🚜 Máquina vial</label>
+                <div style="display:flex;gap:.4rem;">
+                  <input type="number" id="filtroFrec_maquinavial" placeholder="500" min="0" style="flex:1;min-width:0;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+                  <select id="filtroCtrl_maquinavial" style="width:88px;padding:9px 6px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"><option value="horas">horas</option><option value="km">km</option></select>
+                </div>
+              </div>
+              <div class="field" style="margin:0;"><label style="font-size:11px;">🏗️ Autoelevador</label>
+                <div style="display:flex;gap:.4rem;">
+                  <input type="number" id="filtroFrec_autoelevador" placeholder="500" min="0" style="flex:1;min-width:0;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+                  <select id="filtroCtrl_autoelevador" style="width:88px;padding:9px 6px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"><option value="horas">horas</option><option value="km">km</option></select>
+                </div>
+              </div>
+              <div class="field" style="margin:0;"><label style="font-size:11px;">🔩 Otro</label>
+                <div style="display:flex;gap:.4rem;">
+                  <input type="number" id="filtroFrec_otro" placeholder="10000" min="0" style="flex:1;min-width:0;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+                  <select id="filtroCtrl_otro" style="width:88px;padding:9px 6px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;"><option value="km">km</option><option value="horas">horas</option></select>
+                </div>
+              </div>
+            </div>
+
+            <div style="font-size:12px;font-weight:600;color:var(--white);margin-bottom:.5rem;">📏 Avisos por KM (camión, camioneta)</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1.1rem;">
+              <div class="field" style="margin:0;"><label style="font-size:11px;color:#FCD34D;">⚠️ Aviso (km antes)</label><input type="number" id="filtroKmU1" placeholder="5000" min="0" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/></div>
+              <div class="field" style="margin:0;"><label style="font-size:11px;color:#FB923C;">🟠 Atención (km antes)</label><input type="number" id="filtroKmU2" placeholder="2500" min="0" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/></div>
+              <div class="field" style="margin:0;"><label style="font-size:11px;color:#F87171;">🔴 Urgente (km antes)</label><input type="number" id="filtroKmU3" placeholder="1000" min="0" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/></div>
+            </div>
+            <div style="font-size:12px;font-weight:600;color:var(--white);margin-bottom:.5rem;">⏱️ Avisos por HORAS (máquina vial, autoelevador)</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;">
+              <div class="field" style="margin:0;"><label style="font-size:11px;color:#FCD34D;">⚠️ Aviso (hs antes)</label><input type="number" id="filtroHsU1" placeholder="200" min="0" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/></div>
+              <div class="field" style="margin:0;"><label style="font-size:11px;color:#FB923C;">🟠 Atención (hs antes)</label><input type="number" id="filtroHsU2" placeholder="30" min="0" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/></div>
+              <div class="field" style="margin:0;"><label style="font-size:11px;color:#F87171;">🔴 Urgente (hs antes)</label><input type="number" id="filtroHsU3" placeholder="5" min="0" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/></div>
+            </div>
+            <button class="btn-gold" style="font-size:13px;padding:9px 18px;margin-top:1.25rem;" onclick="saveFiltrosConfig()">Guardar configuración de filtros</button>
+          </div>
+          <!-- Anticipación de alertas (TODOS los planes) -->
+          <div class="app-card" style="padding:1.5rem;margin-top:.75rem;">
+            <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:.5rem;">⏰ Anticipación de alertas</div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">¿Con cuánta anticipación querés recibir cada aviso? Podés elegir una o varias opciones.</div>
+            <div id="alertConfigList">
+              <div style="margin-bottom:1rem;">
+                <div style="font-size:13px;font-weight:500;color:var(--white);margin-bottom:.5rem;">🚗 Vencimiento de VTV</div>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                  <label class="alert-chip"><input type="checkbox" data-alert="vtv" value="7"/> 1 semana</label>
+                  <label class="alert-chip"><input type="checkbox" data-alert="vtv" value="15"/> 15 días</label>
+                  <label class="alert-chip"><input type="checkbox" data-alert="vtv" value="30" checked/> 1 mes</label>
+                </div>
+              </div>
+              <div style="margin-bottom:1rem;">
+                <div style="font-size:13px;font-weight:500;color:var(--white);margin-bottom:.5rem;">🛡️ Vencimiento de seguro</div>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                  <label class="alert-chip"><input type="checkbox" data-alert="seguro" value="7"/> 1 semana</label>
+                  <label class="alert-chip"><input type="checkbox" data-alert="seguro" value="15"/> 15 días</label>
+                  <label class="alert-chip"><input type="checkbox" data-alert="seguro" value="30" checked/> 1 mes</label>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--white);margin-bottom:.5rem;">🛣️ Vencimiento de Ruta</div>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                  <label class="alert-chip"><input type="checkbox" data-alert="ruta" value="7"/> 1 semana</label>
+                  <label class="alert-chip"><input type="checkbox" data-alert="ruta" value="15"/> 15 días</label>
+                  <label class="alert-chip"><input type="checkbox" data-alert="ruta" value="30" checked/> 1 mes</label>
+                </div>
+              </div>
+            </div>
+            <button class="btn-gold" style="font-size:13px;padding:9px 18px;margin-top:1.25rem;" onclick="saveAlertConfig()">Guardar configuración</button>
+          </div>
+          <!-- Días laborables (TODOS los planes) -->
+          <div class="app-card" style="padding:1.5rem;margin-top:.75rem;">
+            <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:.5rem;">📅 Días laborables de la empresa</div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Marcá los días que tu empresa considera laborables. Define la semana de trabajo y afecta el cumplimiento de los check-list (la frecuencia se calcula sobre estos días) y el rango que se muestra por defecto en los paneles.</div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;" id="diasLaborables">
+              <label class="alert-chip"><input type="checkbox" name="diaLab" value="1" checked/> Lunes</label>
+              <label class="alert-chip"><input type="checkbox" name="diaLab" value="2" checked/> Martes</label>
+              <label class="alert-chip"><input type="checkbox" name="diaLab" value="3" checked/> Miércoles</label>
+              <label class="alert-chip"><input type="checkbox" name="diaLab" value="4" checked/> Jueves</label>
+              <label class="alert-chip"><input type="checkbox" name="diaLab" value="5" checked/> Viernes</label>
+              <label class="alert-chip"><input type="checkbox" name="diaLab" value="6"/> Sábado</label>
+              <label class="alert-chip"><input type="checkbox" name="diaLab" value="0"/> Domingo</label>
+            </div>
+            <button class="btn-gold" style="font-size:13px;padding:9px 18px;margin-top:1.25rem;" onclick="saveWeekScope()">Guardar días laborables</button>
+          </div>
+          <!-- Email de notificación (SOLO Pro y Enterprise) -->
+          <div class="app-card" id="emailNotifCard" style="padding:1.5rem;margin-top:.75rem;">
+            <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:.5rem;">📧 Envío de notificaciones por email</div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Registrá destinatarios. Cada uno puede recibir tipos de alerta distintos y un alcance propio (todas las áreas, sectores o patentes específicas). Vos elegís cuándo enviar.</div>
+
+            <!-- Lista de destinatarios guardados -->
+            <div id="destinatariosList" style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem;"></div>
+
+            <button class="btn-outline" style="font-size:13px;padding:10px 18px;width:100%;" onclick="openDestinatarioForm()">+ Agregar nuevo destinatario</button>
+
+            <!-- Firma de la empresa (Enterprise white-label) -->
+            <div id="firmaCard" style="display:none;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--bdr);">
+              <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:.5rem;">✍️ Firma de la empresa</div>
+              <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">El nombre y la descripción se agregan al pie de cada email de alertas que envíes a tus destinatarios.</div>
+              <div class="field"><label>Nombre de la empresa</label><input type="text" id="firmaEmpresa" placeholder="Mi Empresa S.A." style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/></div>
+              <div class="field"><label>Descripción / pie de firma</label><textarea id="firmaDesc" placeholder="Departamento de Flota · Tel: ..." style="width:100%;min-height:60px;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;resize:vertical;"></textarea></div>
+              <div class="field"><label>Logo (opcional, máx 500 KB)</label><input type="file" id="firmaLogo" accept="image/*" onchange="_cargarFirmaLogo(this)" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--gray);font-size:13px;"/></div>
+              <button class="btn-gold" style="font-size:13px;padding:9px 18px;margin-top:.5rem;" onclick="saveFirma()">Guardar firma</button>
+            </div>
+          </div>
+          <!-- Reglas de check-list (motor de reglas) -->
+          <div class="app-card" id="checklistReglasCard" style="padding:1.5rem;margin-top:.75rem;display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.4rem;flex-wrap:wrap;">
+              <div style="font-size:14px;font-weight:600;color:var(--gold);">📋 Reglas de check-list</div>
+              <button class="btn-gold" style="font-size:12px;padding:8px 16px;" onclick="nuevaReglaChecklist()">+ Nueva regla</button>
+            </div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1.25rem;line-height:1.6;">Una regla define qué vehículos, qué puesto y con qué frecuencia se hace el check-list. El sistema calcula solo cuántos check-list se esperan (ej: 20 camiones × 5 días = 100 por semana) y mide el cumplimiento. La plantilla de ítems es la del puesto responsable (se arma en la pestaña 🧩 Constructor).</div>
+
+            <!-- Lista de reglas -->
+            <div id="reglasLista" style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:1rem;"></div>
+
+            <!-- Formulario de regla (oculto hasta "Nueva regla" o editar) -->
+            <div id="reglaForm" style="display:none;padding:1.25rem;background:var(--input-bg);border:1px solid var(--gold-border);border-radius:var(--r);">
+              <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:1rem;" id="reglaFormTitulo">Nueva regla</div>
+              <input type="hidden" id="reglaEditId" value="">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div class="field" style="margin:0;grid-column:1/-1;">
+                  <label>Nombre de la regla</label>
+                  <input type="text" id="reglaNombre" placeholder="Ej: Camiones · Chofer · L a V">
+                </div>
+                <div class="field" style="margin:0;">
+                  <label>Categoría</label>
+                  <select id="reglaCategoria"><option value="">Todas</option></select>
+                </div>
+                <div class="field" style="margin:0;">
+                  <label>Sector (opcional)</label>
+                  <select id="reglaSector"><option value="">Todos los sectores</option></select>
+                </div>
+                <div class="field" style="margin:0;">
+                  <label>Responsable (puesto)</label>
+                  <select id="reglaPuesto">
+                    <option value="chofer">Chofer</option>
+                    <option value="operario">Operario</option>
+                    <option value="mantenimiento">Mantenimiento</option>
+                  </select>
+                </div>
+                <div class="field" style="margin:0;">
+                  <label>Frecuencia</label>
+                  <select id="reglaFrecTipo" onchange="_actualizarCamposFrecuencia()">
+                    <option value="diario">Todos los días</option>
+                    <option value="lav">Lunes a viernes</option>
+                    <option value="dias_especificos">Días específicos</option>
+                    <option value="x_semana">X veces por semana</option>
+                    <option value="x_mes">X veces por mes</option>
+                    <option value="cada_x_dias">Cada X días</option>
+                  </select>
+                </div>
+                <!-- Campo dinámico: número (para x_semana/x_mes/cada_x_dias) -->
+                <div class="field" style="margin:0;" id="reglaFrecValorWrap">
+                  <label id="reglaFrecValorLabel">Cantidad</label>
+                  <input type="number" id="reglaFrecValor" min="1" max="31" value="3">
+                </div>
+                <!-- Campo dinámico: días de la semana (para dias_especificos) -->
+                <div class="field" style="margin:0;grid-column:1/-1;display:none;" id="reglaFrecDiasWrap">
+                  <label>Días de la semana</label>
+                  <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="reglaDia" value="1"> Lun</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="reglaDia" value="2"> Mar</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="reglaDia" value="3"> Mié</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="reglaDia" value="4"> Jue</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="reglaDia" value="5"> Vie</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="reglaDia" value="6"> Sáb</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="reglaDia" value="0"> Dom</label>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;gap:.5rem;margin-top:1.25rem;flex-wrap:wrap;">
+                <button class="btn-gold" style="font-size:13px;padding:10px 20px;" onclick="guardarReglaChecklist()">Guardar regla</button>
+                <button class="btn-outline" style="font-size:13px;padding:10px 20px;" onclick="cancelarReglaForm()">Cancelar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Frecuencia de check-list POR PUESTO -->
+          <div class="app-card" id="checklistFreqCatCard" style="padding:1.5rem;margin-top:.75rem;display:none;">
+            <div style="font-size:14px;font-weight:600;color:var(--gold);margin-bottom:.4rem;">🎯 ¿Cuántos check-list por semana hace cada puesto?</div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1.25rem;line-height:1.6;">Definí la meta de cada puesto. Por ejemplo, si el chofer hace 3 por semana, cada vehículo que maneje un chofer debe tener 3 check-list de chofer (en días distintos), sin importar cuál chofer los cargue. El sistema mide el cumplimiento de cada puesto por separado y también el total del vehículo (suma de todos los puestos).</div>
+            <div id="freqCatGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:1rem;">
+              <!-- se llena por JS con cada puesto -->
+            </div>
+            <button class="btn-primary" onclick="saveFreqCategoria()" style="font-size:13px;padding:10px 20px;">Guardar frecuencia por puesto</button>
+          </div>
+
+          <!-- Constructor de check-lists por puesto -->
+          <div class="app-card" id="checklistBuilderCard" style="padding:1.5rem;margin-top:.75rem;display:none;">
+            <div style="font-size:14px;font-weight:600;color:var(--gold);margin-bottom:.4rem;">🧩 Constructor de check-list</div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1.25rem;">Armá el check-list que tu personal completará desde el celular. Elegí el puesto a la izquierda y sus ítems a la derecha.</div>
+
+            <div id="clbGrid" style="display:grid;grid-template-columns:280px 1fr;gap:1.5rem;align-items:start;">
+              <!-- Columna izquierda: configuración -->
+              <div style="display:flex;flex-direction:column;gap:1rem;">
+                <div class="field" id="clbPuestoWrap" style="margin:0;">
+                  <label>¿Para qué puesto es este check-list?</label>
+                  <select id="clbPuesto" onchange="loadChecklistBuilder()">
+                    <option value="operario">Operario</option>
+                    <option value="chofer">Chofer</option>
+                    <option value="mantenimiento">Mantenimiento</option>
+                    <option value="tarea_mant">🔧 Carga Tareas Mantenimiento</option>
+                  </select>
+                </div>
+
+                <!-- Frecuencia: se configura en la pestaña "📋 Reglas". Select oculto por compatibilidad. -->
+                <div style="padding:10px 12px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);font-size:12px;color:var(--gold);line-height:1.5;">
+                  💡 La frecuencia se configura en la pestaña <strong>📋 Reglas</strong>, según el puesto responsable.
+                </div>
+                <select id="clbFrecuencia" style="display:none;">
+                  <option value="diario">Todos los días</option>
+                  <option value="3sem">3 veces por semana</option>
+                  <option value="2sem">2 veces por semana</option>
+                  <option value="semanal" selected>1 vez por semana</option>
+                  <option value="mensual">1 vez al mes</option>
+                </select>
+
+                <button class="btn-outline" style="font-size:12px;padding:9px 14px;width:100%;" onclick="cargarPlantillaSugerida()">⚡ Cargar plantilla sugerida</button>
+                <button class="btn-outline" style="font-size:13px;padding:10px 16px;width:100%;" onclick="addChecklistItem()">+ Agregar ítem</button>
+                <button class="btn-outline" style="font-size:13px;padding:10px 16px;width:100%;color:#F87171;border-color:rgba(239,68,68,.3);" onclick="borrarItemsChecklist()">🗑️ Borrar todos los ítems</button>
+                <button class="btn-gold" style="font-size:13px;padding:11px 16px;width:100%;" onclick="saveChecklistBuilder()">Guardar check-list</button>
+              </div>
+
+              <!-- Columna derecha: ítems -->
+              <div>
+                <div style="font-size:12px;font-weight:600;color:var(--white);margin-bottom:.6rem;">Ítems del check-list</div>
+                <div id="clbItems" style="display:flex;flex-direction:column;gap:.6rem;"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Personal y accesos al check-list (cuando el checklist está habilitado) -->
+          <div class="app-card" id="personalCard" style="padding:1.5rem;margin-top:.75rem;display:none;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:.5rem;">
+              <div style="font-size:13px;font-weight:600;color:var(--gold);">👷 Personal y accesos al check-list</div>
+            </div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Dá de alta a tu personal para que carguen check-lists desde su celular (escaneando el QR o con el link), <strong>sin acceder al panel ni a la información sensible</strong>. El sistema genera un PIN para cada uno.</div>
+
+            <!-- Lista de personal -->
+            <div id="personalList" style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem;"></div>
+
+            <button class="btn-outline" style="font-size:13px;padding:10px 18px;width:100%;" onclick="openPersonalForm()">+ Agregar persona</button>
+
+            <!-- Link y QR de acceso -->
+            <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--bdr);">
+              <div style="font-size:12px;color:var(--gray);margin-bottom:.5rem;">🔗 Link de acceso al check-list para tu personal:</div>
+              <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+                <input type="text" id="personalChecklistLink" readonly value="" style="flex:1;min-width:200px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:12px;font-family:var(--font-mono);padding:8px 10px;outline:none;"/>
+                <button class="btn-outline" style="font-size:12px;padding:8px 14px;" onclick="copyPersonalLink()">Copiar</button>
+                <button class="btn-gold" style="font-size:12px;padding:8px 14px;" onclick="openPersonalQR()">Ver QR</button>
+              </div>
+              <div style="font-size:11px;color:var(--gray);margin-top:.5rem;">Compartí este link o el QR con tu personal. Entran con su nombre y PIN.</div>
+            </div>
+          </div>
+          <!-- White-label (SOLO Enterprise) -->
+          <div class="app-card" id="whiteLabelCard" style="padding:1.5rem;margin-top:.75rem;display:none;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:.5rem;">
+              <div style="font-size:13px;font-weight:600;color:var(--gold);">🏷️ Marca personalizada (White-label)</div>
+              <span style="font-size:9px;background:var(--green);color:#000;padding:1px 6px;border-radius:4px;font-weight:700;">ENTERPRISE</span>
+            </div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Reemplazá "MercaTeck / GesFlota" por el nombre de tu empresa en el panel y la app.</div>
+            <div class="field"><label>Nombre de tu empresa</label><input type="text" id="wlNombre" placeholder="Mi Empresa" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/></div>
+            <div class="field"><label>Logo (subir imagen)</label>
+              <input type="file" id="wlLogo" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="_previewLogoWL(this)" style="width:100%;padding:9px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--gray);font-size:13px;"/>
+              <div style="font-size:11px;color:var(--gray);margin-top:4px;">PNG, JPG, WEBP o SVG · máximo 500 KB · se ve mejor con fondo transparente</div>
+              <div id="wlLogoPreview" style="display:none;margin-top:.75rem;padding:.75rem;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);text-align:center;">
+                <img id="wlLogoImg" alt="Logo" style="max-height:44px;max-width:180px;"/>
+                <div><button class="btn-edit-veh" style="font-size:11px;padding:4px 10px;margin-top:.5rem;color:#F87171;border-color:rgba(239,68,68,.25);" onclick="_quitarLogoWL()">Quitar logo</button></div>
+              </div>
+            </div>
+            <button class="btn-gold" style="font-size:13px;padding:9px 18px;margin-top:.5rem;" onclick="saveWhiteLabel()">Aplicar marca</button>
+          </div>
+          <!-- Exportar datos a Excel (TODOS los planes) — debajo de Sincronización -->
+          <div class="app-card" style="padding:1.5rem;margin-top:.75rem;">
+            <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:.5rem;">📊 Exportar datos a Excel</div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Descargá un Excel con formato: la <strong>Hoja 1</strong> trae tu flota completa y la <strong>Hoja 2</strong> los registros de mantenimiento del período elegido.</div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+              <label style="font-size:12px;color:var(--gray);">Período:</label>
+              <select id="exportPeriodo" style="font-size:13px;padding:9px 14px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+                <option value="semana">Esta semana</option>
+                <option value="mes">Este mes</option>
+                <option value="todo" selected>Todo el historial</option>
+              </select>
+              <button class="btn-gold" style="font-size:13px;padding:10px 20px;" onclick="exportarExcelCompleto()">⬇️ Descargar Excel</button>
+            </div>
+          </div>
+          <!-- Suscripción: se abre con el botón (no ocupa lugar si no la mirás) -->
+          <div style="margin-top:.75rem;">
+            <button class="btn-outline" onclick="toggleSuscripcion()" style="width:100%;padding:14px 16px;font-size:13px;font-weight:600;color:var(--gold);display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+              <span>💳 Mi suscripción y plan</span>
+              <span id="suscArrow" style="color:var(--gray);font-weight:400;font-size:12px;">Ver detalle ▾</span>
+            </button>
+            <div id="suscBody" style="display:none;">
+          <div class="app-card" style="padding:1.5rem;margin-bottom:.75rem;">
+            <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:1rem;">💳 Mi suscripción</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-bottom:1.25rem;">
+              <div style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem;">
+                <div style="font-size:11px;color:var(--gray);">Plan actual</div>
+                <div style="font-family:var(--font-display);font-size:19px;color:var(--gold);" id="susPlan">—</div>
+              </div>
+              <div style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem;">
+                <div style="font-size:11px;color:var(--gray);">Estado</div>
+                <div style="font-size:15px;font-weight:600;margin-top:4px;" id="susEstado">—</div>
+              </div>
+              <div style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem;">
+                <div style="font-size:11px;color:var(--gray);">Próximo vencimiento</div>
+                <div style="font-size:15px;font-weight:600;color:var(--white);margin-top:4px;" id="susVence">—</div>
+              </div>
+              <div style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem;">
+                <div style="font-size:11px;color:var(--gray);">App de check-list</div>
+                <div style="font-size:15px;font-weight:600;margin-top:4px;" id="susAddon">—</div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+              <button class="btn-gold" style="font-size:13px;padding:10px 20px;" onclick="abrirCambioPlan()">Cambiar de plan</button>
+              <button class="btn-outline" style="font-size:13px;padding:10px 20px;" onclick="cargarMiSuscripcion()">🔄 Actualizar</button>
+            </div>
+
+            <div style="font-size:12px;font-weight:600;color:var(--white);margin-bottom:.5rem;">Historial de pagos</div>
+            <div style="overflow-x:auto;">
+              <table class="app-table">
+                <thead><tr><th>Fecha</th><th>Plan</th><th>Período</th><th>Monto</th><th>Estado</th></tr></thead>
+                <tbody id="susPagosBody">
+                  <tr><td colspan="5" style="text-align:center;color:var(--gray);padding:1.25rem;">Cargando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Datos para transferir (solo visibles con sesión iniciada) -->
+            <div style="margin-top:1.25rem;padding:1rem;background:var(--input-bg);border:1px solid var(--gold-border);border-radius:var(--r);">
+              <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:.75rem;">🏦 Datos para transferir</div>
+              <div id="datosBancariosBox" style="font-size:13px;color:var(--gray);">Cargando...</div>
+              <div style="margin-top:.85rem;padding:.7rem;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:var(--r);font-size:11px;color:#FCD34D;line-height:1.5;">
+                ⚠️ <strong>Cuidado con las estafas.</strong> Nunca vamos a enviarte un CBU por email, WhatsApp ni redes sociales. Los datos reales están únicamente acá, dentro de tu panel. Si te llegan datos bancarios por otro medio, <strong>no transfieras</strong> y avisanos.
+              </div>
+            </div>
+
+            <div style="font-size:11px;color:var(--gray);margin-top:.75rem;">
+              Los pagos se confirman manualmente al recibir el comprobante. Enviá el tuyo a <strong style="color:var(--gold);">germanmercado@mercateck.com.ar</strong>, el único canal para comprobantes.
+            </div>
+          </div>
+          <!-- Vehículos de tu plan -->
+          <div class="app-card" style="padding:1.5rem;margin-bottom:.75rem;">
+            <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:.75rem;">🚚 Vehículos de tu plan</div>
+            <div id="limVehBox"><div style="font-size:13px;color:var(--gray);">Cargando...</div></div>
+            <div style="font-size:11px;color:var(--gray);margin-top:.75rem;">Demo: hasta 5 · Pro: hasta 50 · Enterprise: sin límite. Si bajás de plan, <strong>no se borra ningún vehículo</strong>: solo no vas a poder cargar nuevos hasta quedar por debajo del límite.</div>
+          </div>
+            </div>
+          </div>
+          <!-- Borrar mis datos (zona peligrosa) -->
+          <div class="app-card" style="padding:1.5rem;margin-top:.75rem;border-color:rgba(239,68,68,.25);">
+            <div style="font-size:13px;font-weight:600;color:#F87171;margin-bottom:.5rem;">🗑️ Borrar mis datos</div>
+            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;line-height:1.6;">
+              Elegí qué querés borrar. <strong style="color:var(--white);">Solo se borran los datos de tu empresa</strong>, nunca los de otra.
+              Esta acción <strong style="color:#F87171;">no se puede deshacer</strong>: te recomendamos exportar tu Excel antes.
+            </div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+              <button class="btn-outline" style="flex:1;min-width:150px;font-size:13px;padding:10px;color:#F87171;border-color:rgba(239,68,68,.3);" onclick="borrarDatos('flota')">🚚 Borrar datos de Flota</button>
+              <button class="btn-outline" style="flex:1;min-width:150px;font-size:13px;padding:10px;color:#F87171;border-color:rgba(239,68,68,.3);" onclick="borrarDatos('checklist')">📋 Borrar datos de Check-list</button>
+              <button class="btn-outline" style="flex:1;min-width:150px;font-size:13px;padding:10px;color:#F87171;border-color:rgba(239,68,68,.3);" onclick="borrarDatos('mantenimiento')">🔧 Borrar datos de Mantenimiento</button>
+            </div>
+          </div>
+
+          <!-- (La sección vieja de "Alertas automáticas programadas" se quitó:
+               el envío automático ahora se configura por destinatario con día y hora) -->
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+   ADMIN VIEW
+══════════════════════════════════════════ -->
+<div class="view" id="view-admin">
+  <div style="max-width:1200px;margin:0 auto;padding:calc(var(--nav-h) + 2rem) 1.5rem 2rem;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem;">
+      <div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.35rem;">Panel de administración</div>
+        <h2 style="font-family:var(--font-display);font-size:36px;color:var(--white);">Control Maestro</h2>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-outline" id="btnAdminVolverDash" onclick="showView('dashboard')">← Volver al Dashboard</button>
+        <button class="btn-gold" onclick="showToast('Exportando datos...','success')">📥 Exportar todo</button>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+      <div class="admin-stat">
+        <div class="admin-stat-val" id="admEmpresas">—</div>
+        <div class="admin-stat-lbl">Empresas registradas</div>
+      </div>
+      <div class="admin-stat">
+        <div class="admin-stat-val" style="color:var(--green);" id="admAlDia">—</div>
+        <div class="admin-stat-lbl">Pagos al día</div>
+      </div>
+      <div class="admin-stat">
+        <div class="admin-stat-val" style="color:var(--red);" id="admVencidos">—</div>
+        <div class="admin-stat-lbl">Pagos vencidos</div>
+      </div>
+      <div class="admin-stat">
+        <div class="admin-stat-val" style="color:var(--gold);" id="admMrr">—</div>
+        <div class="admin-stat-lbl">MRR estimado (ARS)</div>
+      </div>
+      <div class="admin-stat">
+        <div class="admin-stat-val" id="admVehiculos">—</div>
+        <div class="admin-stat-lbl">Vehículos total</div>
+      </div>
+      <div class="admin-stat">
+        <div class="admin-stat-val" style="color:var(--amber);" id="admPrueba">—</div>
+        <div class="admin-stat-lbl">En prueba</div>
+      </div>
+    </div>
+
+    <div class="app-card" style="margin-bottom:1rem;">
+      <div class="app-card-hdr">
+        <h3>🎁 Alta de demo</h3>
+      </div>
+      <div style="padding:1rem 1.25rem;">
+        <p style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Creá la cuenta de una empresa que pidió la demo: 5 vehículos y 1 mes de uso. Le llega un email con el acceso.</p>
+        <div class="auth-alert" id="altaDemoError"></div>
+        <div class="auth-success" id="altaDemoOk"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem;">
+          <div class="field"><label>Empresa</label><input type="text" id="adEmpresa" maxlength="80" placeholder="Nombre de la empresa"/></div>
+          <div class="field"><label>Nombre del contacto</label><input type="text" id="adNombre" maxlength="60" placeholder="Nombre y apellido"/></div>
+          <div class="field"><label>Email de acceso</label><input type="email" id="adEmail" maxlength="120" placeholder="contacto@empresa.com"/></div>
+          <div class="field"><label>Contraseña</label>
+            <div style="display:flex;gap:.5rem;">
+              <input type="text" id="adPass" maxlength="60" placeholder="Mínimo 8 caracteres" style="flex:1;"/>
+              <button class="btn-outline" style="font-size:12px;padding:0 10px;white-space:nowrap;" onclick="generarPassDemo()">Generar</button>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--gray);margin-bottom:.75rem;">La demo vence el <strong style="color:var(--gold);" id="adVence">—</strong>.</div>
+        <button class="btn-gold" style="padding:10px 22px;" id="adBtn" onclick="crearCuentaDemo()">Crear cuenta demo</button>
+      </div>
+    </div>
+
+    <div class="app-card">
+      <div class="app-card-hdr">
+        <h3>Empresas registradas</h3>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="app-table">
+          <thead><tr><th>Empresa</th><th>Plan</th><th>Estado pago</th><th>Check-list</th><th>Alta</th><th>Acciones</th></tr></thead>
+          <tbody id="admEmpresasBody">
+            <tr><td colspan="6" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargando empresas...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Gestión de tickets de soporte (superadmin) -->
+    <div class="app-card" style="margin-top:1rem;">
+      <div class="app-card-hdr">
+        <h3>🎧 Soporte — Tickets</h3>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <span id="admTicketsBadge" style="display:none;background:var(--gold);color:#0B0E14;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;"></span>
+          <button class="btn-outline" style="font-size:12px;padding:6px 14px;" onclick="cargarTicketsAdmin()">🔄 Actualizar</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="app-table">
+          <thead><tr><th>Empresa</th><th>Asunto</th><th>Tema</th><th>Prioridad</th><th>Estado</th><th>Último</th><th>Acciones</th></tr></thead>
+          <tbody id="admTicketsBody">
+            <tr><td colspan="7" style="text-align:center;color:var(--gray);padding:1.5rem;">Tocá "Actualizar" para ver los tickets.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════ RESPALDO DE LA BASE ══════ -->
+    <div class="app-card" style="margin-top:1rem;">
+      <div class="app-card-hdr">
+        <h3>💾 Respaldo de datos</h3>
+      </div>
+      <div style="padding:0 1.25rem 1.25rem;">
+        <p style="font-size:13px;color:var(--gray);margin-bottom:1rem;line-height:1.6;">
+          Descargá una copia completa de todos los datos (empresas, vehículos, check-lists, mantenimientos, pagos). Se baja en formato JSON, que guarda todo tal cual está en la base.
+        </p>
+        <button class="btn-gold" style="font-size:13px;padding:10px 20px;" onclick="descargarBackupCompleto()">💾 Descargar respaldo completo</button>
+        <div id="backupStatus" style="font-size:12px;color:var(--gray);margin-top:.75rem;"></div>
+      </div>
+    </div>
+
+    <!-- ══════ SOLICITUDES DE CAMBIO DE PLAN ══════ -->
+    <div class="app-card" style="margin-top:1rem;" id="solicitudesCard">
+      <div class="app-card-hdr">
+        <h3>📈 Pedidos de cambio de plan</h3>
+        <span id="solicBadge" style="display:none;background:var(--gold);color:#0B0E14;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;"></span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="app-table">
+          <thead><tr><th>Empresa</th><th>Fecha</th><th>Plan actual</th><th>Plan pedido</th><th>Mensaje</th><th>Acción</th></tr></thead>
+          <tbody id="solicBody">
+            <tr><td colspan="6" style="text-align:center;color:var(--gray);padding:1.25rem;">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════ FACTURACIÓN ══════ -->
+    <div class="app-card" style="margin-top:1rem;">
+      <div class="app-card-hdr">
+        <h3>💰 Facturación</h3>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <button class="btn-gold" style="font-size:12px;padding:7px 14px;" onclick="abrirFormPago()">+ Registrar pago</button>
+          <button class="btn-outline" style="font-size:12px;padding:7px 14px;" onclick="cargarPagos()">🔄 Actualizar</button>
+        </div>
+      </div>
+
+      <!-- Resumen -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem;padding:0 0 1rem;">
+        <div style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem;">
+          <div style="font-size:11px;color:var(--gray);">Cobrado este mes</div>
+          <div style="font-family:var(--font-display);font-size:20px;color:#4ADE80;" id="facCobradoMes">—</div>
+        </div>
+        <div style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem;">
+          <div style="font-size:11px;color:var(--gray);">Pendientes de confirmar</div>
+          <div style="font-family:var(--font-display);font-size:20px;color:var(--gold);" id="facPendientes">—</div>
+        </div>
+        <div style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem;">
+          <div style="font-size:11px;color:var(--gray);">Por vencer (≤7 días)</div>
+          <div style="font-family:var(--font-display);font-size:20px;color:#FCD34D;" id="facPorVencer">—</div>
+        </div>
+        <div style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem;">
+          <div style="font-size:11px;color:var(--gray);">Vencidas</div>
+          <div style="font-family:var(--font-display);font-size:20px;color:#F87171;" id="facVencidas">—</div>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;padding-bottom:.75rem;">
+        <select id="facFiltroEstado" onchange="renderPagos()" style="font-size:12px;padding:7px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+          <option value="">Todos los pagos</option>
+          <option value="pendiente">Pendientes de confirmar</option>
+          <option value="confirmado">Confirmados</option>
+        </select>
+        <select id="facFiltroEmpresa" onchange="renderPagos()" style="font-size:12px;padding:7px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);cursor:pointer;">
+          <option value="">Todas las empresas</option>
+        </select>
+      </div>
+
+      <!-- Lista de pagos -->
+      <div style="overflow-x:auto;">
+        <table class="app-table">
+          <thead><tr><th>Empresa</th><th>Fecha</th><th>Plan</th><th>Período</th><th>Monto</th><th>Medio</th><th>Estado</th><th>Acción</th></tr></thead>
+          <tbody id="facPagosBody">
+            <tr><td colspan="8" style="text-align:center;color:var(--gray);padding:1.5rem;">Tocá "Actualizar" para ver los pagos.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════ RENOVACIONES / VENCIMIENTOS ══════ -->
+    <div class="app-card" style="margin-top:1rem;">
+      <div class="app-card-hdr">
+        <h3>📅 Renovaciones</h3>
+        <span style="font-size:11px;color:var(--gray);">🟢 más de 7 días · 🟡 vence pronto · 🔴 vencida</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="app-table">
+          <thead><tr><th>Empresa</th><th>Plan</th><th>Add-on</th><th>Vence</th><th>Estado</th><th>Acción</th></tr></thead>
+          <tbody id="facRenovBody">
+            <tr><td colspan="6" style="text-align:center;color:var(--gray);padding:1.5rem;">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REGISTRAR PAGO -->
+<div class="modal-overlay" id="pagoModal">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-hdr">
+      <h3>💰 Registrar pago</h3>
+      <button class="modal-close" onclick="cerrarFormPago()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Empresa *</label>
+        <select id="pgEmpresa" onchange="_recalcularMontoPago()"></select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="field"><label>Fecha del pago *</label><input type="date" id="pgFecha"/></div>
+        <div class="field">
+          <label>Plan pagado *</label>
+          <select id="pgPlan" onchange="_recalcularMontoPago()">
+            <option value="pro">Pro ($87.800/mes)</option>
+            <option value="enterprise">Enterprise ($178.800/mes)</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="field">
+          <label>Período *</label>
+          <select id="pgMeses" onchange="_recalcularMontoPago()">
+            <option value="1">Mensual (1 mes)</option>
+            <option value="12">Anual (paga 10, usa 12)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Medio de pago</label>
+          <select id="pgMedio">
+            <option value="transferencia">Transferencia</option>
+            <!-- MP-OCULTO: <option value="mercadopago">Mercado Pago</option> -->
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);cursor:pointer;margin-bottom:.75rem;">
+        <input type="checkbox" id="pgAddon" onchange="_recalcularMontoPago()" style="accent-color:var(--gold);width:16px;height:16px;"/>
+        <span>Incluye add-on de check-list ($30.000/mes) <em style="font-size:11px;color:var(--gray);">— solo Pro</em></span>
+      </label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="field" style="display:none;"><label>USD (no usado)</label><input type="number" id="pgUsd" step="0.01" min="0" value="0"/></div>
+        <div class="field" style="grid-column:1 / -1;"><label>Monto en pesos</label><input type="number" id="pgArs" step="1" min="0"/></div>
+      </div>
+      <div style="font-size:11px;color:var(--gray);margin:-.5rem 0 .75rem;" id="pgDolarInfo"></div>
+      <div class="field"><label>Nota (opcional)</label><input type="text" id="pgNota" placeholder="Ej: comprobante recibido por email"/></div>
+      <div style="font-size:12px;color:var(--gold);background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);padding:.7rem;margin-bottom:1rem;">
+        El pago queda <strong>pendiente</strong> hasta que lo confirmes. Al confirmarlo, la empresa pasa a "al día" y se extiende su vencimiento.
+      </div>
+      <button class="btn-gold" style="width:100%;padding:12px;" onclick="guardarPago()">Registrar pago</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+   PAYMENT MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="payModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3>💳 Completar suscripción</h3>
+      <button class="modal-close" onclick="closePayment()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);padding:1rem;margin-bottom:1.25rem;">
+        <div style="font-size:12px;color:var(--gray);">Plan seleccionado</div>
+        <div style="font-size:18px;font-weight:700;color:var(--white);" id="payPlanName">Pro</div>
+        <div style="font-size:22px;font-weight:700;color:var(--gold);">$<span id="payAmount">—</span> <span id="payPeriod" style="font-size:13px;font-weight:400;color:var(--gray);">ARS/mes</span></div>
+      </div>
+      <div style="font-size:13px;font-weight:500;color:var(--white);margin-bottom:.75rem;">Elegí tu forma de pago:</div>
+      <div class="pay-methods">
+        <div class="pay-method selected" id="pm-transfer" onclick="selectPayMethod('transfer')">
+          <span class="pm-icon">🏦</span>
+          <span class="pm-lbl">Transferencia</span>
+        </div>
+        <!-- MP-OCULTO: metodo de pago desactivado
+        <div class="pay-method" id="pm-mp" onclick="selectPayMethod('mp')">
+          <span class="pm-icon">💳</span>
+          <span class="pm-lbl">Mercado Pago</span>
+        </div>
+        -->
+      </div>
+      <div class="transfer-info show" id="transferInfo">
+        <div style="text-align:center;padding:1rem .5rem;">
+          <div style="font-size:28px;margin-bottom:.5rem;">🔒</div>
+          <div style="font-size:13px;color:var(--white);font-weight:500;margin-bottom:.5rem;">Datos de transferencia protegidos</div>
+          <div style="font-size:12px;color:var(--gray);line-height:1.6;">Por tu seguridad, los datos bancarios para transferencia se muestran únicamente dentro de tu panel, una vez que iniciás sesión en tu cuenta verificada.</div>
+          <div style="margin-top:.85rem;padding:.75rem;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:var(--r);font-size:11px;color:#FCD34D;line-height:1.5;">
+            ⚠️ MercaTeck nunca te pedirá transferencias por WhatsApp, redes sociales ni fuera de tu panel oficial. Verificá siempre estar en el dominio oficial antes de pagar.
+          </div>
+        </div>
+      </div>
+      <!-- MP-OCULTO: panel de Mercado Pago desactivado
+      <div class="transfer-info" id="mpInfo" style="text-align:center;">
+        <div style="font-size:32px;margin:.5rem 0;">💳</div>
+        <div style="font-size:13px;color:var(--white);margin-bottom:.35rem;">Pagar con Mercado Pago</div>
+        <div style="font-size:12px;color:var(--gray);">Serás redirigido a la plataforma de pago seguro de Mercado Pago.</div>
+      </div>
+      -->
+      <button class="modal-btn" onclick="confirmPayment()">
+        <span id="payBtnTxt">Confirmar transferencia</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL EDITAR VEHÍCULO -->
+<div class="modal-overlay" id="editVehModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3>✏️ Editar vehículo — <span id="editVehPat">—</span></h3>
+      <button class="modal-close" onclick="closeEditVeh()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- El estado lo calcula el sistema con las fechas y los km/horas -->
+      <div id="editEstadoResumen" style="margin-bottom:1rem;padding:.85rem 1rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);font-size:12px;color:var(--gray);line-height:1.7;"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="field">
+          <label>Vence VTV</label>
+          <input type="date" id="editVtvFecha" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+        </div>
+        <div class="field">
+          <label>Vencimiento seguro</label>
+          <input type="date" id="editSeguro" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+        </div>
+        <div class="field">
+          <label>Vencimiento ruta <span style="text-transform:none;letter-spacing:0;color:var(--gray);font-weight:400;">(si no tiene, dejalo vacío)</span></label>
+          <input type="date" id="editRuta" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+        </div>
+        <div class="field">
+          <label>Fecha último servicio</label>
+          <input type="date" id="editFechaServ" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+        </div>
+        <div class="field">
+          <label>Propiedad</label>
+          <select id="editPropiedad" onchange="toggleAlquiler()" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;">
+            <option value="propio">Propio</option>
+            <option value="alquilado">Alquilado</option>
+          </select>
+        </div>
+        <div class="field" id="editKmHsField">
+          <label id="editKmHsLabel">Valor actual (km/horas)</label>
+          <input type="number" id="editKmHs" min="0" placeholder="Ej: 85000" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+          <label style="display:flex;align-items:center;gap:7px;margin-top:.6rem;font-size:12px;color:var(--gray);cursor:pointer;">
+            <input type="checkbox" id="editServiceRealizado" style="accent-color:var(--gold);"/>
+            ✅ Cambio de filtros recién realizado (reinicia el ciclo)
+          </label>
+        </div>
+      </div>
+      <div id="alquilerFields" style="display:none;margin-top:1rem;padding:1rem;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:var(--r);">
+        <div style="font-size:12px;font-weight:600;color:#60A5FA;margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.06em;">Datos del alquiler</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="field">
+            <label>Proveedor</label>
+            <input type="text" id="editProveedor" placeholder="Nombre" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+          </div>
+          <div class="field">
+            <label>Fin de contrato</label>
+            <input type="date" id="editFinContrato" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+          </div>
+        </div>
+      </div>
+      <button class="modal-btn" onclick="saveVehEdit()">Guardar cambios</button>
+
+      <!-- Dar de baja / Eliminar -->
+      <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--bdr);">
+        <div style="font-size:12px;font-weight:600;color:var(--gold);margin-bottom:.5rem;">Pausar temporalmente</div>
+        <div style="font-size:12px;color:var(--gray);margin-bottom:.75rem;line-height:1.5;">
+          <strong style="color:var(--white);">Pausar:</strong> para vehículos parados (taller, roto). No se le pide check-list ni suma km, pero las alertas de VTV/seguro/ruta siguen corriendo y podés seguir cargando su mantenimiento. Se reanuda cuando quieras.
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+          <button class="btn-outline" id="btnPausaVeh" style="flex:1;min-width:140px;font-size:13px;padding:10px;color:var(--gold);border-color:var(--gold-border);" onclick="pausarVehiculo()">⏸️ Pausar vehículo</button>
+        </div>
+        <div style="height:1px;background:var(--bdr);margin-bottom:1.25rem;"></div>
+        <div style="font-size:12px;font-weight:600;color:#F87171;margin-bottom:.5rem;">Sacar este vehículo de la flota</div>
+        <div style="font-size:12px;color:var(--gray);margin-bottom:.75rem;line-height:1.5;">
+          <strong style="color:var(--white);">Dar de baja:</strong> deja de aparecer en check-lists, alertas y sectores, pero se guarda su historial y lo podés reactivar.<br>
+          <strong style="color:var(--white);">Eliminar:</strong> lo borra de la flota. No se puede deshacer.
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <button class="btn-outline" id="btnBajaVeh" style="flex:1;min-width:140px;font-size:13px;padding:10px;color:#FCD34D;border-color:rgba(245,158,11,.3);" onclick="darDeBajaVehiculo()">🚫 Dar de baja</button>
+          <button class="btn-outline" style="flex:1;min-width:140px;font-size:13px;padding:10px;color:#F87171;border-color:rgba(239,68,68,.3);" onclick="eliminarVehiculo()">🗑️ Eliminar vehículo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL POPUP CONFIGURACIÓN INICIAL DEL CHECK-LIST -->
+<div class="modal-overlay" id="popupConfigInicialChecklist">
+  <div class="modal-box" style="max-width:440px;">
+    <div style="text-align:center;padding:.5rem 0 1rem;">
+      <div style="font-size:40px;margin-bottom:.5rem;">📋</div>
+      <div style="font-size:18px;font-weight:700;color:var(--gold);margin-bottom:.6rem;">Configurá tu check-list</div>
+      <div style="font-size:13px;color:var(--gray);line-height:1.6;margin-bottom:1.25rem;text-align:left;">
+        Para que el relevamiento de tu flota funcione bien, te recomendamos configurar 3 cosas:<br><br>
+        <strong style="color:var(--white);">1. Las reglas:</strong> qué vehículos, qué puesto y con qué frecuencia se hace el check-list (ej: camiones, chofer, lunes a viernes).<br><br>
+        <strong style="color:var(--white);">2. Los ítems:</strong> qué se revisa en cada check-list, por puesto (en el Constructor).<br><br>
+        <strong style="color:var(--white);">3. El personal:</strong> quién carga los check-list desde el celular.
+      </div>
+      <div style="display:flex;gap:.5rem;flex-direction:column;">
+        <button class="btn-primary" onclick="_cerrarPopupConfigInicial(true)" style="width:100%;padding:12px;">Configurar ahora</button>
+        <button class="btn-outline" onclick="_cerrarPopupConfigInicial(false)" style="width:100%;padding:10px;font-size:13px;">Lo hago después</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COMPARTIR CHECKLIST (Enterprise) -->
+<div class="modal-overlay" id="shareChecklistModal">  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3>📲 Compartir Check-list</h3>
+      <button class="modal-close" onclick="closeShareChecklist()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--gray);margin-bottom:1.25rem;">Compartí el formulario de check-list con tus operarios. Pueden completarlo desde el celular y se sincroniza automáticamente con tu panel.</p>
+      <div style="background:#fff;border-radius:var(--r2);padding:1.5rem;display:flex;justify-content:center;margin-bottom:1.25rem;">
+        <div id="qrCode" style="width:180px;height:180px;"></div>
+      </div>
+      <div style="background:rgba(0,0,0,.3);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem;display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
+        <input type="text" id="checklistLink" readonly value="" placeholder="El link aparece al abrir esta ventana" style="flex:1;background:none;border:none;color:var(--white);font-size:13px;font-family:var(--font-mono);outline:none;"/>
+        <button onclick="copyChecklistLink()" style="background:var(--gold);color:#000;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">Copiar</button>
+      </div>
+      <div style="display:flex;gap:.5rem;">
+        <button class="btn-outline" style="flex:1;padding:11px;font-size:13px;" onclick="window.print()">🖨️ Imprimir QR</button>
+        <button class="btn-gold" style="flex:1;padding:11px;font-size:13px;" onclick="shareWhatsApp()">📱 WhatsApp</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL HISTORIAL DE VEHÍCULO (mantenimiento) -->
+<div class="modal-overlay" id="histVehModal">
+  <div class="modal-box" style="max-width:560px;max-height:88vh;display:flex;flex-direction:column;">
+    <div class="modal-hdr">
+      <h3>📋 Historial — <span id="histVehPat">—</span></h3>
+      <button class="modal-close" onclick="closeHistVeh()">×</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <div style="font-size:13px;color:var(--gray);">Total acumulado: <strong id="histTotal" style="color:var(--gold);font-family:var(--font-mono);">$0</strong></div>
+        <button class="btn-gold" style="font-size:12px;padding:7px 14px;" onclick="addHistItem()">+ Agregar arreglo/compra</button>
+      </div>
+      <div id="histVehBody" style="display:flex;flex-direction:column;gap:.6rem;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE DE VEHÍCULO (ojito) -->
+<div class="modal-overlay" id="vehDetailModal">
+  <div class="modal-box" style="max-width:460px;">
+    <div class="modal-hdr">
+      <h3>👁️ Detalle — <span id="vehDetailPat">—</span></h3>
+      <button class="modal-close" onclick="closeVehDetail()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="vehDetailBody" style="display:flex;flex-direction:column;gap:.75rem;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TÉRMINOS Y CONDICIONES -->
+<div class="modal-overlay" id="termsModal">
+  <div class="modal-box" style="max-width:680px;max-height:88vh;display:flex;flex-direction:column;">
+    <div class="modal-hdr">
+      <h3>Términos, Condiciones y Acuerdo de Datos</h3>
+      <button class="modal-close" onclick="closeTerms()">×</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;">
+      <div style="font-size:13px;color:var(--gray);line-height:1.7;">
+        <p style="color:var(--white);font-weight:600;margin-bottom:.25rem;">GESFLOTA BY MERCATECK — TÉRMINOS Y CONDICIONES DE USO Y ACUERDO DE TRATAMIENTO DE DATOS</p>
+        <p style="font-size:11px;color:var(--gray);margin-bottom:1.25rem;">Última actualización: junio 2025 · Jurisdicción: República Argentina</p>
+
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">1. Partes y objeto</p>
+        <p>El presente acuerdo se celebra entre MercaTeck (en adelante, "el Prestador"), titular de la plataforma GesFlota, y la persona física o jurídica que se registra (en adelante, "el Cliente" o "el Usuario"). El objeto es regular el acceso y uso de la plataforma de gestión de flotas vehiculares ofrecida bajo modalidad de suscripción (SaaS).</p>
+
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">2. Naturaleza del servicio y rol del Cliente como responsable de los datos</p>
+        <p>El Prestador provee una herramienta tecnológica. Toda la información que el Cliente cargue, sincronice o procese (datos de vehículos, patentes, obras, personal, registros de mantenimiento, check-lists, emails de terceros, etc.) es de exclusiva titularidad y responsabilidad del Cliente. El Cliente reviste el carácter de <strong style="color:var(--white);">responsable del tratamiento</strong> de dichos datos, y el Prestador actúa únicamente como <strong style="color:var(--white);">encargado del tratamiento</strong>, conforme a la Ley 25.326 de Protección de Datos Personales y normativa concordante.</p>
+
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">3. Declaraciones y responsabilidad del Cliente</p>
+        <p>El Cliente declara y garantiza que: (a) cuenta con todas las autorizaciones, consentimientos y bases legales necesarias para cargar y tratar los datos que ingresa, incluidos los datos personales de empleados, conductores o terceros; (b) la información es veraz, lícita y obtenida legítimamente; (c) utilizará la plataforma conforme a la ley y a estos términos; (d) es el único responsable frente a sus empleados, clientes, autoridades o terceros por el contenido cargado y por el uso que haga de la plataforma. El Cliente mantendrá indemne al Prestador frente a cualquier reclamo derivado del incumplimiento de estas declaraciones.</p>
+
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">4. Limitación de responsabilidad</p>
+        <p>En la máxima medida permitida por la legislación argentina, el Prestador no será responsable por: (a) daños indirectos, lucro cesante, pérdida de chance o perjuicios derivados del uso o imposibilidad de uso de la plataforma; (b) decisiones operativas, de mantenimiento o de seguridad que el Cliente adopte sobre la base de la información de la plataforma; (c) interrupciones, errores, demoras o pérdidas de datos atribuibles a terceros proveedores (servicios de hosting, Google, proveedores de conectividad), fuerza mayor o caso fortuito; (d) el uso indebido de credenciales por parte del Cliente o sus dependientes. La responsabilidad total del Prestador, de existir, quedará limitada al monto efectivamente abonado por el Cliente en los tres (3) meses previos al hecho que origine el reclamo.</p>
+
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">5. Seguridad de la información</p>
+        <p>El Prestador implementa medidas técnicas y organizativas razonables para proteger la información (encriptación, control de acceso, aislamiento por cuenta). No obstante, el Cliente reconoce que ningún sistema es absolutamente inviolable y que el Prestador no garantiza seguridad absoluta. El Cliente es responsable de resguardar sus credenciales y de notificar de inmediato cualquier uso no autorizado.</p>
+
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">6. Confidencialidad y no divulgación</p>
+        <p>El Prestador se compromete a no acceder, divulgar ni comercializar la información privada del Cliente salvo: (a) por instrucción del propio Cliente; (b) por requerimiento de autoridad competente; (c) para la prestación técnica del servicio. Los datos de cada empresa se mantienen aislados y no se comparten con otras cuentas.</p>
+
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">7. Suscripción, pagos y suspensión</p>
+        <p>El servicio se presta bajo suscripción, en modalidad <strong>mensual o anual</strong> según lo que contrate el Cliente. La suscripción anual puede ofrecerse con una bonificación respecto del total mensual. La falta de pago habilita al Prestador a suspender o dar de baja el acceso, previa notificación. Los precios pueden actualizarse notificando con antelación razonable. No se realizan reembolsos por períodos ya iniciados, salvo disposición legal en contrario.</p>
+
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">7.1. Medio de pago: Transferencia bancaria</p>
+        <p>Cuando el Cliente abone por transferencia bancaria, será su exclusiva responsabilidad realizar la transferencia a la cuenta correcta informada por el Prestador y conservar el comprobante respectivo, el cual deberá <strong>enviarse por email a germanmercado@mercateck.com.ar</strong>, único canal habilitado para la recepción de comprobantes, para su verificación. La acreditación puede demorar hasta cuarenta y ocho (48) horas hábiles desde su efectiva recepción. El Prestador no será responsable por transferencias enviadas a cuentas erróneas, por demoras del sistema bancario, ni por la falta de envío del comprobante. El Cliente reconoce que el envío del comprobante por email es condición para la verificación y habilitación o continuidad del servicio. Cualquier diferencia, retención o gasto bancario derivado de la transferencia será a cargo del Cliente.</p>
+
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">7.3. Mora y reactivación</p>
+        <p>Vencido el plazo de pago sin que se acredite el mismo, el Prestador podrá enviar avisos de vencimiento y, transcurridos los días informados sin regularización, suspender automáticamente el acceso. La reactivación se producirá una vez verificado el pago pendiente. El Prestador no será responsable por la pérdida de acceso ni por las consecuencias operativas derivadas de la falta de pago imputable al Cliente.</p>
+
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">8. Propiedad de los datos y portabilidad</p>
+        <p>Los datos cargados por el Cliente le pertenecen. Ante la baja, el Cliente podrá exportar su información en formato estándar dentro de los plazos que el Prestador disponga. Transcurrido ese plazo, el Prestador podrá eliminar los datos de sus sistemas.</p>
+
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">9. Derechos de los titulares de datos</p>
+        <p>Dado que el Cliente es responsable del tratamiento, le corresponde atender los derechos de acceso, rectificación, actualización y supresión de los titulares de los datos personales que cargue. El Prestador colaborará razonablemente cuando sea técnicamente necesario.</p>
+
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">10. Modificaciones</p>
+        <p>El Prestador podrá modificar estos términos notificando al Cliente. El uso continuado de la plataforma tras la notificación implica aceptación de las modificaciones.</p>
+
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">11. Ley aplicable y jurisdicción</p>
+        <p>Este acuerdo se rige por las leyes de la República Argentina. Para cualquier controversia, las partes se someten a los tribunales ordinarios competentes de la jurisdicción del domicilio del Prestador, renunciando a cualquier otro fuero.</p>
+
+        <p style="color:var(--gold);font-weight:600;margin:1rem 0 .35rem;">12. Aceptación</p>
+        <p>Al tildar la casilla de aceptación y registrarse, el Cliente declara haber leído, comprendido y aceptado en su totalidad estos Términos y Condiciones, el Acuerdo de Tratamiento de Datos y la Política de Privacidad. Esta aceptación se registra con fecha, hora e identificación de la cuenta como constancia.</p>
+      </div>
+    </div>
+    <div style="padding:1rem 1.25rem;border-top:1px solid var(--bdr);">
+      <button class="btn-gold" style="width:100%;padding:12px;" onclick="acceptTermsFromModal()">Leí y acepto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CAMBIO DE PLAN (cliente) -->
+<div class="modal-overlay" id="cambioPlanModal">
+  <div class="modal-box" style="max-width:460px;">
+    <div class="modal-hdr">
+      <h3>📈 Cambiar de plan</h3>
+      <button class="modal-close" onclick="cerrarCambioPlan()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Elegí el plan que querés. Nos llega tu pedido y te contactamos para coordinar el pago. El cambio se aplica cuando confirmamos el pago.</p>
+      <div class="field">
+        <label>Plan que querés</label>
+        <select id="cpPlan" onchange="_actualizarPrecioCambio()">
+          <option value="pro">Pro — $87.800/mes</option>
+          <option value="enterprise">Enterprise — $178.800/mes</option>
+        </select>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);cursor:pointer;margin-bottom:.75rem;" id="cpAddonLabel">
+        <input type="checkbox" id="cpAddon" onchange="_actualizarPrecioCambio()" style="accent-color:var(--gold);width:16px;height:16px;"/>
+        <span>Sumar la app de check-list ($30.000/mes) <em style="font-size:11px;color:var(--gray);">— solo con plan Pro</em></span>
+      </label>
+      <div style="background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);padding:.85rem;margin-bottom:1rem;">
+        <div style="font-size:11px;color:var(--gray);">Te quedaría</div>
+        <div style="font-size:18px;font-weight:700;color:var(--gold);" id="cpPrecio">—</div>
+      </div>
+      <div class="field"><label>Mensaje (opcional)</label><input type="text" id="cpMensaje" placeholder="Ej: quiero pasarme desde el mes que viene"/></div>
+      <button class="btn-gold" style="width:100%;padding:12px;" onclick="enviarCambioPlan()">Enviar pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ACCESO PARA COMPARTIR (al agregar personal) -->
+<div class="modal-overlay" id="accesoModal">
+  <div class="modal-box" style="max-width:460px;">
+    <div class="modal-hdr">
+      <h3>🔑 Acceso para tu personal</h3>
+      <button class="modal-close" onclick="cerrarAcceso()">×</button>
+    </div>
+    <div class="modal-body" id="accesoBody"></div>
+  </div>
+</div>
+
+<!-- MODAL CONVERSACIÓN DE TICKET (cliente) -->
+<div class="modal-overlay" id="ticketConvModal">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-hdr">
+      <h3>💬 Conversación</h3>
+      <button class="modal-close" onclick="cerrarConversacion()">×</button>
+    </div>
+    <div class="modal-body" id="ticketConvBody"></div>
+  </div>
+</div>
+
+<!-- MODAL NOVEDADES (se muestra una vez por versión) -->
+<div class="modal-overlay" id="novedadesModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-hdr">
+      <h3>✨ Novedades</h3>
+      <button class="modal-close" onclick="cerrarNovedades()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Mejoramos GesFlota. Esto es lo nuevo:</p>
+      <ul id="novedadesLista" style="font-size:13px;line-height:1.5;padding-left:1.1rem;margin:0;"></ul>
+    </div>
+    <div style="padding:1rem 1.25rem;border-top:1px solid var(--bdr);">
+      <button class="btn-gold" style="width:100%;padding:12px;" onclick="cerrarNovedades()">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FORMULARIO CHECK-LIST (integrado, sincroniza con panel) -->
+<div class="modal-overlay" id="checklistFormModal">
+  <div class="modal-box" style="max-width:520px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-hdr">
+      <h3>📋 Cargar Check-list</h3>
+      <button class="modal-close" onclick="closeChecklistForm()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- Mensaje de bienvenida / motivación -->
+      <div id="clBienvenida" style="display:none;padding:.85rem 1rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);margin-bottom:1rem;font-size:13px;color:var(--cream);line-height:1.5;"></div>
+
+      <div class="field">
+        <label>¿Qué vehículo estás revisando?</label>
+        <select id="clPatente" onchange="onClVehiculoChange()" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"></select>
+      </div>
+      <!-- Tipo detectado automáticamente (oculto, se setea solo) -->
+      <input type="hidden" id="clTipoVeh" value="liviano"/>
+      <input type="hidden" id="clFreqVeh" value="semanal"/>
+      <div id="clTipoDetectado" style="display:none;font-size:12px;color:var(--gray);margin:-.5rem 0 .75rem;"></div>
+      <div id="clYaCargado" style="display:none;font-size:12px;padding:8px 12px;border:1px solid var(--gold-border);border-radius:var(--r);margin:0 0 .75rem;"></div>
+      <!-- KM / Horas actuales (siempre al inicio del check-list) -->
+      <div class="field" id="clKmHsField" data-obligatorio="0">
+        <label id="clKmHsLabel">Kilómetros actuales <span style="color:var(--gold);">*</span></label>
+        <input type="number" id="clKmHs" min="0" placeholder="Ej: 85000" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+        <label style="display:flex;align-items:flex-start;gap:8px;margin-top:.6rem;font-size:12px;color:var(--gray);cursor:pointer;line-height:1.4;">
+          <input type="checkbox" id="clServiceRealizado" style="accent-color:var(--gold);flex:0 0 auto;width:16px;height:16px;margin:1px 0 0 0;"/>
+          <span>✅ Estos valores corresponden a un cambio de filtros recién realizado</span>
+        </label>
+      </div>
+
+      <!-- Dominio del semi (aparece solo si el vehículo lo requiere) -->
+      <div class="field" id="clSemiDominioField" style="display:none;">
+        <label>Dominio del semirremolque</label>
+        <input type="text" id="clSemiDominio" placeholder="Patente del semi" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>
+      </div>
+
+      <!-- Cómo quiere completar: a mano o por audio -->
+      <div id="clModoWrap" style="display:none;margin-top:1rem;">
+        <div style="font-size:12px;color:var(--gray);margin-bottom:.5rem;">¿Cómo querés completarlo?</div>
+        <div style="display:flex;gap:.5rem;">
+          <button type="button" id="clModoManualBtn" onclick="elegirModoChecklist('manual')" style="flex:1;padding:12px 8px;border-radius:8px;border:1.5px solid var(--gold);background:var(--gold-dim);color:var(--white);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
+            <span style="font-size:22px;">✍️</span><span style="font-size:12px;font-weight:600;">A mano</span>
+          </button>
+          <button type="button" id="clModoAudioBtn" onclick="elegirModoChecklist('audio')" style="flex:1;padding:12px 8px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--card);color:var(--white);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
+            <span style="font-size:22px;">🎤</span><span style="font-size:12px;font-weight:600;">Por audio</span>
+          </button>
+        </div>
+        <div id="clAudioNoDisponible" style="display:none;font-size:11px;color:var(--amber);margin-top:.5rem;"></div>
+      </div>
+
+      <!-- Panel compacto del modo audio (completa el formulario de abajo) -->
+      <div id="clAudioPanel" style="display:none;margin-top:1rem;">
+        <div style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
+            <span style="font-size:12px;font-weight:700;color:var(--gold);">DICTADO</span>
+            <span style="font-size:12px;color:var(--gray);" id="clAudioContador">0 de 0</span>
+          </div>
+          <div id="clAudioLista" style="display:flex;flex-direction:column;gap:4px;max-height:260px;overflow-y:auto;"></div>
+          <div id="clAudioFaltan" style="font-size:11px;color:var(--amber);margin-top:.6rem;"></div>
+        </div>
+
+        <div id="clAudioObsWrap" style="display:none;margin-top:.6rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);padding:.75rem;">
+          <div style="font-size:12px;color:var(--white);font-weight:600;margin-bottom:.5rem;">¿De qué tipo es la observación?</div>
+          <div id="clAudioObsTipos" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+          <div id="clAudioObsDetalle" style="font-size:12px;color:var(--gray);margin-top:.5rem;"></div>
+        </div>
+
+        <div id="clAudioEscuchado" style="display:none;font-size:12px;color:var(--gray);background:var(--card);border:1px dashed var(--bdr);border-radius:var(--r);padding:.6rem .75rem;margin-top:.6rem;"></div>
+        <div id="clAudioError" style="display:none;font-size:12px;color:var(--amber);margin-top:.5rem;"></div>
+
+        <button type="button" id="clAudioBtn" onclick="audioChecklistToggle()" style="width:100%;margin-top:.75rem;padding:16px;border-radius:12px;border:none;background:var(--gold);color:#0B0E14;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+          <span style="font-size:22px;">🎤</span><span id="clAudioBtnTxt">Tocá y hablá</span>
+        </button>
+        <div style="font-size:11px;color:var(--gray);text-align:center;margin-top:.5rem;">Decilo en el orden del check-list. Si se corta, volvé a tocar y seguí donde quedaste.</div>
+      </div>
+
+      <div id="clChecklistItems" style="margin-top:1rem;"></div>
+      <button class="modal-btn" onclick="submitChecklist()">Guardar check-list</button>
+      <div style="font-size:12px;color:var(--gray);text-align:center;margin-top:.75rem;">Se guarda en el panel de tu empresa</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GENÉRICO (prompt/confirm propios) -->
+<div class="modal-overlay" id="genModal">
+  <div class="modal-box" id="genModalBox">
+    <div class="modal-hdr">
+      <h3 id="genModalTitle">Confirmar</h3>
+      <button class="modal-close" onclick="closeGenModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p id="genModalMsg" style="font-size:14px;color:var(--gray);margin-bottom:1rem;"></p>
+      <div id="genModalInputs"></div>
+    </div>
+    <div style="display:flex;gap:.5rem;padding:1rem 1.5rem;border-top:1px solid var(--bdr);flex-shrink:0;">
+      <button class="btn-outline" style="flex:1;padding:11px;" onclick="closeGenModal()">Cancelar</button>
+      <button class="btn-gold" style="flex:1;padding:11px;" id="genModalOk" onclick="genModalConfirm()">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESUMEN DE FLOTA -->
+<div class="modal-overlay" id="resumenFlotaModal">
+  <div class="modal-box" style="max-width:820px;width:92vw;max-height:88vh;display:flex;flex-direction:column;">
+    <div class="modal-hdr">
+      <h3>📋 Resumen de flota</h3>
+      <button class="modal-close" onclick="cerrarResumenFlota()">×</button>
+    </div>
+    <div class="modal-body" id="resumenFlotaContent" style="flex:1;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE MANTENIMIENTO (admin) -->
+<div class="modal-overlay" id="mantDetalleModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-hdr">
+      <h3>Detalle del mantenimiento</h3>
+      <button class="modal-close" onclick="cerrarMantDetalle()">×</button>
+    </div>
+    <div class="modal-body" id="mantDetalleContent"></div>
+  </div>
+</div>
+
+<!-- MODAL MANTENIMIENTO NUEVO (operario mantenimiento) -->
+<div class="modal-overlay" id="opMantModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-hdr">
+      <h3>🔧 Cargar mantenimiento</h3>
+      <button class="modal-close" onclick="cerrarOpMant()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Vehículo <span style="color:#F87171;">*</span></label>
+        <select id="opMantVeh" onchange="opMantAutocompletar()"></select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="field"><label>Interno <span style="font-size:10px;color:var(--gray);">(automático)</span></label><input type="text" id="opMantInterno" placeholder="A-101" readonly style="opacity:.7;cursor:not-allowed;"/></div>
+        <div class="field"><label>Sector <span style="font-size:10px;color:var(--gray);">(automático)</span></label><input type="text" id="opMantSector" placeholder="Sector Norte" readonly style="opacity:.7;cursor:not-allowed;"/></div>
+      </div>
+      <div class="field">
+        <label>Tipo <span style="color:#F87171;">*</span></label>
+        <select id="opMantTipo">
+          <option value="arreglo">Arreglo</option>
+          <option value="compra">Compra</option>
+          <option value="service">Service</option>
+          <option value="incidente">Incidente (choque/imprevisto)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Descripción de la tarea <span style="color:#F87171;">*</span></label>
+        <textarea id="opMantDesc" style="min-height:70px;" placeholder="Detalle del arreglo, compra o incidente..."></textarea>
+      </div>
+      <div class="field">
+        <label>Costo (opcional)</label>
+        <input type="number" id="opMantCosto" placeholder="45000"/>
+      </div>
+      <button class="btn-gold" style="width:100%;padding:12px;margin-top:.5rem;" onclick="guardarOpMantenimiento()">Guardar mantenimiento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BUSCAR MANTENIMIENTO (operario mantenimiento) -->
+<div class="modal-overlay" id="opBuscarMantModal">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-hdr">
+      <h3>🔍 Vehículos con mantenimiento</h3>
+      <button class="modal-close" onclick="cerrarOpBuscarMant()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="text" id="opBuscarMantInput" onkeyup="renderOpMantList()" placeholder="🔍 Buscar por patente..." style="width:100%;padding:9px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;margin-bottom:1rem;"/>
+      <div id="opMantList" style="display:flex;flex-direction:column;gap:.5rem;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE + OBSERVACIÓN (operario mantenimiento) -->
+<div class="modal-overlay" id="opMantDetalleModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-hdr">
+      <h3>Detalle del mantenimiento</h3>
+      <button class="modal-close" onclick="cerrarOpMantDetalle()">×</button>
+    </div>
+    <div class="modal-body" id="opMantDetalleContent"></div>
+  </div>
+</div>
+<div class="modal-overlay" id="detalleChecklistModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-hdr">
+      <h3>Detalle del check-list</h3>
+      <button class="modal-close" onclick="cerrarDetalleChecklist()">×</button>
+    </div>
+    <div class="modal-body" id="detalleChecklistContent"></div>
+  </div>
+</div>
+
+<!-- MODAL CONFIGURAR CHECK-LIST (constructor + personal) -->
+<div class="modal-overlay" id="configChecklistModal">
+  <div class="modal-box" style="max-width:1100px;width:95vw;height:90vh;display:flex;flex-direction:column;">
+    <div class="modal-hdr">
+      <h3>⚙️ Configurar check-list</h3>
+      <button class="modal-close" onclick="cerrarConfigChecklist()">×</button>
+    </div>
+    <div class="modal-body" style="flex:1;overflow-y:auto;">
+      <!-- Pestañas -->
+      <div style="display:flex;gap:.5rem;margin-bottom:1.25rem;border-bottom:1px solid var(--bdr);flex-wrap:wrap;">
+        <button id="tabCfgReglas" class="cfg-cl-tab cfg-cl-tab-activo" onclick="setCfgChecklistTab('reglas')">📋 Reglas</button>
+        <button id="tabCfgConstructor" class="cfg-cl-tab" onclick="setCfgChecklistTab('constructor')">🧩 Constructor</button>
+        <button id="tabCfgPersonal" class="cfg-cl-tab" onclick="setCfgChecklistTab('personal')">👷 Personal y accesos</button>
+      </div>
+      <div id="cfgChecklistContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CATÁLOGO DE ÍTEMS -->
+<div class="modal-overlay" id="catalogoItemsModal">
+  <div class="modal-box" style="max-width:900px;width:95vw;height:90vh;display:flex;flex-direction:column;">
+    <div class="modal-hdr">
+      <h3>Elegí los ítems del check-list</h3>
+      <button class="modal-close" onclick="closeCatalogoItems()">×</button>
+    </div>
+    <div class="modal-body" style="flex:1;overflow-y:auto;">
+      <p style="font-size:12px;color:var(--gray);margin-bottom:1rem;">Marcá todos los ítems que quieras. Podés seleccionar un grupo entero con el botón de al lado del título. Cuando termines, tocá <strong style="color:var(--gold);">Guardar seleccionados</strong>.</p>
+      <div id="catalogoItemsList"></div>
+    </div>
+    <div style="padding:1rem 1.5rem;border-top:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center;gap:1rem;background:var(--card);border-radius:0 0 var(--r) var(--r);">
+      <span id="catalogoContador" style="font-size:13px;color:var(--gray);">0 ítems seleccionados</span>
+      <div style="display:flex;gap:.5rem;">
+        <button class="btn-outline" style="font-size:13px;padding:9px 16px;" onclick="closeCatalogoItems()">Cancelar</button>
+        <button class="btn-gold" style="font-size:13px;padding:9px 20px;" onclick="guardarSeleccionCatalogo()">Guardar seleccionados</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL QR PERSONAL -->
+<div class="modal-overlay" id="personalQRModal">
+  <div class="modal-box" style="max-width:360px;">
+    <div class="modal-hdr">
+      <h3>📲 QR de acceso al check-list</h3>
+      <button class="modal-close" onclick="closePersonalQR()">×</button>
+    </div>
+    <div class="modal-body" style="text-align:center;">
+      <p style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Tu personal escanea este QR, ingresa su nombre y PIN, y carga el check-list.</p>
+      <div id="personalQRCode" style="display:inline-block;padding:12px;background:#fff;border-radius:var(--r);"></div>
+      <p style="font-size:11px;color:var(--gray);margin-top:1rem;word-break:break-all;" id="personalQRLink"></p>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- Botón flotante: volver arriba (aparece al bajar) -->
+<button id="btnVolverArriba" onclick="_scrollArriba()" title="Volver arriba" aria-label="Volver arriba">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+</button>
+<!-- CHATBOT GES — Asistente IA -->
+<div id="gesBtn" onclick="toggleGes()" style="position:fixed;bottom:24px;right:24px;width:60px;height:60px;border-radius:50%;background:var(--gold);box-shadow:0 4px 16px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9000;transition:transform .2s;font-size:26px;">
+  💬
+</div>
+
+<div id="gesChat" style="position:fixed;bottom:96px;right:24px;width:360px;max-width:calc(100vw - 48px);height:520px;max-height:calc(100vh - 140px);background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r2);box-shadow:0 12px 48px rgba(0,0,0,.4);display:none;flex-direction:column;z-index:9000;overflow:hidden;">
+  <!-- Header -->
+  <div style="padding:1rem 1.25rem;background:linear-gradient(135deg,var(--gold),var(--gold-lt));display:flex;align-items:center;gap:12px;">
+    <div style="width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;font-size:20px;">🤖</div>
+    <div style="flex:1;">
+      <div style="font-size:15px;font-weight:700;color:#0B0E14;">Ges</div>
+      <div style="font-size:11px;color:rgba(0,0,0,.6);">Tu asistente de IA · En línea</div>
+    </div>
+    <button onclick="toggleGes()" style="background:rgba(0,0,0,.15);border:none;width:28px;height:28px;border-radius:50%;color:#0B0E14;cursor:pointer;font-size:16px;">×</button>
+  </div>
+  <!-- Mensajes -->
+  <div id="gesMessages" style="flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.75rem;"></div>
+  <!-- Sugerencias rápidas -->
+  <div id="gesSuggestions" style="padding:0 1rem .5rem;display:flex;gap:.4rem;flex-wrap:wrap;"></div>
+  <!-- Input -->
+  <div style="padding:.85rem 1rem;border-top:1px solid var(--bdr);display:flex;gap:.5rem;">
+    <input type="text" id="gesInput" placeholder="Escribí tu pregunta..." onkeyup="if(event.key==='Enter')gesEnviar()" style="flex:1;padding:10px 12px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:13px;outline:none;"/>
+    <button onclick="gesEnviar()" style="background:var(--gold);border:none;border-radius:var(--r);width:40px;color:#0B0E14;cursor:pointer;font-size:16px;">➤</button>
+  </div>
+</div>
+
+
+  <!-- Backend y Servicios -->
+  <script src="../backend/config/supabase.js"></script>
+  <script src="../backend/services/authService.js"></script>
+  <script src="../backend/services/flotaService.js"></script>
+  <script src="../backend/services/checklistService.js"></script>
+  <script src="../backend/services/mantenimientoService.js"></script>
+  <script src="../backend/services/reportesService.js"></script>
+
+  <!-- Lógica Frontend -->
+  <script src="js/utils.js"></script>
+  <script src="js/ui-dashboard.js"></script>
+  <script>
+// Muestra el botón "volver arriba" y el chat de IA solo cuando el usuario baja.
+(function(){
+  // Detecta cuál elemento tiene el scroll REAL (puede ser app-main, o el body/window).
+  function _cont(){
+    var main = document.querySelector('.app-main');
+    if(main && main.scrollHeight > main.clientHeight + 5) return main;  // app-main scrollea
+    return document.scrollingElement || document.documentElement;       // si no, la página
+  }
+  function _scrollTop(){
+    var c=_cont();
+    if(c===document.documentElement||c===document.body||c===document.scrollingElement){
+      return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    }
+    return c.scrollTop;
+  }
+  window._scrollArriba = function(){
+    // Sube TODO lo que pueda estar scrolleado (página y contenedor), por las dudas
+    window.scrollTo({top:0,behavior:'smooth'});
+    var main = document.querySelector('.app-main');
+    if(main && main.scrollTop>0) main.scrollTo({top:0,behavior:'smooth'});
+  };
+  var _mouseEnEsquina = false;  // true cuando el mouse está en la esquina inferior derecha
+
+  function _onScroll(){
+    var y = _scrollTop();
+    var btn = document.getElementById('btnVolverArriba');
+    var ges = document.getElementById('gesBtn');
+    var mostrar = (y > 250) || _mouseEnEsquina;
+    if(btn) btn.classList.toggle('visible', (y>250) || _mouseEnEsquina);
+    // El chat de IA: se ve solo al bajar. PERO si el chat está abierto, siempre visible.
+    if(ges){
+      var gc = document.getElementById('gesChat');
+      var chatAbierto = gc && gc.style.display && gc.style.display!=='none';
+      var verChat = mostrar || chatAbierto;
+      ges.style.opacity = verChat ? '1' : '0';
+      ges.style.pointerEvents = verChat ? 'auto' : 'none';
+      ges.style.transition = 'opacity .25s';
+    }
+  }
+  // Detectar el mouse en la esquina inferior derecha (para mostrar los botones
+  // aunque no se haya bajado). Zona sensible: 160px x 160px de la esquina.
+  document.addEventListener('mousemove', function(e){
+    var enEsquina = (e.clientX > window.innerWidth - 160) && (e.clientY > window.innerHeight - 160);
+    if(enEsquina !== _mouseEnEsquina){ _mouseEnEsquina = enEsquina; _onScroll(); }
+  });
+
+  // Escuchar scroll en el contenedor principal y en window
+  window.addEventListener('scroll', _onScroll, true);
+  document.addEventListener('DOMContentLoaded', function(){
+    var c=document.querySelector('.app-main'); if(c) c.addEventListener('scroll', _onScroll);
+    _onScroll();
+    // Avisos de arranque: archivo abierto desde el disco / sin conexión a la base
+    try{ if(typeof _avisarAbiertoDesdeDisco==='function') _avisarAbiertoDesdeDisco(); }catch(e){}
+    try{ if(typeof _avisarSinConexionBase==='function') _avisarSinConexionBase(); }catch(e){}
+    try{ if(typeof _verificarArchivoCompleto==='function') _verificarArchivoCompleto(); }catch(e){}
+  });
+  setTimeout(_onScroll, 500);
+})();
+</script>
+  <script>
+  window._ARCHIVO_COMPLETO = true;
+  window._GESFLOTA_BUILD = '2026-10-13-fix-carga';
+  function _verificarArchivoCompleto(){
+    if(window._ARCHIVO_COMPLETO) return true;
+    var d = document.createElement('div');
+    d.setAttribute('role','alert');
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99997;background:#7A1F1F;color:#fff;'
+      + 'padding:10px 16px;font:600 13px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;text-align:center;';
+    d.textContent = '\u26A0\uFE0F El archivo se carg\u00F3 incompleto. Volv\u00E9 a subirlo al hosting '
+      + 'y record\u00E1 con Ctrl+Shift+R.';
+    if(document.body) document.body.appendChild(d);
+    return false;
+  }
+</script>
+</body>
+</html>

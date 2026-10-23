@@ -1,0 +1,76 @@
+/* ==========================================================================
+   GESFLOTA - COMPONENTES REUTILIZABLES (components.css)
+   ==========================================================================
+   💡 GUÍA PARA VIBE CODERS:
+   Aquí están los bloques visuales que se repiten en toda la aplicación:
+   - Botones (.btn-gold, .btn-outline, .btn-danger, etc.)
+   - Formularios, inputs, selects y cajas de texto
+   - Tarjetas (.plan-card, .v-card, .metric-card)
+   - Modales (.modal, .modal-box, .modal-header)
+   - Etiquetas y badges de estado (.badge-ok, .badge-warn, .badge-danger)
+   ========================================================================== */
+
+/* ══════════════════════════════════════════
+   PAYMENT MODAL
+══════════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(3px);
+  z-index:500;display:none;align-items:center;justify-content:center;padding:1rem;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:var(--card);border:1px solid var(--gold-border);
+  border-radius:var(--r2);width:100%;max-width:480px;
+  box-shadow:0 0 60px rgba(196,154,58,.1);
+  max-height:90vh;display:flex;flex-direction:column;overflow:hidden;
+}
+.modal-hdr{
+  padding:1rem 1.25rem;border-bottom:1px solid var(--bdr);
+  background:var(--gold-dim);display:flex;justify-content:space-between;align-items:center;
+  flex-shrink:0;
+}
+.modal-hdr h3{font-size:16px;font-weight:700;color:var(--gold);}
+.modal-close{background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;line-height:1;}
+.modal-body{padding:1.5rem;overflow-y:auto;flex:1;}
+.pay-methods{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem;}
+.pay-method{
+  padding:.85rem;border-radius:var(--r);border:1px solid var(--bdr);
+  cursor:pointer;transition:all .15s;text-align:center;
+}
+.pay-method:hover,.pay-method.selected{border-color:var(--gold);background:var(--gold-dim);}
+.pay-method .pm-icon{font-size:24px;display:block;margin-bottom:4px;}
+.pay-method .pm-lbl{font-size:12px;font-weight:500;color:var(--white);}
+.transfer-info{background:rgba(0,0,0,.2);border:1px solid var(--bdr);border-radius:var(--r);padding:1rem;font-size:13px;display:none;}
+.transfer-info.show{display:block;}
+.transfer-row{display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid var(--bdr);color:var(--gray);}
+.transfer-row:last-child{border-bottom:none;}
+.transfer-row span:last-child{color:var(--white);font-weight:500;}
+.modal-btn{width:100%;padding:13px;border-radius:var(--r);border:none;background:var(--gold);color:#000;font-size:15px;font-weight:700;cursor:pointer;margin-top:1rem;transition:background .15s;}
+.modal-btn:hover{background:var(--gold-lt);}
+
+/* ══════════════════════════════════════════
+   NOTIFICATION TOAST
+══════════════════════════════════════════ */
+.toast-wrap{position:fixed;top:80px;right:1.5rem;z-index:9600;display:flex;flex-direction:column;gap:.5rem;pointer-events:none;}
+.toast-wrap .toast{pointer-events:auto;}
+.toast{
+  background:var(--card2);border:1px solid var(--bdr);border-radius:var(--r);
+  padding:12px 16px;font-size:13px;color:var(--white);min-width:280px;max-width:360px;
+  box-shadow:0 4px 24px rgba(0,0,0,.4);display:flex;align-items:flex-start;gap:10px;
+  transform:translateX(120%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.toast.show{transform:translateX(0);}
+.toast.success{border-color:rgba(16,185,129,.4);background:linear-gradient(rgba(16,185,129,.14),rgba(16,185,129,.14)),var(--card2);}
+.toast.error{border-color:rgba(239,68,68,.4);background:linear-gradient(rgba(239,68,68,.14),rgba(239,68,68,.14)),var(--card2);}
+.toast.warning{border-color:rgba(245,158,11,.4);background:linear-gradient(rgba(245,158,11,.14),rgba(245,158,11,.14)),var(--card2);}
+.toast-icon{font-size:16px;flex-shrink:0;}
+.toast-text{flex:1;}
+.toast-title{font-weight:600;margin-bottom:1px;}
+.toast-sub{font-size:12px;color:var(--gray);}
+
+
+.btn-outline{padding:8px 16px;border-radius:var(--r);border:1px solid var(--bdr);color:var(--white);font-size:13px;font-weight:500;cursor:pointer;background:transparent;transition:all .15s;}
+.btn-outline:hover{background:rgba(255,255,255,.04);border-color:var(--gray-soft);}
+.btn-gold{padding:8px 18px;border-radius:var(--r);border:none;background:var(--gold);color:#0B0E14;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-gold:hover{background:var(--gold-lt);}
+
