@@ -748,6 +748,14 @@ function cerrarNovedades(){
 }
 
 function loginSuccess(user){
+  // En el split multipágina, login.html carga este mismo JS pero NO tiene el DOM
+  // del panel (navbar, vistas, toasts). Si la sesión se creó estando en login.html,
+  // la mandamos a dashboard.html, que sí tiene todo, y ahí la sesión se restaura sola.
+  if(!document.getElementById('navUserName')){
+    try{ window.location.replace('dashboard.html'); }
+    catch(e){ window.location.href = 'dashboard.html'; }
+    return;
+  }
   if(typeof arrancarVigilanteChecklists==='function') arrancarVigilanteChecklists();
 
   currentUser = user;
@@ -2727,6 +2735,13 @@ function sendPaymentAlert(company){
 function showToast(msg, type){
   var icons = { success:'✓', error:'✗', warning:'⚠' };
   var wrap = document.getElementById('toastWrap');
+  if(!wrap){
+    // Páginas sin contenedor de toasts (p. ej. login.html): lo creamos al vuelo
+    wrap = document.createElement('div');
+    wrap.id = 'toastWrap';
+    wrap.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:99999;display:flex;flex-direction:column;gap:.5rem;';
+    (document.body||document.documentElement).appendChild(wrap);
+  }
   var t = document.createElement('div');
   t.className = 'toast '+(type||'success');
   t.innerHTML = '<span class="toast-icon">'+(icons[type]||'✓')+'</span><div class="toast-text"><div class="toast-title">'+escapeHtml(msg)+'</div></div>';

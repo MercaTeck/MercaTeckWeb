@@ -51,6 +51,23 @@ const BASE = 'file://' + path.join(__dirname, '..', 'frontend') + '/';
         'dash: showAdminTab("facturacion") togglea bien');
   check(!(await p2.evaluate(() => document.body.innerHTML.indexOf('Borrar datos de Flota')>=0)), 'dash: "Borrar mis datos" eliminado');
 
+  // login.html — regresión: loginSuccess NO debe tirar (antes fallaba en navUserName)
+  // y showToast debe auto-crear su contenedor. En el split, login.html no tiene el DOM del panel.
+  const p3 = await ctx.newPage(); const e3=[];
+  p3.on('pageerror', e => e3.push('login: '+e.message));
+  await p3.goto(BASE+'login.html', { waitUntil:'domcontentloaded' });
+  await p3.waitForTimeout(400);
+  const r3 = await p3.evaluate(()=>{
+    let toastThrew=false, lsThrew=false;
+    try{ Object.defineProperty(window.location,'replace',{configurable:true,value:()=>{}}); }catch(e){}
+    try{ showToast('t','success'); }catch(e){ toastThrew=true; }
+    try{ loginSuccess({email:'x@y.com',name:'G',company:'C',plan:'pro',role:'admin',empresa_id:'1',rol_real:'superadmin',estado_pago:'vencido'}); }catch(e){ lsThrew=true; }
+    return { toastThrew, lsThrew, wrap: !!document.getElementById('toastWrap') };
+  });
+  check(r3.toastThrew===false, 'login.html: showToast no tira');
+  check(r3.wrap===true, 'login.html: showToast crea #toastWrap');
+  check(r3.lsThrew===false, 'login.html: loginSuccess no tira (redirige a dashboard)');
+
   console.log('\nErrores de página:', errs.length?('\n  - '+errs.join('\n  - ')):'ninguno');
   console.log('DOM panel → PASÓ: '+pass+' | FALLÓ: '+fail);
   await browser.close();
