@@ -764,12 +764,8 @@ function loginSuccess(user){
   // del panel (navbar, vistas, toasts). Si la sesión se creó estando en login.html,
   // la mandamos a dashboard.html, que sí tiene todo, y ahí la sesión se restaura sola.
   if(!document.getElementById('navUserName')){
-    // ANTI-BUCLE: solo redirigir si NO estamos ya en dashboard.html. Si estuviéramos
-    // en dashboard.html y faltara navUserName, redirigir recargaría en loop infinito.
-    if(window.location.pathname.indexOf('dashboard.html') === -1){
-      try{ window.location.replace('dashboard.html'); }
-      catch(e){ window.location.href = 'dashboard.html'; }
-    }
+    try{ window.location.replace('dashboard.html'); }
+    catch(e){ window.location.href = 'dashboard.html'; }
     return;
   }
   if(typeof arrancarVigilanteChecklists==='function') arrancarVigilanteChecklists();
@@ -2479,8 +2475,8 @@ function showView(name, targetId){
     else if(name==='operario') target = 'operario.html';
 
     if(target){
-      // Preservar el query string (ej. ?cl= del acceso de operario) al cambiar de página,
-      // si no se pierde el empresa_id y el operario no puede ingresar.
+      // Preservar el query string (ej. ?cl= del acceso de operario) al cambiar de
+      // página; si no, se pierde el empresa_id y el operario no puede ingresar.
       var _search = window.location.search || '';
       if(_search && target.indexOf('?')===-1){
         var _h = target.indexOf('#');
@@ -6100,8 +6096,9 @@ function _genPin(){
 }
 
 function getChecklistBaseUrl(){
-  // El link del operario debe apuntar SIEMPRE a operario.html (la página liviana),
-  // sin importar desde qué página del panel se genere. Se adapta al dominio solo.
+  // El link del operario debe apuntar SIEMPRE a operario.html (la página del
+  // operario), sin importar desde qué página del panel se genere. Se adapta al
+  // dominio solo.
   var path = (window.location.pathname || '/').replace(/[^\/]*$/, 'operario.html');
   return window.location.origin + path;
 }
@@ -11521,27 +11518,11 @@ function renderDestinatarios(){
 }
 
 function deleteDestinatario(i){
-  var d = _destinatarios[i];
-  if(!d) return;
-  genConfirm('Eliminar destinatario', '¿Eliminar a '+d.email+'? Se elimina el email y su alerta programada.', function(){
-    function finalizar(){
-      // Quitar del array por id (por si cambió el orden) o por índice
-      var idx = (d._id!=null) ? _destinatarios.findIndex(function(x){ return x._id===d._id; }) : i;
-      if(idx<0) idx = i;
-      _destinatarios.splice(idx,1);
-      saveStateLocal('destinatarios', _destinatarios);
-      renderDestinatarios();
-      showToast('Destinatario y alerta eliminados','success');
-    }
-    // Borrar también en Supabase (antes solo se borraba localmente y al recargar volvía)
-    if(sb && window._empresaId && d._id){
-      sb.from('destinatarios_email').delete().eq('id', d._id).eq('empresa_id', window._empresaId).then(function(res){
-        if(res.error){ showToast('No se pudo eliminar: '+(res.error.message||''),'error'); return; }
-        finalizar();
-      });
-    } else {
-      finalizar();
-    }
+  genConfirm('Eliminar destinatario', '¿Eliminar a '+_destinatarios[i].email+'?', function(){
+    _destinatarios.splice(i,1);
+    saveStateLocal('destinatarios', _destinatarios);
+    renderDestinatarios();
+    showToast('Destinatario eliminado','success');
   });
 }
 
@@ -12682,4 +12663,25 @@ window.addEventListener('load', function(){
     _onScroll();
   });
   setTimeout(_onScroll, 500);
+})();
+
+// ══════════════════════════════════════════════════════
+//  OCULTAR "Continuar con Google" (provider no habilitado en Supabase)
+//  Se hace por JS para no depender de editar login.html. Oculta los botones
+//  .auth-google y el divisor "o" que los precede, en login y registro.
+// ══════════════════════════════════════════════════════
+(function(){
+  function _ocultarGoogle(){
+    try{
+      document.querySelectorAll('.auth-google').forEach(function(btn){
+        btn.style.display = 'none';
+        var prev = btn.previousElementSibling;
+        if(prev && prev.classList && prev.classList.contains('auth-divider')) prev.style.display='none';
+      });
+    }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', _ocultarGoogle);
+  else _ocultarGoogle();
+  // Por si la vista de registro se arma/rearma después:
+  setTimeout(_ocultarGoogle, 600);
 })();
