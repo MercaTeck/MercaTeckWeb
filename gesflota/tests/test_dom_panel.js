@@ -13,8 +13,15 @@ const BASE = 'file://' + path.join(__dirname, '..', 'frontend') + '/';
   const ctx = await browser.newContext();
   await ctx.route('**/*', route => route.request().url().startsWith('file://') ? route.continue() : route.abort());
   await ctx.addInitScript(() => {
-    const chain = () => new Proxy(function(){}, { get: () => chain(), apply: () => Promise.resolve({ data: null, error: null }) });
-    window.supabase = { createClient: () => ({ auth: { getUser: async()=>({data:{user:null}}), onAuthStateChange(){}, getSession: async()=>({data:{session:null}}) }, from: chain, rpc: chain, functions: { invoke: async()=>({data:null,error:null}) }, channel: chain }) };
+    // Stub encadenable Y "thenable": soporta .from().select().order().eq().single().then(), rpc, functions, channel
+    const res = { data: null, error: null };
+    const makeChain = () => new Proxy(function(){}, {
+      get(t, p){ if(p==='then') return (f)=>{ try{f(res);}catch(e){} return makeChain(); };
+                 if(p==='catch') return ()=>makeChain();
+                 return ()=>makeChain(); },
+      apply(){ return makeChain(); }
+    });
+    window.supabase = { createClient: () => ({ auth: { getUser: async()=>({data:{user:null}}), onAuthStateChange(){}, getSession: async()=>({data:{session:null}}), signOut(){} }, from: ()=>makeChain(), rpc: ()=>makeChain(), functions: { invoke: ()=>makeChain() }, channel: ()=>makeChain() }) };
   });
 
   let pass=0, fail=0; const errs=[];
