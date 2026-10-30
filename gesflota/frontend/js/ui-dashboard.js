@@ -32,19 +32,7 @@ var SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 // Inicializar cliente (la librería expone window.supabase)
 var sb = null;
 try {
-  // IMPORTANTE: reusar el cliente que ya creó backend/config/supabase.js.
-  // Si se crea un SEGUNDO cliente con la misma storageKey, ambos tienen
-  // autoRefreshToken y pelean por el refresh token (que es de un solo uso):
-  // uno lo rota, el otro queda inválido → te saca la sesión al refrescar
-  // (warning "Multiple GoTrueClient instances detected").
-  var _sbExistente = (window.GesflotaBackend && window.GesflotaBackend.supabase &&
-                      typeof window.GesflotaBackend.supabase.getClient === 'function')
-                      ? window.GesflotaBackend.supabase.getClient()
-                      : (window.sb || null);
-  if(_sbExistente){
-    sb = _sbExistente;
-    console.log('✓ Supabase conectado (cliente compartido)');
-  } else if(window.supabase && window.supabase.createClient){
+  if(window.supabase && window.supabase.createClient){
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: {
         detectSessionInUrl: true,  // detecta el token de confirmación en el #hash
@@ -53,7 +41,6 @@ try {
         autoRefreshToken: true
       }
     });
-    window.sb = sb;
     console.log('✓ Supabase conectado');
   }
 } catch(e){ console.warn('Supabase no disponible:', e); }
@@ -777,8 +764,12 @@ function loginSuccess(user){
   // del panel (navbar, vistas, toasts). Si la sesión se creó estando en login.html,
   // la mandamos a dashboard.html, que sí tiene todo, y ahí la sesión se restaura sola.
   if(!document.getElementById('navUserName')){
-    try{ window.location.replace('dashboard.html'); }
-    catch(e){ window.location.href = 'dashboard.html'; }
+    // ANTI-BUCLE: solo redirigir si NO estamos ya en dashboard.html. Si estuviéramos
+    // en dashboard.html y faltara navUserName, redirigir recargaría en loop infinito.
+    if(window.location.pathname.indexOf('dashboard.html') === -1){
+      try{ window.location.replace('dashboard.html'); }
+      catch(e){ window.location.href = 'dashboard.html'; }
+    }
     return;
   }
   if(typeof arrancarVigilanteChecklists==='function') arrancarVigilanteChecklists();
