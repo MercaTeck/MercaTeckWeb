@@ -820,3 +820,16 @@ body::-webkit-scrollbar-track{background:transparent;}
 
 /* Modo solo-lectura (período vencido) */
 body[data-solo-lectura="1"] .btn-solo-escritura{opacity:.4;pointer-events:none;}
+
+/* ════════════════════════════════════════════════
+   PANEL ADMIN — Pestañas (vista compacta)
+   ════════════════════════════════════════════════ */
+.adm-tabbar{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem;border-bottom:1px solid var(--bdr);padding-bottom:.6rem;}
+.adm-tab-btn{font-size:13px;padding:8px 14px;border-radius:8px;border:1px solid var(--bdr);background:transparent;color:var(--gray);cursor:pointer;white-space:nowrap;transition:all .15s;font-family:inherit;}
+.adm-tab-btn:hover{color:var(--white);border-color:var(--gold-border,var(--gold));}
+.adm-tab-btn.active{background:var(--gold);color:#0B0E14;border-color:var(--gold);font-weight:700;}
+.adm-tab-badge{display:inline-block;margin-left:6px;background:#F87171;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;vertical-align:middle;}
+.admtab{display:none;}
+.admtab.active{display:block;animation:admFade .2s ease;}
+.admtab.app-card{margin-top:0 !important;margin-bottom:0 !important;}
+@keyframes admFade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}

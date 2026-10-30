@@ -1,0 +1,46 @@
+# ============================================================================
+#  MercaTeck / GesFlota — Seguridad (Apache)
+#  Headers de seguridad + forzado de HTTPS.
+#  Si algún recurso externo deja de cargar, revisá la consola del navegador:
+#  el mensaje "Refused to load ... Content-Security-Policy" indica qué origen
+#  agregar en la directiva correspondiente del CSP de abajo.
+# ============================================================================
+
+# ── 1) Forzar HTTPS ─────────────────────────────────────────────────────────
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# ── 2) Headers de seguridad ──────────────────────────────────────────────────
+<IfModule mod_headers.c>
+  # Evita clickjacking (el sitio no puede embeberse en un iframe de otro dominio)
+  Header always set X-Frame-Options "SAMEORIGIN"
+  # Evita que el navegador "adivine" tipos MIME
+  Header always set X-Content-Type-Options "nosniff"
+  # Controla cuánta info de referer se envía
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  # HSTS: fuerza HTTPS por 1 año (solo se envía sobre HTTPS)
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+  # Restringe APIs sensibles del navegador (no usamos cámara, micrófono se usa solo en demo de voz)
+  Header always set Permissions-Policy "geolocation=(), camera=(), payment=()"
+
+  # ── Content-Security-Policy ──
+  # Allowlist basada en los orígenes que el sitio realmente usa.
+  #  script : cdnjs, jsdelivr (supabase-js, xlsx, qrcode, emailjs), hCaptcha
+  #  style  : Google Fonts + estilos inline del sitio
+  #  font   : Google Fonts (gstatic)
+  #  img    : propias, data/blob (QR generado) y api.qrserver.com
+  #  connect: Supabase (REST + realtime wss), hCaptcha, emailjs API
+  #  frame  : hCaptcha (el desafío "no soy un robot")
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://js.hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.hcaptcha.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://api.qrserver.com https://*.hcaptcha.com; connect-src 'self' https://fbdojuppvokdvvzsegoe.supabase.co wss://fbdojuppvokdvvzsegoe.supabase.co https://api.emailjs.com https://*.hcaptcha.com; frame-src https://*.hcaptcha.com https://js.hcaptcha.com; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'self'"
+</IfModule>
+
+# ── 3) No listar el contenido de las carpetas ────────────────────────────────
+Options -Indexes
+
+# ── 4) Bloquear acceso a archivos sensibles ──────────────────────────────────
+<FilesMatch "(^\.|\.(sql|md|map)$)">
+  Require all denied
+</FilesMatch>

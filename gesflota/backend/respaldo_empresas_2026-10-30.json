@@ -1,0 +1,37 @@
+{
+  "generado": "2026-10-30T04:17:03Z",
+  "nota": "Respaldo previo a limpieza de empresas vencidas. empresas + perfiles (emails) + vehiculos de las cuentas vencidas que tenían datos cargados.",
+  "empresas": [
+    {"id":"16d8e9f2-d0cc-4881-b7de-d421ca19b147","nombre":"Prueba","plan":"enterprise","estado_pago":"al_dia","creado_en":"2026-06-28","vehiculos":9,"nota":"CUENTA DE GERMÁN — NO BORRAR (al_dia)"},
+    {"id":"e61275f7-6bf8-464c-afad-7bf4e090ecfc","nombre":"Mercateck","plan":"enterprise","estado_pago":"vencido","creado_en":"2026-06-28","vehiculos":0,"perfil":"mercateckinfo@gmail.com (superadmin)"},
+    {"id":"2b47dcf8-e2c6-4548-87f4-e7e8abc6c0ff","nombre":"Prueba Basic","plan":"pro","estado_pago":"vencido","vehiculos":0,"perfil":"germanmercado160@gmail.com"},
+    {"id":"b8b3517c-0275-4b1e-98f0-3b7250a98b25","nombre":"Prueba Pro","plan":"pro","estado_pago":"vencido","vehiculos":0,"perfil":"germanmomentos@gmail.com"},
+    {"id":"4956e35b-87cc-440f-b7be-01af1934e1b7","nombre":"Enterprise","plan":"enterprise","estado_pago":"vencido","vehiculos":0,"perfil":"abrilmartinamercado@gmail.com (Martina)"},
+    {"id":"d0331a8a-bcb1-4739-91c1-a1666851d202","nombre":"Elida Prueb","plan":"pro","estado_pago":"vencido","vehiculos":0,"perfil":"palmaelida1@gmail.com (Elida)"},
+    {"id":"1989d060-3a64-4f98-8361-42d5a48b8c1d","nombre":"german Pro 4","plan":"pro","estado_pago":"vencido","vehiculos":0,"perfil":"germanmercadook+prueba4@gmail.com"},
+    {"id":"aa5df864-894c-44ee-91dc-5896ac394d7d","nombre":"german enterprise 1","plan":"enterprise","estado_pago":"vencido","vehiculos":0,"perfil":"germanmercadook+pruba5@gmail.com"},
+    {"id":"3f8c68aa-fff1-4d5e-a637-55b8b985d7ed","nombre":"german enterprise 6","plan":"enterprise","estado_pago":"vencido","vehiculos":0,"perfil":"germanmercadook+pruba6@gmail.com"},
+    {"id":"4b44f92b-8ccd-4b8c-9721-9d7d2780f1e4","nombre":"german pro","plan":"pro","estado_pago":"vencido","vehiculos":0,"perfil":"germanmercadook+pc1@gmail.com"},
+    {"id":"adc44598-127e-4df2-bb76-436f0448f355","nombre":"Ger23pro","plan":"pro","estado_pago":"vencido","vehiculos":0,"perfil":"germanmercadook+pc2@gmail.com"},
+    {"id":"58bf9719-331e-4979-bf85-6d5f04ece0db","nombre":"GERMANBASIC7","plan":"pro","estado_pago":"vencido","vehiculos":0,"perfil":"germanmercadook+basic3@gmail.com"},
+    {"id":"5443255a-0699-407d-930d-42ec1b12e7e1","nombre":"GERMANBASIC7","plan":"pro","estado_pago":"vencido","vehiculos":0,"perfil":"germanmercadook+ok@gmail.com"},
+    {"id":"923b8c7b-02af-4a34-b739-e80da1c6fc27","nombre":"GERMANBASIC7","plan":"pro","estado_pago":"vencido","vehiculos":0,"perfil":"germanmercadook+ok3@gmail.com"},
+    {"id":"e4991df5-a16d-4f36-b882-106e82e721b5","nombre":"Cortez Construcciones SRL","plan":"pro","estado_pago":"vencido","vehiculos":1,"perfil":"cortez.walter09@gmail.com (Walter) — POSIBLE CLIENTE REAL"},
+    {"id":"7fec2ec7-4304-404a-86ea-18c85cb43976","nombre":"germanmercado","plan":"pro","estado_pago":"vencido","vehiculos":8,"perfil":"germanmercadook+10@gmail.com"},
+    {"id":"cf867e6e-e35e-4c3e-b766-6ee1a70005de","nombre":"basico","plan":"pro","estado_pago":"vencido","vehiculos":0,"perfil":"germanmercado+123@gmail.com"},
+    {"id":"373e84d9-5821-497f-8fe5-162d0a97547b","nombre":"TEST2026","plan":"pro","estado_pago":"vencido","vehiculos":0,"perfil":"(sin usuario)"}
+  ],
+  "vehiculos_cortez": [
+    {"id":"8780f0a8-ed7a-4a95-9db2-9931f9053426","empresa":"Cortez Construcciones SRL","id_interno":"A101","patente":"AB123CD","tipo":"Camioneta","obra":"Obra Norte","valor_actual":45000}
+  ],
+  "vehiculos_germanmercado": [
+    {"id":"d4f942a1-a389-4d71-8a0d-b167aabc93bb","id_interno":"P-01","patente":"AF45632","tipo":"Camioneta","marca":"Toyota","modelo":"Hilux"},
+    {"id":"ba513b51-fb00-4020-9c0c-9681a007f9b3","id_interno":"P-02","patente":"WD012GH","tipo":"Camión","marca":"Mercedes","modelo":"Actros"},
+    {"id":"942850cb-fe4f-4d65-b589-91720c5d3666","id_interno":"P-04","patente":null,"tipo":"Autoelevador","marca":"Genco","modelo":"A250"},
+    {"id":"2bdf4bf0-44d7-4e94-bc13-51130c562ad8","id_interno":"P-03","patente":null,"tipo":"Máquina vial","marca":"Caterpillar","modelo":"420F"},
+    {"id":"055136cd-92ab-479c-806b-a48c7378e125","id_interno":"P-05","patente":"AG123HG","tipo":"Camioneta","marca":"Ford","modelo":"Ranger"},
+    {"id":"41542442-7b1a-4181-b39f-8603dcb80335","id_interno":"P-06","patente":"WD013HG","tipo":"Camión","marca":"Mercedes","modelo":"Tector"},
+    {"id":"d9d331f3-6997-4e37-b6e2-10a2517b86b8","id_interno":"P-07","patente":null,"tipo":"Máquina vial","marca":"Caterpillar","modelo":"420F"},
+    {"id":"a231acd2-af5d-4877-b180-42db05759be4","id_interno":"P-08","patente":null,"tipo":"Autoelevador","marca":"Genco","modelo":"A250"}
+  ]
+}

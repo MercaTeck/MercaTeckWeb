@@ -608,6 +608,52 @@ function _captchaValido(){
   return !!_hcaptchaToken;
 }
 
+// ── hCaptcha para el ALTA DE DEMO (panel superadmin) ──
+// Widget aparte del registro público: Supabase exige captcha_token también
+// cuando el superadmin crea una cuenta demo (si no, da "no captcha_token found").
+var _altaDemoCaptchaToken = null;
+var _altaDemoCaptchaWidgetId = null;
+function _initCaptchaAltaDemo(){
+  if(!HCAPTCHA_SITE_KEY){ return; }
+  var box = document.getElementById('altaDemoCaptchaBox');
+  if(box) box.style.display = 'block';
+  function render(){
+    if(window.hcaptcha && document.getElementById('hcaptcha-altademo') && _altaDemoCaptchaWidgetId===null){
+      _altaDemoCaptchaWidgetId = window.hcaptcha.render('hcaptcha-altademo', {
+        sitekey: HCAPTCHA_SITE_KEY,
+        theme: 'dark',
+        callback: function(token){ _altaDemoCaptchaToken = token; },
+        'expired-callback': function(){ _altaDemoCaptchaToken = null; }
+      });
+    }
+  }
+  if(window.hcaptcha){ render(); return; }
+  if(!document.getElementById('hcaptcha-script')){
+    var s = document.createElement('script');
+    s.id = 'hcaptcha-script';
+    s.src = 'https://js.hcaptcha.com/1/api.js?render=explicit';
+    s.async = true; s.defer = true;
+    s.onload = render;
+    document.head.appendChild(s);
+  } else {
+    // el script ya se está cargando (lo pidió el registro): reintentar el render
+    var tries = 0;
+    var iv = setInterval(function(){
+      tries++;
+      if(window.hcaptcha){ clearInterval(iv); render(); }
+      else if(tries > 40){ clearInterval(iv); }
+    }, 150);
+  }
+}
+function _resetCaptchaAltaDemo(){
+  _altaDemoCaptchaToken = null;
+  try{
+    if(HCAPTCHA_SITE_KEY && window.hcaptcha && _altaDemoCaptchaWidgetId!==null){
+      window.hcaptcha.reset(_altaDemoCaptchaWidgetId);
+    }
+  }catch(e){}
+}
+
 function doGoogleLogin(){
   if(!sb){ showToast('Sin conexión con el servidor. Reintentá en un momento.','error'); return; }
   // Desde el disco (file://) Google RECHAZA el redirect: da 400 siempre.
@@ -1385,6 +1431,7 @@ function crearCuentaDemo(){
   if(!_emailValido(email)) return fallo('Revisá el email de acceso.');
   if(pass.length < 8) return fallo('La contraseña necesita al menos 8 caracteres.');
   if(!sb || !window.supabase || !window.supabase.createClient) return fallo('No hay conexión con la base.');
+  if(HCAPTCHA_SITE_KEY && !_altaDemoCaptchaToken) return fallo('Completá la verificación "No soy un robot" antes de crear la cuenta.');
 
   var nom = nombre;
   var ape = '';
@@ -1407,11 +1454,17 @@ function crearCuentaDemo(){
   sbAlta.auth.signUp({
     email: email,
     password: pass,
-    options: { data: { empresa: empresa, nombre: nom, apellido: ape, email: email, plan: 'demo', version_terminos: '2025-06', user_agent: 'alta-demo-mercateck' } }
+    options: {
+      captchaToken: (HCAPTCHA_SITE_KEY && _altaDemoCaptchaToken) ? _altaDemoCaptchaToken : undefined,
+      data: { empresa: empresa, nombre: nom, apellido: ape, email: email, plan: 'demo', version_terminos: '2025-06', user_agent: 'alta-demo-mercateck' }
+    }
   }).then(function(res){
+    // El token de hCaptcha es de un solo uso: lo reseteamos siempre tras el intento
+    _resetCaptchaAltaDemo();
     if(res.error){
       var msg = res.error.message || 'No se pudo crear la cuenta.';
       if(msg.indexOf('already registered')>=0) msg = 'Ese email ya tiene cuenta en GesFlota.';
+      if(msg.toLowerCase().indexOf('captcha')>=0) msg = 'La verificación anti-robot falló o expiró. Reintentá el "No soy un robot".';
       return fallo(msg);
     }
     var vence = _finDeDemo();
@@ -1424,7 +1477,7 @@ function crearCuentaDemo(){
     btn.disabled=false; btn.textContent='Crear cuenta demo';
     ['adEmpresa','adNombre','adEmail','adPass'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
     if(typeof cargarPanelAdmin==='function'){ try{ cargarPanelAdmin(); }catch(e){} }
-  }).catch(function(e){ fallo('No se pudo crear la cuenta: '+e); });
+  }).catch(function(e){ _resetCaptchaAltaDemo(); fallo('No se pudo crear la cuenta: '+e); });
 }
 
 // Email que recibe la empresa cuando MercaTeck le da el alta de la demo
@@ -1669,6 +1722,7 @@ function renderSolicitudes(){
     if(_solicitudes.length){ badge.style.display='inline-block'; badge.textContent=_solicitudes.length+' pendiente'+(_solicitudes.length>1?'s':''); }
     else { badge.style.display='none'; }
   }
+  if(typeof _setAdmTabBadge==='function'){ _setAdmTabBadge('admTabBadgePedidos', _solicitudes.length); }
   if(!_solicitudes.length){
     body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:1.25rem;">No hay pedidos pendientes.</td></tr>';
     return;
@@ -1957,9 +2011,34 @@ function confirmarPago(pagoId){
     });
 }
 
+// ── Pestañas del panel admin ──
+function showAdminTab(name){
+  var cont = document.getElementById('view-admin');
+  if(!cont) return;
+  var panels = cont.querySelectorAll('.admtab');
+  for(var i=0;i<panels.length;i++){
+    var p = panels[i];
+    var esta = (p.id === 'admtab-'+name) || (p.getAttribute('data-admtab-panel') === name);
+    if(esta){ p.classList.add('active'); } else { p.classList.remove('active'); }
+  }
+  var btns = cont.querySelectorAll('#admTabbar .adm-tab-btn');
+  for(var j=0;j<btns.length;j++){
+    var b = btns[j];
+    if(b.getAttribute('data-admtab') === name){ b.classList.add('active'); } else { b.classList.remove('active'); }
+  }
+}
+// Espeja un contador en el botón de pestaña (para no perder el aviso al ocultar el panel)
+function _setAdmTabBadge(id, count){
+  var el = document.getElementById(id);
+  if(!el) return;
+  if(count > 0){ el.style.display='inline-block'; el.textContent = count; }
+  else { el.style.display='none'; }
+}
+
 function cargarPanelAdmin(){
   var elVence = document.getElementById('adVence');
   if(elVence) elVence.textContent = _fechaAR(_finDeDemo());
+  if(typeof _initCaptchaAltaDemo==='function'){ try{ _initCaptchaAltaDemo(); }catch(e){} }
   if(!sb){ return; }
   if(typeof cargarTicketsAdmin==='function'){ cargarTicketsAdmin(); }
   if(typeof cargarPagos==='function'){ cargarPagos(); }
@@ -2026,7 +2105,8 @@ function cargarPanelAdmin(){
         +'<td style="white-space:nowrap;">'
           +'<button class="adm-plan-btn" data-id="'+e.id+'" style="font-size:11px;padding:3px 9px;margin-bottom:3px;border-radius:5px;border:1px solid var(--bdr);background:transparent;color:var(--gold);cursor:pointer;">Cambiar plan</button> '
           +'<button class="adm-mail-btn" data-id="'+e.id+'" data-nombre="'+escapeHtml(e.nombre||'')+'" style="font-size:11px;padding:3px 9px;margin-bottom:3px;border-radius:5px;border:1px solid var(--bdr);background:transparent;color:#60A5FA;cursor:pointer;">✉️ Email</button> '
-          +'<button class="adm-block-btn" data-id="'+e.id+'" data-nombre="'+escapeHtml(e.nombre||'')+'" data-bloq="'+(bloqueada?'1':'0')+'" style="font-size:11px;padding:3px 9px;border-radius:5px;border:1px solid '+(bloqueada?'rgba(16,185,129,.3)':'rgba(239,68,68,.3)')+';background:transparent;color:'+(bloqueada?'#34D399':'#F87171')+';cursor:pointer;">'+(bloqueada?'🔓 Desbloquear':'🔒 Bloquear')+'</button>'
+          +'<button class="adm-block-btn" data-id="'+e.id+'" data-nombre="'+escapeHtml(e.nombre||'')+'" data-bloq="'+(bloqueada?'1':'0')+'" style="font-size:11px;padding:3px 9px;border-radius:5px;border:1px solid '+(bloqueada?'rgba(16,185,129,.3)':'rgba(239,68,68,.3)')+';background:transparent;color:'+(bloqueada?'#34D399':'#F87171')+';cursor:pointer;">'+(bloqueada?'🔓 Desbloquear':'🔒 Bloquear')+'</button> '
+          +'<button class="adm-del-btn" data-id="'+e.id+'" data-nombre="'+escapeHtml(e.nombre||'')+'" style="font-size:11px;padding:3px 9px;margin-top:3px;border-radius:5px;border:1px solid rgba(239,68,68,.45);background:rgba(239,68,68,.06);color:#F87171;cursor:pointer;">🗑️ Eliminar</button>'
         +'</td>';
       body.appendChild(tr);
     });
@@ -2045,6 +2125,10 @@ function cargarPanelAdmin(){
     // Listeners para bloquear / desbloquear
     body.querySelectorAll('.adm-block-btn').forEach(function(btn){
       btn.onclick = function(){ bloquearEmpresa(btn.getAttribute('data-id'), btn.getAttribute('data-nombre'), btn.getAttribute('data-bloq')==='1'); };
+    });
+    // Listeners para eliminar empresa (borrado total via Edge Function)
+    body.querySelectorAll('.adm-del-btn').forEach(function(btn){
+      btn.onclick = function(){ eliminarEmpresaAdmin(btn.getAttribute('data-id'), btn.getAttribute('data-nombre')); };
     });
   });
 }
@@ -2072,6 +2156,34 @@ function bloquearEmpresa(empresaId, nombre, estaBloqueada){
         cargarPanelAdmin();
       });
     }, 'Bloquear');
+}
+
+// ── Eliminar una empresa por completo (datos + usuario de auth) ──
+// Pasa por la Edge Function 'eliminar-empresa' (service role). Pide escribir
+// el nombre exacto para confirmar, porque es irreversible.
+function eliminarEmpresaAdmin(empresaId, nombre){
+  var nom = (nombre||'').trim();
+  genConfirmHTML('🗑️ Eliminar '+escapeHtml(nom),
+    '<p style="font-size:13px;color:var(--white);margin-bottom:.75rem;">Vas a <strong style="color:#F87171;">borrar definitivamente</strong> a <strong>'+escapeHtml(nom)+'</strong>: todos sus vehículos, check-lists, mantenimiento, pagos, tickets y el/los usuario(s) de acceso.</p>'
+    +'<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:var(--r);padding:.7rem;font-size:12px;color:#FCA5A5;margin-bottom:1rem;line-height:1.5;">⚠️ Esta acción <strong>no se puede deshacer</strong>. Si tenés dudas, hacé un respaldo antes (pestaña Respaldo).</div>'
+    +'<p style="font-size:13px;color:var(--gray);margin-bottom:.5rem;">Para confirmar, escribí el nombre de la empresa:</p>'
+    +'<input type="text" id="confirmBorrarEmpresa" placeholder="'+escapeHtml(nom)+'" autocomplete="off" style="width:100%;padding:10px;background:var(--input-bg);border:1px solid var(--input-bdr);border-radius:var(--r);color:var(--white);font-size:14px;"/>',
+    function(){
+      var tipeado = ((document.getElementById('confirmBorrarEmpresa')||{}).value||'').trim();
+      if(tipeado !== nom){ showToast('El nombre no coincide. No se borró nada.','error'); return; }
+      showToast('Eliminando '+nom+'...','info');
+      sb.functions.invoke('eliminar-empresa', { body: { empresa_id: empresaId } }).then(function(res){
+        var d = res.data || {};
+        if(res.error || !d.ok){
+          var msg = d.error || (res.error && res.error.message) || 'Error desconocido';
+          showToast('No se pudo eliminar: '+msg,'error');
+          return;
+        }
+        var u = (d.usuarios_borrados!=null) ? d.usuarios_borrados : 0;
+        showToast('✓ '+nom+' eliminada ('+u+' usuario'+(u===1?'':'s')+' de acceso).','success');
+        cargarPanelAdmin();
+      }).catch(function(e){ showToast('No se pudo eliminar: '+e,'error'); });
+    }, 'Eliminar definitivamente');
 }
 
 // ── Cambiar el email de acceso de una empresa ──
@@ -3403,70 +3515,266 @@ var GES_BASE = {
 // Cada respuesta tiene palabras clave (k) y la respuesta (r).
 // El motor elige la que MÁS coincidencias tenga, no la primera.
 var GES_RESPUESTAS = [
-  // ── Qué es / general ──
-  { k:['que es','qué es','para que sirve','para qué sirve','plataforma','de que se trata','información','que hace'], r:"GesFlota es una plataforma para gestionar tu flota de vehículos desde un solo lugar: controlás VTV, seguros, mantenimiento y check-lists. Está pensada para empresas de construcción e infraestructura que necesitan tener todo bajo control y evitar imprevistos. 🚛" },
-  // ── Planes ──
-  { k:['plan','precio','cuesta','vale','cuanto','cuánto','tarifa','valor','mensual','anual'], r:"Tenemos 2 planes pagos (precio en pesos):\n\n• Pro $87.800/mes — hasta 50 vehículos\n• Enterprise $178.800/mes — vehículos ilimitados\n\nY una Demo sin cargo: 5 vehículos por 1 mes, que activa MercaTeck a pedido. Con pago anual tenés 15% de descuento. La app de check-list se puede sumar como add-on en el plan Pro ($30.000/mes); en Enterprise ya viene incluida. 💼" },
-  { k:['diferencia','comparar','cual elijo','cuál elijo','que plan','qué plan','recomendas','recomendás'], r:"Te oriento rápido:\n\n• Si querés probarlo primero → Demo sin cargo (5 vehículos por 1 mes, la activamos nosotros)\n• Si necesitás cargar mantenimiento, informes y recibir avisos por email → Pro (hasta 50)\n• Si querés check-list para operarios con reglas por puesto y categoría, cumplimiento, alertas automáticas y marca propia → Enterprise (ilimitado)\n\nEl check-list se puede activar como add-on en el plan Pro ($30.000/mes), y viene incluido en Enterprise. El panel de inicio con resumen semanal está en los 3 planes. 👍" },
-  // ── Cargar flota ──
-  { k:['cargo','cargar','subir','flota','importar','excel','planilla','agregar vehiculo','agregar vehículo','sumar vehiculo'], r:"Para cargar tu flota tenés 2 formas:\n\n1️⃣ Cargar vehículos de a uno con el botón '+ Cargar vehículo'\n2️⃣ Subir un Excel con la plantilla (botón 'Descargar plantilla', lo completás y lo subís)\n\nTip: cargá las patentes sin guiones (AF45632). Para máquinas sin patente (autoelevador) usá el N° interno. 📊" },
-  { k:['patente','dominio','sin guion','sin guión','formato patente'], r:"Cargá las patentes sin guiones ni espacios (ej: AF45632 o AB123CD). Si el vehículo no tiene patente, como un autoelevador, podés identificarlo por su N° interno. 🔢" },
-  // ── Check-lists ──
-  { k:['check','checklist','check-list','control de vehiculo','revision','revisión'], r:"El check-list te permite registrar el estado de cada vehículo con reglas por puesto y categoría. Lo podés cargar vos desde el panel, o tu personal desde el celular escaneando un QR o con un link (entran con un PIN). Definís frecuencias (diario, X por semana, días específicos, X por mes) y ves el cumplimiento con gráficos. Viene incluido en Enterprise y como add-on en el plan Pro ($30.000/mes). En la Demo no está disponible. ✅" },
-  { k:['qr','link','operario','chofer','personal','pin','acceso personal'], r:"Tu personal carga check-lists sin entrar a tu panel: en Configuración → 'Personal y accesos', das de alta a cada persona (nombre + puesto) y el sistema genera un PIN. Les pasás el QR o el link, ellos entran con su nombre y PIN, y solo pueden cargar check-lists. No ven tus datos ni costos. 🔐" },
-  { k:['frecuencia','cada cuanto','cada cuánto','cuantas veces','cuántas veces'], r:"Con el motor de reglas configurás cada cuánto se debe cargar el check-list: diario, X veces por semana, días específicos (ej. martes y viernes), X veces por mes o cada X días. Podés tener reglas distintas por puesto y categoría de vehículo. Después en el panel ves si cada vehículo está al día o pendiente, con gráficos de cumplimiento. 📅" },
-  { k:['regla','reglas','motor de reglas','por categoria','por categoría','por puesto','por sector'], r:"El motor de reglas (Enterprise, o add-on en Pro) te deja crear reglas de check-list específicas: elegís el puesto responsable (chofer, operario, mantenimiento, etc.), a qué se aplica (una categoría de vehículos, un sector u obra, o vehículos puntuales) y con qué frecuencia. Cada regla cuenta para el cumplimiento y los gráficos. Podés crear varias reglas para el mismo puesto en distintas categorías. 🎯" },
-  { k:['armar checklist','configurar checklist','items','ítems','tipo de checklist','checklist por puesto'], r:"En Configuración → 'Armá el check-list de cada puesto' podés crear listas distintas: por ejemplo el operario revisa el estado del vehículo y mantenimiento carga arreglos. Cada ítem puede tener distintas respuestas (bien/mal/NA, mercadería, documentación, sí/no, texto libre). 🧩" },
-  // ── Mantenimiento ──
-  { k:['mantenimiento','arreglo','compra','service','reparac','taller','repuesto'], r:"En Mantenimiento (Pro y Enterprise) cargás arreglos, compras y services. Cada vehículo tiene su historial con el botón '📋 Historial', donde ves todos los registros, agregás observaciones y modificás montos si se suma un gasto nuevo. 🔧" },
-  // ── Alertas / VTV / Seguro ──
-  { k:['alerta','aviso','vencimiento','notificac','recordatorio','vence'], r:"GesFlota te avisa antes de que venzan la VTV, el seguro o la ruta. La anticipación la configurás vos (7, 15 o 30 días); si marcás varias, toma la más anticipada. En el panel lo ves con colores (verde/amarillo/rojo). En Enterprise podés programar alertas automáticas por email a quien quieras, eligiendo el día y la hora. 🔔" },
-  { k:['vtv','rto','verificacion tecnica','verificación técnica'], r:"Cargá la fecha de VTV de cada vehículo (con el lápiz ✏️ en la fila). El sistema calcula solo si está vigente, por vencer o vencida, y lo muestra en el panel de VTV y en Alertas. 🗓️" },
-  { k:['seguro','poliza','póliza','aseguradora'], r:"Cargá la fecha de vencimiento del seguro de cada vehículo. El panel de Seguros te muestra cuántos están vigentes, por vencer o vencidos, y te avisa con anticipación. 🛡️" },
-  // ── Informes ──
-  { k:['informe','reporte','exportar','pdf','descargar informe','word'], r:"En Informes (Pro y Enterprise) generás reportes de tu flota, vencimientos y check-lists. Los podés exportar a Excel y PDF. En Enterprise, los informes pueden incluir recomendaciones por IA. 📈" },
-  // ── Pagos ──
-  { k:['comprobante de pago','mando el comprobante','envio el comprobante','pagar con tarjeta','con mercado pago','medio de pago','forma de pago','comprobante','comprobantes','transferencia','transferir','cbu','alias','mercado pago','mercadopago','tarjeta','factura','abonar','cobro','pago','pagar'], r:"El pago es por transferencia bancaria. Por seguridad, los datos para transferir aparecen dentro de tu panel ya logueado, en Configuración → Mi suscripción. El comprobante se manda a germanmercado@mercateck.com.ar, que es el único canal por el que lo recibimos. ⚠️ Importante: MercaTeck nunca pide pagos por WhatsApp ni por fuera de la plataforma. 🏦" },
-  // ── Seguridad / datos ──
-  { k:['seguridad','aislamiento','privacidad','mis datos seguros','proteccion','protección','hackeo','backup','respaldo'], r:"Cada empresa ve solo su propia información: los datos están aislados a nivel de base de datos. Usamos control de acceso y respaldos. Vos sos el dueño de tus datos y los podés exportar cuando quieras. 🔒" },
-  // ── White-label / IA ──
-  { k:['white','marca propia','logo','personalizar','marca blanca'], r:"En Enterprise tenés white-label: reemplazás el nombre y logo por los de tu empresa, en el panel y en los emails. 🏷️" },
-  { k:['ia','inteligencia artificial','recomendacion','recomendación','sugerencia'], r:"En Enterprise, los informes pueden incluir recomendaciones por IA: analizan tus datos y sugieren mantenimiento preventivo, optimización de costos y qué vehículos priorizar. 🤖" },
-  // ── Tema claro / uso de la interfaz ──
-  { k:['tema','oscuro','claro','modo noche','color de fondo'], r:"Podés cambiar entre tema claro y oscuro con el botón 🌙/☀️ arriba a la derecha. Tu preferencia queda guardada para la próxima vez. 🎨" },
-  { k:['como uso','cómo uso','empezar','primeros pasos','arrancar','tutorial','como funciona el panel'], r:"Para arrancar:\n\n1️⃣ Cargá tu flota (botón '+ Cargar vehículo' o subiendo un Excel)\n2️⃣ Completá las fechas de VTV y seguro de cada uno\n3️⃣ Si tenés check-list, configurá tu personal en Configuración\n4️⃣ Mirá el panel: te muestra vencimientos, alertas y estado de cada vehículo\n\n¿Querés que profundice en alguno? 🚀" },
-  // ── Soporte ──
-  { k:['soporte','contacto','hablar con alguien','atencion','atención','telefono','teléfono','mail','email'], r:"Para soporte, abrí un ticket desde el panel (sección Soporte) eligiendo el tema: ventas, soporte técnico, capacitación o pagos. Te responden por email a germanmercado@mercateck.com.ar dentro de 24-48hs hábiles. 📨" },
-  // ── Cancelar / baja ──
-  { k:['cancelar','baja','dar de baja','dejar de usar','suspender mi cuenta'], r:"Podés cancelar cuando quieras, sin permanencia. Escribinos un ticket desde Soporte (tema Pagos) y lo gestionamos. Tus datos los podés exportar antes de irte. 👋" },
-  // ── Saludos / cortesía ──
-  { k:['gracias','genial','perfecto','buenisimo','buenísimo','dale','barbaro','bárbaro','joya'], r:"¡De nada! 😊 Cualquier otra cosa, acá estoy. Si querés probar GesFlota, podés empezar gratis." },
-  { k:['demo','prueba','probar','demostracion','demostración','gratis','sin cargo','solicitar demo'], r:"Podés pedir una demo sin cargo: hasta 5 vehículos y 1 mes de uso, con todas las funciones. La activa MercaTeck. Dejanos los datos de tu empresa con el botón 'Solicitá tu demo' en la sección Cómo funciona, o escribinos a germanmercado@mercateck.com.ar. Te damos de alta y te mandamos el acceso por email. 🎁" },
-  { k:['hola','buenas','buen dia','buen día','hey','que tal','qué tal','holaa'], r:"¡Hola! 👋 ¿En qué te puedo ayudar? Te puedo contar de los planes, cómo cargar tu flota, los check-lists, o ayudarte si algo no te funciona." },
-  // ── PASOS DETALLADOS de uso del sitio ──
-  { k:['paso a paso','pasos para','como hago para','cómo hago para','explicame como','explicame paso','guia','guía','no se como','no sé cómo'], r:"Te doy los pasos según lo que necesites. ¿Qué querés hacer?\n\n• Cargar un vehículo\n• Cargar la VTV o el seguro\n• Crear un check-list\n• Dar acceso a mi personal\n• Ver vencimientos y alertas\n\nDecime el tema y te paso el paso a paso. 📋" },
-  { k:['cargar un vehiculo','cargar un vehículo','agregar un vehiculo','dar de alta vehiculo','como agrego un auto','sumar una unidad','como cargo un vehiculo'], r:"Para cargar un vehículo:\n\n1. Entrá a tu panel y andá a 'Flota'\n2. Tocá el botón '+ Cargar vehículo'\n3. Completá: N° interno, patente (sin guiones), tipo y obra\n4. Guardá\n\nQueda cargado al instante. Si tenés muchos, mejor usá la carga por Excel. 🚗" },
-  { k:['cargar vtv','cargar seguro','poner vencimiento','fecha de vtv','fecha de seguro','editar fecha','como cargo la vtv'], r:"Para cargar la VTV o el seguro de un vehículo:\n\n1. En 'Flota', buscá el vehículo\n2. Tocá el lápiz ✏️ en su fila\n3. Cargá la fecha de VTV y/o seguro\n4. Guardá\n\nEl sistema calcula solo si está vigente, por vencer o vencido. 🗓️" },
-  { k:['ver vencimientos','ver alertas','que vence','qué vence','proximos vencimientos','próximos vencimientos','donde veo los vencimientos'], r:"Para ver qué está por vencer:\n\n1. En el menú lateral, entrá a 'Alertas' → ahí ves todo lo que vence pronto\n2. O entrá a 'VTV' / 'Seguros' para ver cada uno por separado\n\nLos vehículos aparecen automáticamente según las fechas que cargaste. 🔔" },
-  { k:['dar acceso','acceso a mi personal','que mi personal','crear pin','agregar personal','dar de alta personal','como agrego personal'], r:"Para que tu personal cargue check-lists:\n\n1. Andá a Configuración → 'Personal y accesos'\n2. Tocá '+ Agregar persona': nombre, puesto y cada cuánto debe cargar\n3. El sistema genera un PIN\n4. Compartiles el QR o el link\n\nEllos entran con su nombre y PIN, y solo cargan check-lists. 👷" },
-  // ── Cómo surge MercaTeck ──
-  { k:['mercateck','quien hizo','quién hizo','quien creo','quién creó','como surge','cómo surge','historia','quien esta detras','quién está detrás','desarrollador','origen'], r:"GesFlota es un producto de MercaTeck, un estudio de desarrollo y diseño web enfocado en soluciones para empresas argentinas. MercaTeck nació de la experiencia real en gestión de flotas y mantenimiento: la idea fue transformar ese conocimiento del día a día en una herramienta simple y potente. 🚀\n\nPodés conocer más en nuestro sitio y redes:\n🌐 mercateck.com.ar\n📸 Instagram: @mercateck_" },
-  { k:['sitio web','pagina web','página web','web de mercateck','instagram','redes','red social','seguir','contacto redes'], r:"Estos son nuestros canales:\n\n🌐 Sitio: mercateck.com.ar\n📸 Instagram: @mercateck_\n📨 Email: germanmercado@mercateck.com.ar\n\nEscribinos por cualquier consulta. 😊" },
-  // ── Dónde está cada función ──
-  { k:['donde esta','dónde está','donde encuentro','dónde encuentro','donde veo','dónde veo','en que parte','en qué parte','ubicacion','ubicación','como llego a'], r:"Te ubico según lo que busques:\n\n• Flota, VTV, seguro y filtros → panel 'Flota'\n• Arreglos, compras y fallas → 'Mantenimiento'\n• Cargar controles → 'Check-lists'\n• Reportes y análisis → 'Informes'\n• Días laborables, personal, alertas, exportar Excel → 'Configuración'\n• Ayuda → 'Soporte'\n\n¿Cuál te muestro con más detalle? 🧭" }
+
+  // ═══════════════════════════════════════
+  //  LANDING PAGE / QUÉ ES GESFLOTA
+  // ═══════════════════════════════════════
+  { k:['que es','qué es','para que sirve','para qué sirve','plataforma','de que se trata','información','que hace','gesflota'], r:"GesFlota es una plataforma web para gestionar tu flota de vehículos desde un solo lugar. Controlás VTV, seguros, mantenimiento, check-lists y alertas. Está pensada para empresas de construcción e infraestructura que necesitan tener todo bajo control.\n\nNo necesitás instalar nada: entrás desde el navegador con tu email y contraseña. Tu equipo también puede cargar check-lists desde el celular con un link y un PIN.\n\n🌐 Sitio: mercateck.com.ar\n📸 Instagram: @mercateck_ 🚛" },
+
+  { k:['pagina principal','página principal','landing','pagina de inicio','página de inicio','home','que tiene la pagina','secciones de la pagina'], r:"La página principal de GesFlota tiene estas secciones (las ves bajando o desde el menú arriba):\n\n1️⃣ Hero — el encabezado con 'Creá tu cuenta' y 'Ver demo'\n2️⃣ Funcionalidades — las 6 cards que explican qué hace GesFlota\n3️⃣ Cómo funciona — los 3 pasos para arrancar + la demo de check-list por voz\n4️⃣ Planes — Demo, Pro y Enterprise con precios y comparación\n5️⃣ Add-on de Check-list — detalle del módulo de check-list\n6️⃣ Quiénes somos — info sobre MercaTeck\n7️⃣ Seguridad — cómo protegemos tus datos\n8️⃣ Formas de pago — transferencia bancaria\n\nArriba a la derecha tenés los botones 'Ingresar' y 'Registrarse', y el botón de tema claro/oscuro (🌙). En celular, tocá el menú ☰ para ver todas las secciones. 📄" },
+
+  { k:['funcionalidades','funciones','que ofrece','qué ofrece','caracteristicas','características','que incluye','qué incluye'], r:"GesFlota ofrece 6 funcionalidades principales (las ves en la sección 'Funcionalidades' de la página principal):\n\n🚗 Control de flota en tiempo real — estado de cada vehículo, alertas y check-list desde un panel\n🔧 Mantenimiento preventivo — arreglos, compras, services y trazabilidad\n🔔 Alertas automáticas — email cuando la VTV, seguro o ruta se acercan a vencer\n📊 Informes en PDF — reportes por obra, vehículo o período, exportables\n📋 Carga y exportación por Excel — subí tu flota completa y exportá cuando quieras\n🏗️ Multi-obra y multi-empresa — cada empresa tiene su espacio privado y seguro\n\nTodas están disponibles en Pro y Enterprise. La Demo incluye flota, VTV y seguros. ✅" },
+
+  // ═══════════════════════════════════════
+  //  MERCATECK / QUIÉNES SOMOS
+  // ═══════════════════════════════════════
+  { k:['mercateck','quien hizo','quién hizo','quien creo','quién creó','como surge','cómo surge','historia','quien esta detras','quién está detrás','desarrollador','origen','quienes somos','quiénes somos'], r:"GesFlota es un producto de MercaTeck, un estudio de desarrollo de software y diseño web de Mendoza, Argentina. MercaTeck crea herramientas digitales que resuelven problemas reales de las empresas: sistemas de gestión, automatizaciones y aplicaciones a medida.\n\nGesFlota nació de la experiencia real en gestión de flotas y mantenimiento: la idea fue transformar ese conocimiento del día a día en una herramienta simple y potente.\n\nPodés ver más en la sección 'Quiénes somos' de la página principal, o visitando:\n🌐 mercateck.com.ar\n📸 Instagram: @mercateck_ 🚀" },
+
+  // ═══════════════════════════════════════
+  //  CONTACTO / REDES / EMAIL / WHATSAPP
+  // ═══════════════════════════════════════
+  { k:['contacto','contactar','comunicarme','hablar','escribir','consulta','atencion','atención'], r:"Tenés varias formas de contactarnos:\n\n📨 Email: germanmercado@mercateck.com.ar\n🌐 Sitio web: mercateck.com.ar\n📸 Instagram: @mercateck_\n👥 Facebook: MercaTeck\n🎫 Ticket de soporte: dentro de tu panel, en la sección 'Soporte'\n\nEl email es el canal principal. Los tickets de soporte se responden dentro de 24-48hs hábiles. 📬" },
+
+  { k:['whatsapp','wsp','wa','escribir por whatsapp','mandar whatsapp','numero','número'], r:"⚠️ Importante: MercaTeck NO usa WhatsApp para atención al cliente ni para pedir pagos. Si te llega un mensaje por WhatsApp pidiendo datos bancarios o pagos, NO es de nosotros.\n\nPara contactarnos usá:\n📨 Email: germanmercado@mercateck.com.ar\n🎫 Ticket desde tu panel (sección Soporte)\n🌐 mercateck.com.ar\n\nLos datos de pago están únicamente dentro de tu panel logueado, en Configuración → Mi suscripción. Nunca los enviamos por WhatsApp, email ni redes sociales. 🔒" },
+
+  { k:['sitio web','pagina web','página web','web de mercateck','instagram','redes','red social','seguir','contacto redes','facebook'], r:"Estos son nuestros canales oficiales:\n\n🌐 Sitio web: mercateck.com.ar\n📸 Instagram: @mercateck_\n👥 Facebook: MercaTeck (facebook.com/share/1E1Bwwz4Xq/)\n📨 Email: germanmercado@mercateck.com.ar\n\nLos íconos de redes sociales están en el pie de página (footer) de GesFlota, abajo de todo. 😊" },
+
+  { k:['soporte','ticket','ayuda tecnica','ayuda técnica','problema tecnico','problema técnico','capacitacion','capacitación'], r:"Para soporte técnico, abrí un ticket desde tu panel:\n\n1. En el menú lateral izquierdo, tocá 'Soporte' (el ícono de signo de pregunta ❓)\n2. Elegí el tema: Ventas, Soporte técnico, Capacitación o Pagos\n3. Escribí tu consulta y enviá\n\nTe responden por email a germanmercado@mercateck.com.ar dentro de 24-48hs hábiles. 📨" },
+
+  // ═══════════════════════════════════════
+  //  PLANES Y PRECIOS
+  // ═══════════════════════════════════════
+  { k:['plan','precio','cuesta','vale','cuanto','cuánto','tarifa','valor','mensual','anual'], r:"GesFlota tiene 3 planes:\n\n🎁 Demo — Gratis, hasta 5 vehículos por 1 mes. La activa MercaTeck a pedido. Incluye panel de flota, VTV, seguros, alertas y carga por Excel. No incluye mantenimiento ni check-list.\n\n⭐ Pro — $87.800/mes, hasta 50 vehículos. Todo lo de la Demo + mantenimiento, informes, notificaciones por email, gráficos. El check-list se puede sumar como add-on ($30.000/mes).\n\n🏢 Enterprise — $178.800/mes, vehículos ilimitados. Todo lo del Pro + check-list incluido, motor de reglas, alertas automáticas programadas, recomendaciones por IA, marca propia (white-label).\n\nCon pago anual tenés 15% de descuento. Los planes los ves en la sección 'Planes' de la página principal. 💼" },
+
+  { k:['diferencia','comparar','cual elijo','cuál elijo','que plan','qué plan','recomendas','recomendás','me conviene'], r:"Te oriento rápido:\n\n• Si querés probarlo primero → Demo sin cargo (5 vehículos, 1 mes, la activamos nosotros)\n• Si necesitás mantenimiento, informes y avisos por email → Pro ($87.800/mes, hasta 50 vehículos)\n• Si además querés check-list para operarios, reglas por puesto, alertas automáticas y tu logo propio → Enterprise ($178.800/mes, ilimitado)\n\nEl check-list se puede activar como add-on en Pro ($30.000/mes extra). En Enterprise ya viene incluido.\n\nPodés ver la comparación detallada en la sección 'Planes' de la página principal, donde cada plan lista lo que incluye con ✓ y lo que no con —. 👍" },
+
+  { k:['addon','add-on','add on','modulo checklist','módulo checklist','checklist aparte'], r:"El módulo de check-list es un add-on que se suma al plan Pro por $30.000/mes. En Enterprise ya viene incluido sin costo extra.\n\nIncluye: constructor de check-list por puesto, acceso por QR/link con PIN para tu personal, fallas que van directo a Mantenimiento, informe de cumplimiento e historial por vehículo.\n\nLo ves detallado en la sección 'Add-on disponible' de la página principal, justo debajo de Planes. 📋" },
+
+  { k:['descuento','anual','pago anual','ahorro'], r:"Si pagás anual, tenés un 15% de descuento sobre el precio mensual.\n\nPara ver los precios con descuento anual, en la sección 'Planes' de la página principal tocá el botón 'Anual' (está arriba de las cards de planes, al lado de 'Mensual'). Los precios se actualizan automáticamente mostrando el valor mensual con el descuento aplicado. 💰" },
+
+  // ═══════════════════════════════════════
+  //  DEMO
+  // ═══════════════════════════════════════
+  { k:['demo','prueba','probar','demostracion','demostración','gratis','sin cargo','solicitar demo'], r:"Podés pedir una demo sin cargo: hasta 5 vehículos y 1 mes de uso.\n\nPara solicitarla:\n1. En la página principal, bajá hasta la sección 'Cómo funciona'\n2. Tocá el botón dorado 'Solicitá tu demo'\n3. Completá los datos de tu empresa\n4. MercaTeck te da de alta y te manda el acceso por email\n\nTambién podés escribir directo a germanmercado@mercateck.com.ar pidiendo la demo.\n\nAdemás, en la sección 'Cómo funciona' hay una demo en vivo del check-list por voz: tocá el micrófono 🎤 y probá decir un check-list hablando. Es solo una demostración, no se guarda nada. 🎁" },
+
+  { k:['demo voz','microfono','micrófono','hablar','checklist por voz','check-list por voz','probar voz'], r:"En la página principal, sección 'Cómo funciona', hay una demo interactiva del check-list por voz.\n\nPara probarla:\n1. Bajá hasta donde dice '🎤 Probalo acá mismo'\n2. Tocá el botón dorado 'Tocá y hablá'\n3. Decí por ejemplo: 'Dominio AB 123 CD, kilometraje doce mil quinientos, estado del vehículo bien, documentación al día'\n4. El sistema interpreta lo que dijiste y llena los campos\n\nEs solo una demostración para que veas cómo funciona. No se guarda nada y se borra al recargar. En el sistema real, el check-list lo arma el administrador con los ítems de su empresa. 🎤" },
+
+  // ═══════════════════════════════════════
+  //  PAGOS
+  // ═══════════════════════════════════════
+  { k:['comprobante de pago','mando el comprobante','envio el comprobante','pagar con tarjeta','con mercado pago','medio de pago','forma de pago','comprobante','comprobantes','transferencia','transferir','cbu','alias','mercado pago','mercadopago','tarjeta','factura','abonar','cobro','pago','pagar'], r:"El pago es por transferencia bancaria.\n\nPara ver los datos de pago:\n1. Ingresá a tu panel con tu email y contraseña\n2. En el menú lateral izquierdo, tocá 'Configuración' (ícono de engranaje ⚙️, última opción)\n3. Buscá la sección 'Mi suscripción'\n4. Ahí aparecen los datos bancarios para transferir\n\nEl comprobante se envía a germanmercado@mercateck.com.ar — es el único canal por el que lo recibimos.\n\n⚠️ Importante: MercaTeck NUNCA te pide pagos por WhatsApp, email ni redes sociales. Los datos bancarios están únicamente dentro de tu panel logueado. Si te llegan datos por otro medio, no transfieras y avisanos. 🏦" },
+
+  // ═══════════════════════════════════════
+  //  SEGURIDAD
+  // ═══════════════════════════════════════
+  { k:['seguridad','aislamiento','privacidad','mis datos seguros','proteccion','protección','hackeo','backup','respaldo','encriptacion','encriptación'], r:"GesFlota protege tus datos con varias capas de seguridad:\n\n🔐 Encriptación end-to-end — toda la información se almacena encriptada\n🗄️ Base de datos PostgreSQL con Row Level Security — cada empresa accede solo a sus propios registros\n🔑 Login seguro con email y contraseña\n📧 Notificación de accesos — te llega un email si alguien entra desde un dispositivo desconocido\n💾 Backups diarios\n\nVos sos el dueño de tus datos y los podés exportar cuando quieras.\n\nEsta información la ves en la sección 'Seguridad' de la página principal, con el estado del sistema en tiempo real (Servidor, Base de datos, Auth, etc.). 🔒" },
+
+  // ═══════════════════════════════════════
+  //  REGISTRO / LOGIN / CUENTA
+  // ═══════════════════════════════════════
+  { k:['registrarse','registrarme','crear cuenta','crearse cuenta','crear mi cuenta','como me registro','cómo me registro','abrir cuenta'], r:"Para crear tu cuenta en GesFlota:\n\n1. En la página principal, tocá el botón dorado 'Registrarse' (arriba a la derecha, o 'Creá tu cuenta' en el centro)\n2. Completá nombre de empresa, email y contraseña, y tocá 'Crear cuenta'\n3. Te llega un email de confirmación — hacé clic en el link para activar tu cuenta\n4. Listo, ya podés ingresar\n\nAl registrarte arrancás en el plan Demo. Para cambiar de plan, lo hacés desde Configuración → Mi suscripción. 📝" },
+
+  { k:['ingresar','iniciar sesion','iniciar sesión','login','entrar','loguearse','loguearme','acceder'], r:"Para ingresar a tu panel:\n\n1. En la página principal, tocá 'Ingresar' (arriba a la derecha)\n2. Ingresá tu email y contraseña\n3. Si olvidaste tu contraseña, tocá 'Olvidé mi contraseña' y te llega un email para recuperarla\n\nAbajo del formulario también tenés un link 'Registrate' si todavía no tenés cuenta. 🔑" },
+
+  // ═══════════════════════════════════════
+  //  PANEL - MENÚ LATERAL (SIDEBAR)
+  // ═══════════════════════════════════════
+  { k:['menu','menú','barra lateral','sidebar','panel lateral','secciones del panel','navegacion','navegación'], r:"Una vez que ingresás a tu panel, a la izquierda tenés el menú lateral con todas las secciones:\n\n1. 🏠 Inicio — resumen semanal con indicadores\n2. 🚗 Flota — todos tus vehículos, VTV, seguros\n3. 🔧 Mantenimiento — arreglos, compras, services (Pro y Enterprise)\n4. 📋 Check-lists — controles cargados por tu equipo (Pro con add-on / Enterprise)\n5. 📊 Informes — reportes exportables (Pro y Enterprise)\n6. ❓ Soporte — abrí tickets de ayuda\n7. 📖 Guía de uso — tutorial interactivo paso a paso\n8. ⚙️ Configuración — plan, personal, alertas, exportar Excel\n\nEn celular, el menú aparece como una barra horizontal abajo. En computadora, pasá el mouse por encima de la barra izquierda para ver los nombres de cada sección. 📱" },
+
+  // ═══════════════════════════════════════
+  //  PANEL DE INICIO
+  // ═══════════════════════════════════════
+  { k:['inicio','dashboard','panel de inicio','resumen','resumen semanal','indicadores'], r:"El panel de Inicio es lo primero que ves al entrar. Muestra un resumen semanal con indicadores clave:\n\n• Cantidad de vehículos totales y alertas activas\n• Estado de la flota: al día, por vencer y vencidos\n• Próximos vencimientos de VTV y seguro\n• Check-lists cargados esta semana (si tenés el módulo)\n• Mantenimientos pendientes\n\nEs la primera opción del menú lateral (ícono de casa 🏠). Desde ahí ves de un vistazo cómo está tu flota sin entrar sección por sección. 📊" },
+
+  // ═══════════════════════════════════════
+  //  FLOTA
+  // ═══════════════════════════════════════
+  { k:['cargo','cargar','subir','flota','importar','excel','planilla','agregar vehiculo','agregar vehículo','sumar vehiculo'], r:"Para cargar tu flota, andá a 'Flota' en el menú lateral (segundo ícono, 🚗). Ahí tenés 2 formas:\n\n1️⃣ Cargar de a uno:\n   • Tocá el botón '+ Cargar vehículo' (arriba a la derecha, botón dorado)\n   • Completá: N° interno, patente (sin guiones), tipo de vehículo y obra/sector\n   • Tocá 'Guardar'\n\n2️⃣ Carga masiva por Excel:\n   • Tocá 'Descargar plantilla' para bajar el Excel modelo\n   • Completá la plantilla con tus vehículos\n   • Tocá 'Subir Excel' y seleccioná el archivo\n\nTip: las patentes van sin guiones ni espacios (ej: AF45632 o AB123CD). Para máquinas sin patente (autoelevador, retroexcavadora), usá el N° interno. 📊" },
+
+  { k:['patente','dominio','sin guion','sin guión','formato patente','formato de patente'], r:"Las patentes se cargan sin guiones ni espacios.\n\nEjemplos: AF45632, AB123CD, AA000BB\n\nSi el vehículo no tiene patente (autoelevador, retroexcavadora, etc.), lo identificás por su N° interno — ese campo está justo al lado de 'Patente' cuando cargás un vehículo nuevo. 🔢" },
+
+  { k:['editar vehiculo','editar vehículo','modificar vehiculo','cambiar datos del vehiculo','lapiz','lápiz','editar patente','editar datos'], r:"Para editar un vehículo:\n\n1. Andá a 'Flota' en el menú lateral\n2. Buscá el vehículo en la tabla (podés usar el buscador 🔍 arriba)\n3. En la fila del vehículo, tocá el ícono de lápiz ✏️ que está a la derecha\n4. Se abre un formulario donde podés cambiar patente, interno, tipo, obra, fechas de VTV y seguro\n5. Tocá 'Guardar'\n\nSi no ves el lápiz, deslizá la tabla hacia la derecha en el celular. ✏️" },
+
+  { k:['eliminar vehiculo','eliminar vehículo','borrar vehiculo','borrar vehículo','sacar vehiculo','quitar vehiculo','dar de baja vehiculo'], r:"Para eliminar un vehículo:\n\n1. Andá a 'Flota' en el menú lateral\n2. Buscá el vehículo en la tabla\n3. Tocá el ícono de lápiz ✏️ en su fila para abrir el detalle\n4. Abajo del formulario vas a ver el botón '🗑️ Eliminar vehículo' en color rojo\n5. Confirmá la eliminación\n\n⚠️ Esta acción no se puede deshacer. Si tenés registros de mantenimiento asociados, esos también se pierden. Te conviene exportar tu flota a Excel antes. 🗑️" },
+
+  { k:['exportar flota','exportar excel','bajar excel','descargar excel','exportar mis datos','exportar vehiculos','exportar vehículos'], r:"Para exportar tu flota a Excel:\n\n1. Andá a 'Configuración' (ícono de engranaje ⚙️, última opción del menú lateral)\n2. Buscá la sección 'Exportar datos'\n3. Tocá el botón 'Exportar a Excel'\n\nSe descarga un archivo .xlsx con todos tus vehículos y sus datos. También podés exportar mantenimientos desde la misma sección. 📥" },
+
+  { k:['filtrar','filtro','buscar vehiculo','buscar vehículo','buscar patente','buscador'], r:"En la sección 'Flota' tenés un buscador arriba de la tabla:\n\n🔍 Escribí la patente, el N° interno o el nombre para filtrar\n\nTambién podés filtrar por sector/obra con el desplegable que está al lado del buscador. Los filtros se aplican en tiempo real mientras escribís. 🔎" },
+
+  // ═══════════════════════════════════════
+  //  VTV / SEGUROS
+  // ═══════════════════════════════════════
+  { k:['vtv','rto','verificacion tecnica','verificación técnica'], r:"Para cargar o ver la VTV de un vehículo:\n\n1. Andá a 'Flota' en el menú lateral\n2. Buscá el vehículo y tocá el lápiz ✏️ en su fila\n3. En el formulario, cargá la fecha de VTV\n4. Guardá\n\nEl sistema calcula solo si está vigente (verde ✅), por vencer (amarillo ⚠️) o vencida (rojo 🔴). La anticipación del aviso la configurás en Configuración → 'Anticipación de alertas' (7, 15 o 30 días).\n\nEn el panel de Inicio ves el resumen de VTV de toda tu flota. 🗓️" },
+
+  { k:['seguro','poliza','póliza','aseguradora','vencimiento seguro'], r:"Para cargar o ver el seguro de un vehículo:\n\n1. Andá a 'Flota' en el menú lateral\n2. Buscá el vehículo y tocá el lápiz ✏️ en su fila\n3. En el formulario, cargá la fecha de vencimiento del seguro\n4. Guardá\n\nEl panel te muestra cuántos seguros están vigentes (verde), por vencer (amarillo) o vencidos (rojo). La anticipación del aviso se configura en Configuración. 🛡️" },
+
+  // ═══════════════════════════════════════
+  //  MANTENIMIENTO (PASO A PASO DETALLADO)
+  // ═══════════════════════════════════════
+  { k:['mantenimiento','arreglo','compra','service','reparac','taller','repuesto','compras y arreglos'], r:"La sección Mantenimiento (Pro y Enterprise) está en el menú lateral, tercera opción (ícono de llave 🔧). Ahí se llama 'Compras y Arreglos'.\n\nPara cargar un registro nuevo:\n1. Tocá el botón dorado '+ Cargar desde panel' (arriba a la derecha)\n2. Elegí el vehículo, tipo (arreglo, compra, service o incidente), sector y descripción\n3. Cargá el costo si lo tiene\n4. Guardá\n\nCada registro aparece en la tabla con su fecha, patente, tipo, descripción, origen, costo y estado (Pendiente o Finalizado).\n\nFiltros disponibles arriba de la tabla:\n🔍 Buscador por patente o interno\n📋 Filtro por sector/obra\n🏷️ Filtro por tipo (arreglo, compra, service, incidente, o por tipo de observación)\n📦 Filtro por origen (Panel o Check-list)\n💰 Filtro por con/sin costo\n📅 Filtro por período (semana actual, anterior, mes o historial completo)\n📊 Botón 'Mostrar gráficos' para ver gráficos de gestión\n\nDisponible en Pro y Enterprise. 🔧" },
+
+  { k:['eliminar mantenimiento','borrar mantenimiento','eliminar registro','borrar registro','boton eliminar','botón eliminar','tacho','basura','eliminar en mantenimiento','boton rojo'], r:"Para eliminar un registro de mantenimiento:\n\n1. Andá a 'Mantenimiento' en el menú lateral (tercera opción, ícono 🔧)\n2. Buscá el registro en la tabla\n3. En la última columna de la derecha de cada fila, vas a ver los botones de acción apilados uno arriba del otro\n4. El botón '🗑️ Eliminar' está abajo de todo, escrito en color rojo con un ícono de tacho de basura\n\nSi el registro está pendiente, los botones son:\n   • 📝 Obs. (arriba)\n   • ✓ Finalizar (medio, en verde)\n   • 🗑️ Eliminar (abajo, en rojo)\n\nSi el registro ya está finalizado, los botones son:\n   • 📋 Ver (arriba)\n   • 🗑️ Eliminar (abajo, en rojo)\n\nSi no ves los botones en el celular, deslizá la tabla hacia la derecha. ⚠️ Eliminar no se puede deshacer. 🗑️" },
+
+  { k:['no encuentro eliminar','no veo eliminar','donde esta eliminar','dónde está eliminar','no lo encuentro','no veo el boton','no veo el botón','no encuentro el boton','no encuentro el botón'], r:"El botón de eliminar está en la última columna a la derecha de cada fila de la tabla. Es de color rojo con un ícono de tacho de basura 🗑️.\n\nSi no lo ves:\n• En celular: deslizá la tabla hacia la derecha, porque hay varias columnas y el botón está en la última\n• En computadora: si la ventana es chica, también puede quedar fuera de la vista — deslizá horizontalmente\n\nEl botón dice '🗑️ Eliminar' en texto rojo. Está debajo de los otros botones de acción (📝 Obs. y ✓ Finalizar si es pendiente, o 📋 Ver si está finalizado).\n\nSi seguís sin verlo, avisame en qué sección estás y te guío. 🔍" },
+
+  { k:['finalizar mantenimiento','finalizar registro','cerrar mantenimiento','marcar como finalizado','boton finalizar','botón finalizar','completar mantenimiento'], r:"Para finalizar un registro de mantenimiento:\n\n1. Andá a 'Mantenimiento' en el menú lateral\n2. Buscá el registro pendiente en la tabla\n3. En la última columna de la derecha, tocá el botón '✓ Finalizar' (está en verde, en el medio de los 3 botones)\n4. Confirmá\n\nEl estado cambia de 'Pendiente' a '✓ Finalizado'. Una vez finalizado, ya no se puede volver a pendiente. ✅" },
+
+  { k:['observacion','observación','agregar observacion','agregar observación','obs','detalle mantenimiento','historial mantenimiento'], r:"Para agregar una observación a un registro de mantenimiento:\n\n1. Andá a 'Mantenimiento' en el menú lateral\n2. Buscá el registro en la tabla\n3. Si está pendiente, tocá el botón '📝 Obs.' (es el primer botón de la columna de acciones, a la derecha)\n4. Se abre el detalle donde podés agregar observaciones, modificar el monto/costo y ver el historial completo\n\nSi el registro ya está finalizado, el botón cambia a '📋 Ver' y podés ver todo el historial pero sin modificarlo. 📝" },
+
+  { k:['falla','fallas','falla de checklist','falla de check-list','llega a mantenimiento','cae en mantenimiento'], r:"Cuando un operario marca algo como 'mal' en un check-list, esa falla cae automáticamente en Mantenimiento como un registro nuevo.\n\nLo reconocés porque:\n• El tipo aparece como 'Falla' con un badge rojo\n• El origen dice '👷 Operario' o '👷 Mantenimiento' en vez de '🖥️ Panel'\n• Si hay varias fallas, se listan debajo de la descripción en rojo con un ⚠️\n\nDesde ahí podés agregar observaciones, cargar el costo de reparación y finalizar cuando esté resuelto. 🔴" },
+
+  // ═══════════════════════════════════════
+  //  CHECK-LISTS (DETALLADO)
+  // ═══════════════════════════════════════
+  { k:['check','checklist','check-list','control de vehiculo','control de vehículo','revision','revisión'], r:"El módulo de Check-list (Pro con add-on / Enterprise) está en el menú lateral, cuarta opción (ícono de clipboard 📋).\n\nDesde ahí ves todos los check-lists cargados por tu equipo, con filtros por:\n🔍 Patente o interno\n📋 Sector/obra\n📅 Período (semana, mes, etc.)\n👷 Persona que lo cargó\n\nCada check-list muestra: fecha, vehículo, quién lo cargó, resultado de cada ítem y observaciones.\n\nPara configurar QUÉ se controla (los ítems del check-list), andá a Configuración → 'Armá el check-list de cada puesto'. Para dar acceso a tu personal, andá a Configuración → 'Personal y accesos'. ✅" },
+
+  { k:['qr','link','operario','chofer','personal','pin','acceso personal','acceso operario','compartir checklist','compartir check-list'], r:"Para que tu personal cargue check-lists desde el celular:\n\n1. Andá a Configuración (ícono de engranaje ⚙️, última opción del menú lateral)\n2. Buscá la sección 'Personal y accesos'\n3. Tocá '+ Agregar persona'\n4. Completá: nombre completo y puesto (chofer, operario, etc.)\n5. El sistema genera un PIN automáticamente\n6. Tocá el botón de compartir y elegí: 📱 WhatsApp o 📋 Copiar link\n\nTu personal entra con el link, pone su nombre y PIN, y carga el check-list del vehículo. Solo pueden cargar check-lists — no ven tus datos, costos ni configuración.\n\nEl QR y el link son únicos por persona. Si alguien pierde el PIN, podés regenerarlo desde la misma sección. 🔐" },
+
+  { k:['frecuencia','cada cuanto','cada cuánto','cuantas veces','cuántas veces','diario','semanal'], r:"Con el motor de reglas configurás cada cuánto se debe cargar el check-list:\n\n• Diario\n• X veces por semana (ej: 3 veces)\n• Días específicos (ej: martes y viernes)\n• X veces por mes\n• Cada X días\n\nPara configurarlo:\n1. Andá a Configuración → sección de reglas de check-list\n2. Creá una regla: elegís el puesto, la categoría de vehículo y la frecuencia\n3. Guardá\n\nDespués en el panel de Check-lists ves si cada vehículo está al día o pendiente, con gráficos de cumplimiento y ranking. 📅" },
+
+  { k:['regla','reglas','motor de reglas','por categoria','por categoría','por puesto','por sector'], r:"El motor de reglas (Enterprise, o Pro con add-on) te deja crear reglas de check-list específicas:\n\n1. Andá a Configuración\n2. Buscá la sección de reglas de check-list\n3. Tocá '+ Nueva regla'\n4. Elegí:\n   • Puesto responsable (chofer, operario, mantenimiento, etc.)\n   • A qué se aplica (una categoría de vehículos, un sector/obra, o vehículos puntuales)\n   • Frecuencia (diaria, semanal, etc.)\n5. Guardá\n\nCada regla cuenta para el cumplimiento y los gráficos. Podés tener varias reglas para el mismo puesto en distintas categorías. 🎯" },
+
+  { k:['armar checklist','configurar checklist','items','ítems','tipo de checklist','checklist por puesto','constructor','armar el check'], r:"Para armar el check-list de cada puesto:\n\n1. Andá a Configuración (ícono de engranaje ⚙️)\n2. Buscá la sección 'Armá el check-list de cada puesto'\n3. Elegí el puesto (chofer, operario, mantenimiento, etc.)\n4. Agregá los ítems que querés que controlen\n5. Para cada ítem elegí el tipo de respuesta: bien/mal/NA, mercadería, documentación, sí/no o texto libre\n6. Guardá\n\nPodés tener check-lists distintos para cada puesto. Por ejemplo: el chofer revisa estado del vehículo y documentación, y mantenimiento revisa arreglos y repuestos. 🧩" },
+
+  // ═══════════════════════════════════════
+  //  ALERTAS
+  // ═══════════════════════════════════════
+  { k:['alerta','aviso','vencimiento','notificac','recordatorio','vence','email automatico','email automático'], r:"GesFlota te avisa antes de que venzan la VTV, el seguro o la ruta.\n\nAlertas visuales (todos los planes):\n• En el panel de Inicio ves los indicadores con colores: verde (al día), amarillo (por vencer) y rojo (vencido)\n• La anticipación la configurás en Configuración → 'Anticipación de alertas': 7, 15 o 30 días. Si marcás varias, toma la más anticipada\n\nAlertas por email (Pro y Enterprise):\n• En Configuración → sección de alertas por email, configurás a quién se envían\n\nAlertas automáticas programadas (Enterprise):\n• Podés elegir el día y la hora en que se envía el email de alerta\n• Configurás destinatarios distintos para cada tipo de alerta 🔔" },
+
+  // ═══════════════════════════════════════
+  //  INFORMES
+  // ═══════════════════════════════════════
+  { k:['informe','reporte','exportar','pdf','descargar informe','generar informe','reportes'], r:"La sección Informes (Pro y Enterprise) está en el menú lateral, quinta opción (ícono de gráfico 📊).\n\nDesde ahí podés generar reportes de:\n• Tu flota completa\n• Vencimientos (VTV, seguros)\n• Check-lists y cumplimiento\n• Mantenimiento y costos\n\nLos informes se pueden exportar a Excel y PDF. En Enterprise, los informes pueden incluir recomendaciones por IA que analizan tus datos y sugieren mantenimiento preventivo, optimización de costos y qué vehículos priorizar.\n\nPara generar un informe, elegí el tipo, el período y tocá 'Generar'. 📈" },
+
+  // ═══════════════════════════════════════
+  //  CONFIGURACIÓN (GENERAL)
+  // ═══════════════════════════════════════
+  { k:['configuracion','configuración','config','ajustes','opciones','preferencias'], r:"La sección Configuración es la última opción del menú lateral (ícono de engranaje ⚙️). Incluye:\n\n📊 Mi suscripción — tu plan actual, datos de pago y cambio de plan\n🚚 Vehículos de tu plan — cuántos tenés cargados vs. el límite del plan\n👷 Personal y accesos — dar de alta a tu equipo para check-lists (nombre, puesto, PIN)\n📋 Armá el check-list de cada puesto — constructor de ítems por puesto\n⚙️ Reglas de check-list — motor de reglas por frecuencia, puesto y categoría\n🔔 Anticipación de alertas — 7, 15 o 30 días antes del vencimiento\n📧 Alertas por email — configurar destinatarios\n📅 Días laborables — qué días se trabaja (para cumplimiento de check-list)\n📥 Exportar datos — exportar flota y mantenimiento a Excel\n🏷️ White-label — personalizar nombre y logo (Enterprise)\n\nCada sección tiene su propia card dentro de Configuración. 🔧" },
+
+  // ═══════════════════════════════════════
+  //  GUÍA DE USO
+  // ═══════════════════════════════════════
+  { k:['guia de uso','guía de uso','tutorial','como usar','cómo usar','empezar','primeros pasos','arrancar','como funciona el panel','cómo funciona el panel'], r:"GesFlota tiene una Guía de uso integrada en el panel. La encontrás en el menú lateral, penúltima opción (ícono de libro 📖).\n\nLa guía te lleva paso a paso por las funciones principales con explicaciones interactivas:\n\n1️⃣ Cargá tu flota (vehículos de a uno o por Excel)\n2️⃣ Completá las fechas de VTV y seguro\n3️⃣ Si tenés check-list, configurá tu personal en Configuración\n4️⃣ Mirá el panel de Inicio: te muestra vencimientos, alertas y estado de cada vehículo\n\n¿Querés que te explique algún paso en particular? Decime qué necesitás y te guío con detalle. 🚀" },
+
+  // ═══════════════════════════════════════
+  //  WHITE-LABEL / IA
+  // ═══════════════════════════════════════
+  { k:['white','marca propia','logo','personalizar','marca blanca','white label','mi logo','mi marca'], r:"En Enterprise tenés white-label: reemplazás el nombre 'GesFlota' y el logo por los de tu empresa.\n\nPara configurarlo:\n1. Andá a Configuración (ícono de engranaje ⚙️)\n2. Buscá la sección de marca personalizada / white-label\n3. Subí tu logo y escribí el nombre de tu empresa\n4. Guardá\n\nEl cambio se aplica en tu panel y en los emails que recibe tu equipo. Tus operarios ven tu marca cuando cargan check-lists. 🏷️" },
+
+  { k:['ia','inteligencia artificial','recomendacion','recomendación','sugerencia','analisis','análisis'], r:"En Enterprise, los informes pueden incluir recomendaciones por IA.\n\nLa IA analiza tus datos y te sugiere:\n• Mantenimiento preventivo (qué vehículos necesitan atención)\n• Optimización de costos (dónde estás gastando más)\n• Qué vehículos priorizar según su estado\n\nLas recomendaciones aparecen dentro de los informes generados en la sección 'Informes'. 🤖" },
+
+  // ═══════════════════════════════════════
+  //  TEMA CLARO / OSCURO
+  // ═══════════════════════════════════════
+  { k:['tema','oscuro','claro','modo noche','color de fondo','modo oscuro','modo claro'], r:"Para cambiar entre tema claro y oscuro:\n\n• En computadora: tocá el botón 🌙 (o ☀️) que está arriba a la derecha en la barra de navegación\n• En celular: abrí el menú ☰ y tocá 'Cambiar tema'\n• En la página principal (sin loguearte): el botón está arriba a la derecha, al lado de 'Ingresar'\n\nTu preferencia queda guardada para la próxima vez que entres. 🎨" },
+
+  // ═══════════════════════════════════════
+  //  CANCELAR / BAJA
+  // ═══════════════════════════════════════
+  { k:['cancelar','baja','dar de baja','dejar de usar','suspender mi cuenta','me quiero ir'], r:"Podés cancelar tu cuenta cuando quieras, sin permanencia ni penalidad.\n\nPara hacerlo:\n1. Andá a 'Soporte' en el menú lateral (ícono ❓)\n2. Creá un ticket con el tema 'Pagos'\n3. Indicá que querés dar de baja tu cuenta\n\nAntes de irte, te recomendamos exportar tus datos: andá a Configuración → 'Exportar datos' y descargá tu flota y mantenimientos a Excel. 👋" },
+
+  // ═══════════════════════════════════════
+  //  SALUDOS / CORTESÍA
+  // ═══════════════════════════════════════
+  { k:['gracias','genial','perfecto','buenisimo','buenísimo','dale','barbaro','bárbaro','joya','excelente','copado'], r:"¡De nada! 😊 Cualquier otra duda, preguntame. Estoy acá para ayudarte con lo que necesites de GesFlota." },
+  { k:['hola','buenas','buen dia','buen día','hey','que tal','qué tal','holaa','buenas tardes','buenas noches','buenos dias','buenos días'], r:"¡Hola! 👋 ¿En qué te puedo ayudar? Te puedo explicar paso a paso cómo usar cualquier función de GesFlota, contarte sobre los planes, o ayudarte si algo no te funciona." },
+  { k:['chau','nos vemos','hasta luego','bye','adios','adiós','me voy'], r:"¡Hasta luego! 👋 Cuando necesites ayuda, acá me encontrás. ¡Éxitos!" },
+
+  // ═══════════════════════════════════════
+  //  PASOS DETALLADOS / GUÍA INTERACTIVA
+  // ═══════════════════════════════════════
+  { k:['paso a paso','pasos para','como hago para','cómo hago para','explicame como','explicame paso','no se como','no sé cómo','necesito ayuda con'], r:"Te doy los pasos según lo que necesites. ¿Qué querés hacer?\n\n• Cargar un vehículo\n• Editar o eliminar un vehículo\n• Cargar la VTV o el seguro\n• Cargar un arreglo o compra en Mantenimiento\n• Eliminar o finalizar un mantenimiento\n• Configurar el check-list\n• Dar acceso a mi personal (QR/PIN)\n• Ver vencimientos y alertas\n• Generar un informe\n• Exportar datos a Excel\n• Cambiar mi plan\n\nDecime el tema y te paso el paso a paso con la ubicación exacta de cada botón. 📋" },
+
+  { k:['cargar un vehiculo','cargar un vehículo','agregar un vehiculo','agregar un vehículo','dar de alta vehiculo','dar de alta vehículo','como agrego un auto','sumar una unidad','como cargo un vehiculo','cómo cargo un vehículo'], r:"Para cargar un vehículo nuevo:\n\n1. En el menú lateral izquierdo, tocá 'Flota' (segundo ícono, 🚗)\n2. Arriba a la derecha vas a ver el botón dorado '+ Cargar vehículo' — tocalo\n3. Se abre un formulario con estos campos:\n   • N° interno (identificación interna de tu empresa)\n   • Patente (sin guiones ni espacios, ej: AB123CD)\n   • Tipo de vehículo (camión, camioneta, etc.)\n   • Obra/Sector al que pertenece\n4. Completá los campos y tocá 'Guardar'\n\nEl vehículo aparece al instante en tu tabla de flota. Si tenés muchos vehículos, mejor usá la carga masiva por Excel (botón 'Descargar plantilla' → completás → 'Subir Excel'). 🚗" },
+
+  { k:['cargar vtv','cargar seguro','poner vencimiento','fecha de vtv','fecha de seguro','editar fecha','como cargo la vtv','cómo cargo la vtv'], r:"Para cargar la VTV o el seguro de un vehículo:\n\n1. Andá a 'Flota' en el menú lateral (segundo ícono, 🚗)\n2. En la tabla, buscá el vehículo (usá el buscador 🔍 si tenés muchos)\n3. En la fila del vehículo, a la derecha, tocá el ícono de lápiz ✏️\n4. Se abre el formulario de edición:\n   • El campo 'Fecha de VTV' está debajo de los datos del vehículo\n   • El campo 'Fecha de seguro' está justo debajo\n5. Cargá la fecha y tocá 'Guardar'\n\nEl sistema calcula automáticamente si está vigente (verde ✅), por vencer (amarillo ⚠️) o vencido (rojo 🔴), según la anticipación que configuraste. 🗓️" },
+
+  { k:['ver vencimientos','ver alertas','que vence','qué vence','proximos vencimientos','próximos vencimientos','donde veo los vencimientos','dónde veo los vencimientos'], r:"Para ver qué está por vencer:\n\nOpción 1 — Panel de Inicio:\n• Entrá al panel (primera opción del menú lateral, ícono 🏠)\n• Ahí ves el resumen de VTV y seguros con indicadores de colores\n\nOpción 2 — Flota:\n• En la tabla de Flota, cada vehículo muestra el estado de VTV y seguro con colores: verde (vigente), amarillo (por vencer), rojo (vencido)\n\nLa anticipación del aviso la configurás en Configuración → 'Anticipación de alertas': 7, 15 o 30 días antes del vencimiento. Si marcás varias, toma la más anticipada. 🔔" },
+
+  { k:['dar acceso','acceso a mi personal','que mi personal','crear pin','agregar personal','dar de alta personal','como agrego personal','cómo agrego personal'], r:"Para que tu personal cargue check-lists sin entrar a tu panel:\n\n1. Andá a Configuración (ícono de engranaje ⚙️, última opción del menú lateral)\n2. Bajá hasta la sección 'Personal y accesos'\n3. Tocá el botón '+ Agregar persona'\n4. Completá:\n   • Nombre completo (como quieras que aparezca)\n   • Puesto (chofer, operario, mantenimiento, etc.)\n5. El sistema genera un PIN automáticamente\n6. Se muestra un cuadro con el link de acceso y el PIN\n7. Tocá '📱 WhatsApp' para compartir directo, o '📋 Copiar link' para mandarlo por otro medio\n\nTu personal entra al link, pone su nombre y PIN, y carga el check-list. Solo ven el formulario del check-list, no tus datos ni costos. 👷" },
+
+  { k:['cambiar plan','upgrade','mejorar plan','pasar a pro','pasar a enterprise','subir de plan','mi suscripcion','mi suscripción'], r:"Para cambiar tu plan:\n\n1. Andá a Configuración (ícono de engranaje ⚙️, última opción del menú lateral)\n2. Buscá la sección 'Mi suscripción'\n3. Ahí ves tu plan actual y las opciones disponibles\n4. Elegí el plan que querés y seguí los pasos\n\nSi bajás de plan, no se borra ningún vehículo: solo no vas a poder cargar nuevos hasta quedar por debajo del límite del nuevo plan. 📊" },
+
+  // ═══════════════════════════════════════
+  //  TÉRMINOS Y CONDICIONES
+  // ═══════════════════════════════════════
+  { k:['terminos','términos','condiciones','privacidad','politica','política','tratamiento de datos','legal'], r:"Los Términos y Condiciones (que incluyen la Política de Privacidad y Tratamiento de Datos) los encontrás en el pie de página (footer) de la página principal:\n\n1. Bajá hasta abajo de todo en la página principal\n2. En la columna 'Legal' tocá 'Términos y Condiciones'\n3. Se abre el documento completo\n\nTambién podés verlo al registrarte, antes de confirmar tu cuenta. 📄" },
+
+  // ═══════════════════════════════════════
+  //  DÓNDE ESTÁ CADA FUNCIÓN
+  // ═══════════════════════════════════════
+  { k:['donde esta','dónde está','donde encuentro','dónde encuentro','donde veo','dónde veo','en que parte','en qué parte','ubicacion','ubicación','como llego a','cómo llego a'], r:"Te ubico según lo que busques. En el menú lateral izquierdo (en celular es la barra de abajo):\n\n🏠 Inicio (1ra opción) → resumen semanal, indicadores\n🚗 Flota (2da opción) → tus vehículos, VTV, seguros, cargar/editar/eliminar\n🔧 Mantenimiento (3ra opción) → arreglos, compras, services, fallas de check-list\n📋 Check-lists (4ta opción) → todos los controles cargados por tu equipo\n📊 Informes (5ta opción) → reportes exportables a PDF y Excel\n❓ Soporte (6ta opción) → tickets de ayuda\n📖 Guía de uso (7ma opción) → tutorial interactivo\n⚙️ Configuración (última opción) → plan, personal, alertas, exportar, white-label\n\n¿De cuál querés más detalle? Te paso la ubicación exacta de cada botón. 🧭" },
+
+  // ═══════════════════════════════════════
+  //  DÍAS LABORABLES
+  // ═══════════════════════════════════════
+  { k:['dias laborables','días laborables','laborable','dia laborable','día laborable','que dias se trabaja','qué días se trabaja'], r:"Para configurar los días laborables (afecta el cálculo de cumplimiento del check-list):\n\n1. Andá a Configuración (ícono de engranaje ⚙️)\n2. Buscá la sección 'Días laborables'\n3. Marcá los días que trabaja tu empresa (por defecto lunes a viernes)\n4. Guardá\n\nEsto define qué días cuentan para el cumplimiento del check-list. Si tu equipo trabaja los sábados, agregalo para que el sistema lo considere. 📅" },
+
+  // ═══════════════════════════════════════
+  //  ESTAFA / SEGURIDAD EN PAGOS
+  // ═══════════════════════════════════════
+  { k:['estafa','fraude','me piden plata','me piden datos','cbu por whatsapp','cbu por email','es seguro','es verdad','verificar'], r:"⚠️ Importante: MercaTeck NUNCA te pide pagos por WhatsApp, email, redes sociales ni fuera de tu panel.\n\nLos datos bancarios para transferir aparecen ÚNICAMENTE dentro de tu panel logueado, en Configuración → Mi suscripción.\n\nSi alguien te contacta pidiendo una transferencia por otro medio:\n• NO transfieras\n• NO compartas tus datos\n• Avisanos por email a germanmercado@mercateck.com.ar\n\nEl dominio oficial es mercateck.com.ar — verificá siempre estar en el sitio correcto antes de ingresar tu contraseña. 🔒" }
+
 ];
 
 // Respuestas a PROBLEMAS / ERRORES comunes (uso cotidiano)
 var GES_PROBLEMAS = [
-  { k:['no puedo entrar','no me deja entrar','no inicia sesion','no inicia sesión','error login','no puedo ingresar','olvide mi contraseña','olvidé mi contraseña','recuperar contraseña'], r:"Si no podés entrar:\n\n• Verificá que el email y la contraseña sean correctos\n• Si olvidaste la contraseña, tocá 'Olvidé mi contraseña' en el login y te llega un email para recuperarla\n• Si registraste la cuenta recién, revisá que hayas confirmado el email\n\nSi sigue sin andar, escribinos por Soporte. 🔑" },
-  { k:['no aparece','no se carga','no se ve','no figura','no me aparece','cargue y no','no se guardo','no se guardó','desaparecio','desapareció'], r:"Si cargaste algo y no aparece:\n\n• Refrescá la página (a veces queda mostrando datos viejos)\n• Verificá que estés en la empresa correcta\n• Si subiste un Excel, revisá que tenga la columna 'Patente' y el formato de la plantilla\n\nSi el problema sigue, contame qué cargaste exactamente y te ayudo. 🔄" },
-  { k:['no me llega el qr','no funciona el qr','qr no funciona','no anda el qr','no funciona el link','el operario no puede','no carga el checklist','no puede cargar','problema con el qr','problema con el link'], r:"Si tu personal no puede cargar el check-list:\n\n• Confirmá que diste de alta a la persona en Configuración → Personal\n• Verificá que esté usando el nombre y PIN exactos\n• El link debe abrirse en el navegador del celular (no dentro de otra app)\n\n¿Querés que te explique cómo generar el acceso paso a paso? 📲" },
-  { k:['no me funciona','no anda','no sirve','esta roto','está roto','error','falla','problema','bug','se traba','se cierra'], r:"Lamento el inconveniente. Para ayudarte mejor:\n\n• Contame qué estabas haciendo cuando pasó\n• Probá refrescar la página\n• Si es algo visual, fijate de tener el navegador actualizado\n\nSi es algo puntual, abrí un ticket en Soporte describiendo el problema y lo resolvemos. 🛠️" },
-  { k:['fecha mal','fecha incorrecta','dia equivocado','día equivocado','aparece otra fecha'], r:"Si una fecha aparece distinta, verificá que la hayas cargado en formato día/mes/año. Si editaste la VTV o el seguro, el sistema recalcula el estado automáticamente al guardar. Si ves algo raro, refrescá la página. 🗓️" }
+  { k:['no puedo entrar','no me deja entrar','no inicia sesion','no inicia sesión','error login','no puedo ingresar','olvide mi contraseña','olvidé mi contraseña','recuperar contraseña','no me deja loguear','no puedo acceder'], r:"Si no podés entrar a tu panel:\n\n1. Verificá que el email y la contraseña sean correctos (ojo con mayúsculas y espacios)\n2. Si olvidaste la contraseña:\n   • En la pantalla de login, tocá 'Olvidé mi contraseña' (está debajo del botón 'Ingresar')\n   • Ingresá tu email y te llega un correo para crear una contraseña nueva\n   • Revisá la carpeta de spam si no lo ves\n3. Si acabás de registrarte, verificá que hayas confirmado el email (te llegó un mail de confirmación con un link)\n\nSi sigue sin andar, abrí un ticket en Soporte o escribinos a germanmercado@mercateck.com.ar. 🔑" },
+
+  { k:['no aparece','no se carga','no se ve','no figura','no me aparece','cargue y no','no se guardo','no se guardó','desaparecio','desapareció','no se muestra'], r:"Si cargaste algo y no aparece:\n\n1. Refrescá la página con F5 o el botón de recarga del navegador (a veces queda mostrando datos viejos)\n2. Verificá que estés en la sección correcta (ej: los arreglos están en 'Mantenimiento', no en 'Flota')\n3. Revisá los filtros: si tenés un filtro activo (período, sector, tipo), puede estar ocultando el registro. Poné todos los filtros en 'Todos'\n4. Si subiste un Excel, revisá que tenga la columna 'Patente' y use el formato de la plantilla descargable\n\nSi el problema sigue, contame exactamente qué cargaste, en qué sección, y te ayudo a ubicarlo. 🔄" },
+
+  { k:['no me llega el qr','no funciona el qr','qr no funciona','no anda el qr','no funciona el link','el operario no puede','no carga el checklist','no puede cargar','problema con el qr','problema con el link','no le funciona','pin no funciona'], r:"Si tu personal no puede cargar el check-list desde el celular:\n\n1. Confirmá que diste de alta a la persona en Configuración → 'Personal y accesos'\n2. Verificá que esté usando el nombre y PIN exactos (el PIN distingue mayúsculas)\n3. El link debe abrirse en el navegador del celular (Chrome, Safari), no dentro de WhatsApp ni otra app — que toque 'Abrir en navegador'\n4. Si el PIN no funciona, podés regenerarlo: andá a Configuración → Personal, buscá a la persona y tocá el botón de regenerar\n\nSi sigue sin andar, mandame el error que le aparece y lo resolvemos. 📲" },
+
+  { k:['no me funciona','no anda','no sirve','esta roto','está roto','error','falla','problema','bug','se traba','se cierra','se tilda','pantalla blanca','no carga'], r:"Lamento el inconveniente. Probemos estos pasos:\n\n1. Refrescá la página con F5 o el botón de recarga\n2. Si estás en el celular, cerrá la pestaña y abrí una nueva\n3. Probá en otro navegador (Chrome suele funcionar mejor)\n4. Si ves una pantalla blanca, puede ser un problema de conexión — verificá tu internet\n\nSi el problema sigue:\n• Andá a 'Soporte' en el menú lateral (ícono ❓)\n• Creá un ticket describiendo qué estabas haciendo cuando pasó\n• Te responden en 24-48hs hábiles\n\nTambién podés escribir directo a germanmercado@mercateck.com.ar. 🛠️" },
+
+  { k:['fecha mal','fecha incorrecta','dia equivocado','día equivocado','aparece otra fecha','fecha cambiada'], r:"Si una fecha aparece distinta a la que cargaste:\n\n1. Verificá que la hayas cargado en formato día/mes/año (dd/mm/aaaa)\n2. Si editaste la VTV o el seguro, refrescá la página — el sistema recalcula el estado automáticamente al guardar\n3. Si ves una diferencia de un día, puede ser por la zona horaria — no afecta el cálculo de vencimiento\n\nSi ves algo raro que no se explica con esto, contame qué fecha pusiste y qué fecha aparece, y lo revisamos. 🗓️" },
+
+  { k:['lento','tarda','demora','carga lento','se demora','muy lento'], r:"Si la plataforma anda lenta:\n\n1. Verificá tu conexión a internet\n2. Probá refrescar la página (F5)\n3. Si tenés muchos registros, usá los filtros para ver solo lo que necesitás (por período, sector, etc.)\n4. Cerrá otras pestañas del navegador que no estés usando\n5. Si usás Chrome, probá borrar la caché (Ctrl+Shift+Del → Solo datos en caché)\n\nSi sigue lento, avisanos por Soporte con el horario en que pasa y lo investigamos. ⚡" }
 ];
 
 // Temas de DATOS PRIVADOS — el bot NO los revela
-var GES_PRIVADO_KW = ['mi contraseña','contraseña de','datos de la empresa','dato personal','telefono de','teléfono de','direccion de','dirección de','cuit de','dni de','email de','cuanto factura','cuánto factura','cuanto gana','cuánto gana','datos de otra','otra empresa','informacion privada','información privada','quien es el dueño','quién es el dueño','cuantos clientes','cuántos clientes','facturacion de','facturación de'];
+// Capa 1: keywords de información privada de empresas/usuarios
+var GES_PRIVADO_KW = [
+  // Contraseñas y credenciales
+  'mi contraseña','contraseña de','password','clave de acceso','token','api key','clave secreta',
+  // Datos personales / empresariales
+  'datos de la empresa','dato personal','datos personales','datos del cliente','datos del usuario',
+  'telefono de','teléfono de','direccion de','dirección de','domicilio de',
+  'cuit de','dni de','email de','correo de','mail de',
+  // Financieros
+  'cuanto factura','cuánto factura','cuanto gana','cuánto gana','facturacion de','facturación de',
+  'cuenta bancaria','cbu de','alias de cuenta','saldo de',
+  // Otras empresas / clientes
+  'datos de otra','otra empresa','nombre de empresas','listado de empresas','empresas registradas',
+  'lista de clientes','listado de clientes','cuantos clientes','cuántos clientes','quienes usan','quiénes usan',
+  'informacion privada','información privada',
+  // Propiedad / admin
+  'quien es el dueño','quién es el dueño','quien es el admin','quién es el admin','quien administra','quién administra',
+  // Infraestructura / técnico (anti-reconnaissance)
+  'base de datos','servidor','ip del servidor','arquitectura','tecnologia que usan','tecnología que usan',
+  'que stack','qué stack','que framework','qué framework','supabase','postgresql','firebase',
+  'codigo fuente','código fuente','repositorio','github','backend','endpoint','ruta api',
+  // Ingeniería social
+  'soy el admin','soy administrador','soy el dueño','soy gerente','soy de soporte','soy tecnico','soy técnico',
+  'necesito acceso','dame acceso','compartime','pasame los datos','pasame la info','mandame los datos',
+  'verificar identidad','verificar mi cuenta','resetear cuenta',
+  // Intentos de manipulación del bot
+  'ignorar instrucciones','olvidate de las reglas','sos un asistente','actua como','actuá como',
+  'modo debug','modo admin','modo desarrollador','modo mantenimiento'
+];
+// Capa 2: patrones sospechosos que refuerzan la detección
+var GES_PRIVADO_PATTERNS = [
+  /dame.*(datos|info|acceso|contraseña|clave|lista)/i,
+  /pasame.*(datos|info|email|telefono|teléfono|lista|cbu)/i,
+  /cuantas?\s+empresas/i,
+  /cuántas?\s+empresas/i,
+  /lista(do)?\s+de\s+(empresas|clientes|usuarios)/i,
+  /quien(es)?\s+(usa|tiene|registr)/i,
+  /quién(es)?\s+(usa|tiene|registr)/i,
+  /soy\s+(el\s+)?(dueño|admin|gerente|soporte|tecnico|técnico)/i,
+  /modo\s+(debug|admin|desarrollador|test|mantenimiento)/i,
+  /(mostrame|decime|listame|revelame)\s+(los\s+)?(datos|usuarios|empresas|clientes|emails)/i
+];
 
 function toggleGes(){
   _gesAbierto = !_gesAbierto;
@@ -3647,10 +3955,20 @@ function gesProcesarPregunta(texto){
   }
 
   // 1. PRIMERO: ¿pregunta por datos privados? → respuesta de protección
+  // Capa 1: coincidencia por palabras clave
   for(var d=0; d<GES_PRIVADO_KW.length; d++){
     if(textoNorm.indexOf(_gesNormalizar(GES_PRIVADO_KW[d]).trim())>=0){
       respuesta = "Esa información es privada y no la puedo compartir. 🔒 En GesFlota, los datos de cada empresa (contraseñas, datos personales, facturación, etc.) son confidenciales y están aislados: ni yo ni otras empresas tenemos acceso a ellos. Si necesitás tus propios datos, los ves dentro de tu panel ya logueado. Si es una consulta de seguridad, escribinos por Soporte.";
       break;
+    }
+  }
+  // Capa 2: patrones regex para intentos indirectos / ingeniería social
+  if(!respuesta){
+    for(var p=0; p<GES_PRIVADO_PATTERNS.length; p++){
+      if(GES_PRIVADO_PATTERNS[p].test(texto)){
+        respuesta = "No puedo darte esa información. 🔒 Por seguridad, no comparto datos de empresas, usuarios ni infraestructura. Cada cuenta tiene sus datos aislados y solo se acceden desde el panel con tu sesión iniciada. Si tenés una consulta legítima de soporte, abrí un ticket desde la sección Soporte de tu panel.";
+        break;
+      }
     }
   }
 
@@ -6478,6 +6796,7 @@ function renderTicketsAdmin(){
   var noLeidos = _ticketsAdmin.reduce(function(a,t){ return a+(t.no_leidos_soporte||0); },0);
   var badge = document.getElementById('admTicketsBadge');
   if(badge){ if(noLeidos>0){ badge.style.display='inline-block'; badge.textContent=noLeidos+' sin leer'; } else { badge.style.display='none'; } }
+  if(typeof _setAdmTabBadge==='function'){ _setAdmTabBadge('admTabBadgeSoporte', noLeidos); }
   if(!_ticketsAdmin.length){
     body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:1.5rem;">No hay tickets.</td></tr>';
     return;

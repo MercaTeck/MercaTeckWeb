@@ -1132,19 +1132,8 @@
           </div>
             </div>
           </div>
-          <!-- Borrar mis datos (zona peligrosa) -->
-          <div class="app-card" style="padding:1.5rem;margin-top:.75rem;border-color:rgba(239,68,68,.25);">
-            <div style="font-size:13px;font-weight:600;color:#F87171;margin-bottom:.5rem;">🗑️ Borrar mis datos</div>
-            <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;line-height:1.6;">
-              Elegí qué querés borrar. <strong style="color:var(--white);">Solo se borran los datos de tu empresa</strong>, nunca los de otra.
-              Esta acción <strong style="color:#F87171;">no se puede deshacer</strong>: te recomendamos exportar tu Excel antes.
-            </div>
-            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-              <button class="btn-outline" style="flex:1;min-width:150px;font-size:13px;padding:10px;color:#F87171;border-color:rgba(239,68,68,.3);" onclick="borrarDatos('flota')">🚚 Borrar datos de Flota</button>
-              <button class="btn-outline" style="flex:1;min-width:150px;font-size:13px;padding:10px;color:#F87171;border-color:rgba(239,68,68,.3);" onclick="borrarDatos('checklist')">📋 Borrar datos de Check-list</button>
-              <button class="btn-outline" style="flex:1;min-width:150px;font-size:13px;padding:10px;color:#F87171;border-color:rgba(239,68,68,.3);" onclick="borrarDatos('mantenimiento')">🔧 Borrar datos de Mantenimiento</button>
-            </div>
-          </div>
+          <!-- (El bloque "Borrar mis datos" se quitó del panel del cliente;
+               la función borrarDatos() se mantiene en el JS por si se reutiliza) -->
 
           <!-- (La sección vieja de "Alertas automáticas programadas" se quitó:
                el envío automático ahora se configura por destinatario con día y hora) -->
@@ -1197,7 +1186,19 @@
       </div>
     </div>
 
-    <div class="app-card" style="margin-bottom:1rem;">
+    <!-- Barra de pestañas del panel admin -->
+    <div class="adm-tabbar" id="admTabbar">
+      <button class="adm-tab-btn active" data-admtab="empresas" onclick="showAdminTab('empresas')">🏢 Empresas</button>
+      <button class="adm-tab-btn" data-admtab="facturacion" onclick="showAdminTab('facturacion')">💰 Facturación</button>
+      <button class="adm-tab-btn" data-admtab="renovaciones" onclick="showAdminTab('renovaciones')">📅 Renovaciones</button>
+      <button class="adm-tab-btn" data-admtab="pedidos" onclick="showAdminTab('pedidos')">📈 Pedidos<span id="admTabBadgePedidos" class="adm-tab-badge" style="display:none;"></span></button>
+      <button class="adm-tab-btn" data-admtab="soporte" onclick="showAdminTab('soporte')">🎧 Soporte<span id="admTabBadgeSoporte" class="adm-tab-badge" style="display:none;"></span></button>
+      <button class="adm-tab-btn" data-admtab="respaldo" onclick="showAdminTab('respaldo')">💾 Respaldo</button>
+      <button class="adm-tab-btn" data-admtab="altademo" onclick="showAdminTab('altademo')">🎁 Alta demo</button>
+    </div>
+
+    <!-- ══════ ALTA DE DEMO ══════ -->
+    <div class="app-card admtab" id="admtab-altademo" style="margin-bottom:1rem;">
       <div class="app-card-hdr">
         <h3>🎁 Alta de demo</h3>
       </div>
@@ -1217,11 +1218,13 @@
           </div>
         </div>
         <div style="font-size:12px;color:var(--gray);margin-bottom:.75rem;">La demo vence el <strong style="color:var(--gold);" id="adVence">—</strong>.</div>
+        <div id="altaDemoCaptchaBox" style="display:none;margin-bottom:.9rem;"><div id="hcaptcha-altademo"></div></div>
         <button class="btn-gold" style="padding:10px 22px;" id="adBtn" onclick="crearCuentaDemo()">Crear cuenta demo</button>
       </div>
     </div>
 
-    <div class="app-card">
+    <!-- ══════ EMPRESAS REGISTRADAS ══════ -->
+    <div class="app-card admtab active" id="admtab-empresas">
       <div class="app-card-hdr">
         <h3>Empresas registradas</h3>
       </div>
@@ -1235,8 +1238,8 @@
       </div>
     </div>
 
-    <!-- Gestión de tickets de soporte (superadmin) -->
-    <div class="app-card" style="margin-top:1rem;">
+    <!-- ══════ SOPORTE — TICKETS ══════ -->
+    <div class="app-card admtab" id="admtab-soporte">
       <div class="app-card-hdr">
         <h3>🎧 Soporte — Tickets</h3>
         <div style="display:flex;gap:.5rem;align-items:center;">
@@ -1255,7 +1258,7 @@
     </div>
 
     <!-- ══════ RESPALDO DE LA BASE ══════ -->
-    <div class="app-card" style="margin-top:1rem;">
+    <div class="app-card admtab" id="admtab-respaldo">
       <div class="app-card-hdr">
         <h3>💾 Respaldo de datos</h3>
       </div>
@@ -1269,7 +1272,7 @@
     </div>
 
     <!-- ══════ SOLICITUDES DE CAMBIO DE PLAN ══════ -->
-    <div class="app-card" style="margin-top:1rem;" id="solicitudesCard">
+    <div class="app-card admtab" style="margin-top:1rem;" id="solicitudesCard" data-admtab-panel="pedidos">
       <div class="app-card-hdr">
         <h3>📈 Pedidos de cambio de plan</h3>
         <span id="solicBadge" style="display:none;background:var(--gold);color:#0B0E14;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;"></span>
@@ -1285,7 +1288,7 @@
     </div>
 
     <!-- ══════ FACTURACIÓN ══════ -->
-    <div class="app-card" style="margin-top:1rem;">
+    <div class="app-card admtab" id="admtab-facturacion">
       <div class="app-card-hdr">
         <h3>💰 Facturación</h3>
         <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
@@ -1338,7 +1341,7 @@
     </div>
 
     <!-- ══════ RENOVACIONES / VENCIMIENTOS ══════ -->
-    <div class="app-card" style="margin-top:1rem;">
+    <div class="app-card admtab" id="admtab-renovaciones">
       <div class="app-card-hdr">
         <h3>📅 Renovaciones</h3>
         <span style="font-size:11px;color:var(--gray);">🟢 más de 7 días · 🟡 vence pronto · 🔴 vencida</span>
