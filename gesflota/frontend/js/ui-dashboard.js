@@ -11517,11 +11517,27 @@ function renderDestinatarios(){
 }
 
 function deleteDestinatario(i){
-  genConfirm('Eliminar destinatario', '¿Eliminar a '+_destinatarios[i].email+'?', function(){
-    _destinatarios.splice(i,1);
-    saveStateLocal('destinatarios', _destinatarios);
-    renderDestinatarios();
-    showToast('Destinatario eliminado','success');
+  var d = _destinatarios[i];
+  if(!d) return;
+  genConfirm('Eliminar destinatario', '¿Eliminar a '+d.email+'? Se elimina el email y su alerta programada.', function(){
+    function finalizar(){
+      // Quitar del array por id (por si cambió el orden) o por índice
+      var idx = (d._id!=null) ? _destinatarios.findIndex(function(x){ return x._id===d._id; }) : i;
+      if(idx<0) idx = i;
+      _destinatarios.splice(idx,1);
+      saveStateLocal('destinatarios', _destinatarios);
+      renderDestinatarios();
+      showToast('Destinatario y alerta eliminados','success');
+    }
+    // Borrar también en Supabase (antes solo se borraba localmente y al recargar volvía)
+    if(sb && window._empresaId && d._id){
+      sb.from('destinatarios_email').delete().eq('id', d._id).eq('empresa_id', window._empresaId).then(function(res){
+        if(res.error){ showToast('No se pudo eliminar: '+(res.error.message||''),'error'); return; }
+        finalizar();
+      });
+    } else {
+      finalizar();
+    }
   });
 }
 
