@@ -119,9 +119,21 @@ function doLogin(){
       _registrarIntentoFallido(email);
       var rest = _intentosLogin(email);
       var msg = res.error.message||'Error al iniciar sesión.';
-      if(msg.indexOf('Invalid login')>=0) msg='Email o contraseña incorrectos.';
-      if(msg.indexOf('Email not confirmed')>=0) msg='Confirmá tu email antes de ingresar.';
-      if(msg.toLowerCase().indexOf('captcha')>=0) msg='La verificación anti-robot falló. Reintentá.';
+      if(msg.indexOf('Email not confirmed')>=0){ errEl.textContent='Confirmá tu email antes de ingresar (revisá tu bandeja y el spam).'; errEl.style.display='block'; return; }
+      if(msg.toLowerCase().indexOf('captcha')>=0){ errEl.textContent='La verificación anti-robot falló. Reintentá.'; errEl.style.display='block'; return; }
+      if(msg.indexOf('Invalid login')>=0){
+        // Distinguir "email no registrado" de "contraseña incorrecta"
+        sb.rpc('email_registrado', { p_email: email }).then(function(chk){
+          if(!chk.error && chk.data === false){
+            errEl.textContent = 'Este email no está registrado. Por favor, primero dese de alta o complete el registro.';
+          } else {
+            var r2 = _intentosLogin(email);
+            errEl.textContent = 'Email o contraseña incorrectos.' + ((!r2.bloqueado && r2.restantes<=2 && r2.restantes>0) ? (' (te quedan '+r2.restantes+' intentos)') : '');
+          }
+          errEl.style.display='block';
+        }).catch(function(){ errEl.textContent='Email o contraseña incorrectos.'; errEl.style.display='block'; });
+        return;
+      }
       if(!rest.bloqueado && rest.restantes<=2 && rest.restantes>0) msg += ' (te quedan '+rest.restantes+' intentos)';
       errEl.textContent = msg; errEl.style.display='block';
       return;
@@ -2323,6 +2335,17 @@ function enviarRecuperar(){
   if(HCAPTCHA_SITE_KEY && !_recCaptchaToken){
     showToast('Completá la verificación "No soy un robot".','warning'); return;
   }
+  // Verificar que el email corresponda a un usuario registrado antes de enviar el reset
+  sb.rpc('email_registrado', { p_email: email }).then(function(chk){
+    if(!chk.error && chk.data === false){
+      showToast('Este email no corresponde a un usuario registrado.','error');
+      return;
+    }
+    _enviarRecuperarConfirmado(email);
+  }).catch(function(){ _enviarRecuperarConfirmado(email); });
+}
+
+function _enviarRecuperarConfirmado(email){
   var volverA = window.location.origin + window.location.pathname + '?type=recovery';
   var opciones = { redirectTo: volverA };
   if(HCAPTCHA_SITE_KEY && _recCaptchaToken){ opciones.captchaToken = _recCaptchaToken; }
@@ -2452,6 +2475,14 @@ function showView(name, targetId){
     else if(name==='operario') target = 'operario.html';
 
     if(target){
+      // Preservar el query string (ej. ?cl= del acceso de operario) al cambiar de página,
+      // si no se pierde el empresa_id y el operario no puede ingresar.
+      var _search = window.location.search || '';
+      if(_search && target.indexOf('?')===-1){
+        var _h = target.indexOf('#');
+        if(_h>=0) target = target.slice(0,_h) + _search + target.slice(_h);
+        else target += _search;
+      }
       if(targetId) target += (target.includes('#') ? '' : '#') + targetId;
       window.location.href = target;
     }
@@ -6065,10 +6096,10 @@ function _genPin(){
 }
 
 function getChecklistBaseUrl(){
-  // El link apunta a la URL actual donde está publicado el HTML (mercateck.com.ar).
-  // Usa location.origin para adaptarse solo si el dominio cambia.
-  var base = window.location.origin + window.location.pathname;
-  return base;
+  // El link del operario debe apuntar SIEMPRE a operario.html (la página liviana),
+  // sin importar desde qué página del panel se genere. Se adapta al dominio solo.
+  var path = (window.location.pathname || '/').replace(/[^\/]*$/, 'operario.html');
+  return window.location.origin + path;
 }
 
 function actualizarLinkPersonal(){
