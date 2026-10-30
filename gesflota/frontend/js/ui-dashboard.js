@@ -12582,3 +12582,53 @@ window.addEventListener('load', function(){
     });
   }
 });
+
+// ══════════════════════════════════════════════════════
+//  BOTÓN "VOLVER ARRIBA" + visibilidad del botón de chat al bajar
+//  (portado del monolito original; el split lo había perdido)
+// ══════════════════════════════════════════════════════
+(function(){
+  function _cont(){
+    var main = document.querySelector('.app-main');
+    if(main && main.scrollHeight > main.clientHeight + 5) return main;
+    return document.scrollingElement || document.documentElement;
+  }
+  function _scrollTop(){
+    var c=_cont();
+    if(c===document.documentElement||c===document.body||c===document.scrollingElement){
+      return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    }
+    return c.scrollTop;
+  }
+  window._scrollArriba = function(){
+    window.scrollTo({top:0,behavior:'smooth'});
+    var main = document.querySelector('.app-main');
+    if(main && main.scrollTop>0) main.scrollTo({top:0,behavior:'smooth'});
+  };
+  var _mouseEnEsquina = false;
+  function _onScroll(){
+    var y = _scrollTop();
+    var btn = document.getElementById('btnVolverArriba');
+    var ges = document.getElementById('gesBtn');
+    var mostrar = (y > 250) || _mouseEnEsquina;
+    if(btn) btn.classList.toggle('visible', (y>250) || _mouseEnEsquina);
+    if(ges){
+      var gc = document.getElementById('gesChat');
+      var chatAbierto = gc && gc.style.display && gc.style.display!=='none';
+      var verChat = mostrar || chatAbierto;
+      ges.style.opacity = verChat ? '1' : '0';
+      ges.style.pointerEvents = verChat ? 'auto' : 'none';
+      ges.style.transition = 'opacity .25s';
+    }
+  }
+  document.addEventListener('mousemove', function(e){
+    var enEsquina = (e.clientX > window.innerWidth - 160) && (e.clientY > window.innerHeight - 160);
+    if(enEsquina !== _mouseEnEsquina){ _mouseEnEsquina = enEsquina; _onScroll(); }
+  });
+  window.addEventListener('scroll', _onScroll, true);
+  document.addEventListener('DOMContentLoaded', function(){
+    var c=document.querySelector('.app-main'); if(c) c.addEventListener('scroll', _onScroll);
+    _onScroll();
+  });
+  setTimeout(_onScroll, 500);
+})();
