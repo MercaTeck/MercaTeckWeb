@@ -50,6 +50,11 @@ const BASE = 'file://' + path.join(__dirname, '..', 'frontend') + '/';
         !(await p2.$eval('#admtab-empresas', el => el.classList.contains('active'))),
         'dash: showAdminTab("facturacion") togglea bien');
   check(!(await p2.evaluate(() => document.body.innerHTML.indexOf('Borrar datos de Flota')>=0)), 'dash: "Borrar mis datos" eliminado');
+  // Aislamiento de vistas: showView('admin') debe mostrar SOLO view-admin (no apilado)
+  const visAdmin = await p2.evaluate(()=>{ try{Object.defineProperty(window.location,'replace',{configurable:true,value:()=>{}});}catch(e){} if(typeof showView==='function') showView('admin'); return [...document.querySelectorAll('.view')].filter(v=>getComputedStyle(v).display!=='none').map(v=>v.id); });
+  check(visAdmin.length===1 && visAdmin[0]==='view-admin', 'dash: showView("admin") muestra solo admin (sin apilar) → '+JSON.stringify(visAdmin));
+  const visDash = await p2.evaluate(()=>{ if(typeof showView==='function') showView('dashboard'); return [...document.querySelectorAll('.view')].filter(v=>getComputedStyle(v).display!=='none').map(v=>v.id); });
+  check(visDash.length===1 && visDash[0]==='view-dashboard', 'dash: showView("dashboard") muestra solo dashboard → '+JSON.stringify(visDash));
 
   // login.html — regresión: loginSuccess NO debe tirar (antes fallaba en navUserName)
   // y showToast debe auto-crear su contenedor. En el split, login.html no tiene el DOM del panel.
