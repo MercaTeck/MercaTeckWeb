@@ -41,6 +41,7 @@
 Options -Indexes
 
 # ── 4) Bloquear acceso a archivos sensibles ──────────────────────────────────
-<FilesMatch "(^\.|\.(sql|md|map)$)">
+# Oculta código fuente de backend/tests y respaldos si llegaran a subirse.
+<FilesMatch "(^\.|\.(sql|md|map|ts|json|py|patch)$)">
   Require all denied
 </FilesMatch>
