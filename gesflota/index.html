@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GesFlota — Redirigiendo...</title>
+
+  <!-- =====================================================================
+       ENRUTADOR DEL SUBDOMINIO gesflota.mercateck.com.ar (index.html)
+       Este archivo es la raíz del subdominio. La app vive en frontend/.
+       1. QR de chofer (?cl=ID_EMPRESA)            -> frontend/operario.html
+       2. Email de confirmación (?token_hash=...)  -> frontend/login.html
+       3. Email de recuperación (?type=recovery)   -> frontend/login.html
+       4. Sesión guardada en este navegador        -> frontend/dashboard.html
+       5. Sin parámetros                           -> frontend/landing.html
+       ===================================================================== -->
+  <script>
+    (function() {
+      try {
+        var search = window.location.search || '';
+        var hash = window.location.hash || '';
+        var params = new URLSearchParams(search);
+
+        // 1. Acceso de chofer / operario por QR o enlace directo de empresa
+        if (params.get('cl')) {
+          window.location.replace('frontend/operario.html' + search + hash);
+          return;
+        }
+
+        // 2. Token de confirmación de cuenta o recuperación de contraseña
+        if (params.get('token_hash') || params.get('type') === 'recovery' || hash.indexOf('access_token') !== -1) {
+          window.location.replace('frontend/login.html' + search + hash);
+          return;
+        }
+
+        // 3. Si hay sesión previa guardada en este navegador, ir al dashboard
+        var tieneSesion = false;
+        try {
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            if (k && k.indexOf('sb-') !== -1 && k.indexOf('-auth-token') !== -1) {
+              tieneSesion = true;
+              break;
+            }
+          }
+        } catch(e){}
+
+        if (tieneSesion && hash.indexOf('login') === -1 && search.indexOf('logout') === -1) {
+          window.location.replace('frontend/dashboard.html' + search + hash);
+          return;
+        }
+
+        // 4. Caso por defecto: Landing Page de presentación
+        window.location.replace('frontend/landing.html' + search + hash);
+
+      } catch(err) {
+        console.error('Error enrutando a GesFlota:', err);
+        window.location.href = 'frontend/landing.html';
+      }
+    })();
+  </script>
+
+  <style>
+    body {
+      background: #0B0E14;
+      color: #C49A3A;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(196,154,58,.2);
+      border-top-color: #C49A3A;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin-bottom: 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    a { color: #F4F6FA; text-decoration: underline; font-size: 14px; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="spinner"></div>
+  <p>Ingresando a <strong>GesFlota</strong>...</p>
+  <noscript>
+    <p>Para ingresar hacé clic aquí:</p>
+    <a href="frontend/landing.html">Ir a GesFlota</a>
+  </noscript>
+</body>
+</html>
