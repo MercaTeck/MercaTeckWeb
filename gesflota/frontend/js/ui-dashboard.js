@@ -11546,8 +11546,14 @@ function saveDestinatario(){
       hora: (document.getElementById('gen_autoHora')||{}).value || '09:00'
     };
   }
-  if(_editDestIdx>=0) _destinatarios[_editDestIdx] = dest;
-  else _destinatarios.push(dest);
+  if(_editDestIdx>=0){
+    // Preservar el _id del registro que estamos editando. Si no, al guardar se
+    // crea un DUPLICADO en la base en vez de actualizar el existente.
+    if(_destinatarios[_editDestIdx] && _destinatarios[_editDestIdx]._id) dest._id = _destinatarios[_editDestIdx]._id;
+    _destinatarios[_editDestIdx] = dest;
+  } else {
+    _destinatarios.push(dest);
+  }
   saveStateLocal('destinatarios', _destinatarios);
   renderDestinatarios();
   // Guardar también en Supabase (para que el envío automático del servidor lo lea)
@@ -11559,12 +11565,14 @@ function saveDestinatario(){
       auto_dia: dest.auto ? dest.auto.dia : '4',
       auto_hora: dest.auto ? dest.auto.hora : '09:00'
     };
-    var existente = (_editDestIdx>=0 && _destinatarios[_editDestIdx] && _destinatarios[_editDestIdx]._id) ? _destinatarios[_editDestIdx]._id : null;
+    var existente = dest._id || null;
     if(existente){
-      sb.from('destinatarios_email').update(fila).eq('id', existente).then(function(){});
+      sb.from('destinatarios_email').update(fila).eq('id', existente).eq('empresa_id', window._empresaId).then(function(){});
     } else {
-      sb.from('destinatarios_email').insert(fila).then(function(r){
-        if(!r.error && r.data && r.data[0]) dest._id = r.data[0].id;
+      // .select() hace que Supabase devuelva la fila insertada, así guardamos su
+      // id y se puede borrar/editar sin tener que recargar la página.
+      sb.from('destinatarios_email').insert(fila).select().then(function(r){
+        if(!r.error && r.data && r.data[0]){ dest._id = r.data[0].id; saveStateLocal('destinatarios', _destinatarios); }
       });
     }
   }
@@ -11609,11 +11617,27 @@ function renderDestinatarios(){
 }
 
 function deleteDestinatario(i){
-  genConfirm('Eliminar destinatario', '¿Eliminar a '+_destinatarios[i].email+'?', function(){
-    _destinatarios.splice(i,1);
-    saveStateLocal('destinatarios', _destinatarios);
-    renderDestinatarios();
-    showToast('Destinatario eliminado','success');
+  var d = _destinatarios[i];
+  if(!d) return;
+  genConfirm('Eliminar destinatario', '¿Eliminar a '+d.email+'?', function(){
+    var quitarLocal = function(){
+      _destinatarios.splice(i,1);
+      saveStateLocal('destinatarios', _destinatarios);
+      renderDestinatarios();
+    };
+    // Borrar TAMBIÉN de la base: si no, al recargar reaparece y el servidor
+    // sigue enviándole las alertas automáticas.
+    if(sb && window._empresaId && d._id){
+      sb.from('destinatarios_email').delete().eq('id', d._id).eq('empresa_id', window._empresaId).then(function(res){
+        if(res && res.error){ showToast('No se pudo eliminar: '+(res.error.message||''),'error'); return; }
+        quitarLocal();
+        showToast('Destinatario eliminado','success');
+      }).catch(function(e){ showToast('No se pudo eliminar: '+e,'error'); });
+    } else {
+      // Nunca se guardó en la base (sin _id) o sin conexión: solo local
+      quitarLocal();
+      showToast('Destinatario eliminado','success');
+    }
   });
 }
 
