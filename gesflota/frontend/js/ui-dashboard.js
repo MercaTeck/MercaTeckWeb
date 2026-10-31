@@ -438,6 +438,10 @@ function doRegister(){
     email: email,
     password: pass,
     options: {
+      // El email de confirmación debe volver al subdominio nuevo (login.html),
+      // que procesa el token_hash. Debe estar en la lista blanca de Redirect URLs
+      // de Supabase, si no Supabase usa el Site URL por defecto.
+      emailRedirectTo: window.location.origin + '/login.html',
       data: {
         empresa: company,
         nombre: name,
@@ -1475,6 +1479,9 @@ function crearCuentaDemo(){
     email: email,
     password: pass,
     options: {
+      // Mismo criterio que el registro público: la confirmación vuelve al
+      // subdominio nuevo (login.html), no al HTML viejo.
+      emailRedirectTo: window.location.origin + '/login.html',
       captchaToken: (HCAPTCHA_SITE_KEY && _altaDemoCaptchaToken) ? _altaDemoCaptchaToken : undefined,
       data: { empresa: empresa, nombre: nom, apellido: ape, email: email, plan: 'demo', version_terminos: '2025-06', user_agent: 'alta-demo-mercateck' }
     }
@@ -1503,7 +1510,10 @@ function crearCuentaDemo(){
 // Email que recibe la empresa cuando MercaTeck le da el alta de la demo
 function enviarEmailAltaDemo(email, nombre, empresa, vence){
   if(!sb) return;
-  var link = window.location.origin + window.location.pathname;
+  // El botón "Ingresar a GesFlota" debe llevar SIEMPRE a la pantalla de login
+  // del subdominio. Antes usaba window.location.pathname, que al dar el alta
+  // desde el panel quedaba apuntando a dashboard.html (el panel del admin).
+  var link = window.location.origin + '/login.html';
   var cuerpo =
     '<p>¡Hola'+(nombre?(' <strong>'+escapeHtml(nombre)+'</strong>'):'')+'!</p>'
     +'<p><strong>MercaTeck</strong> le dio de alta a <strong>'+escapeHtml(empresa||'')+'</strong> la opción <strong>Demo</strong> de GesFlota: podés cargar hasta <strong>5 vehículos</strong> y usar el sistema durante <strong>1 mes</strong>, con todas las funciones.</p>'
@@ -12509,8 +12519,11 @@ window.addEventListener('load', function(){
   if(detectarLinkChecklist()){ return; }
 
   // 1b) Confirmación de cuenta por token_hash (método directo desde el email).
-  //     El link del email apunta a gesflota.html?token_hash=...&type=signup.
+  //     El link del email apunta a login.html?token_hash=...&type=signup
+  //     (subdominio nuevo gesflota.mercateck.com.ar).
   //     Verificamos el token: eso confirma la cuenta y abre la sesión.
+  //     Este handler es agnóstico de la página: corre en cualquier .html que
+  //     cargue este script (login/dashboard/landing).
   (function(){
     try{
       var q = new URLSearchParams(window.location.search || '');
