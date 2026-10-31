@@ -3694,6 +3694,10 @@ var GES_RESPUESTAS = [
   // ═══════════════════════════════════════
   //  MANTENIMIENTO (PASO A PASO DETALLADO)
   // ═══════════════════════════════════════
+  { k:['kilometraje','kilometros','kilómetros','km','horas','horas de uso','horometro','horómetro','cargar km','valor de km','cuentakilometros','odometro','odómetro'], r:"El kilometraje (o las horas de uso, para máquinas) se carga editando el vehículo:\n\n1. Andá a 'Flota' en el menú lateral (🚗)\n2. Buscá el vehículo y tocá el lápiz ✏️ en su fila\n3. Cargá el valor actual de km (o de horas, según el vehículo)\n4. Guardá\n\n¿Para qué sirve? El sistema usa el km u horas para avisarte del cambio de filtros / service. Cuando le hacés el service, editá el vehículo, poné el km u hora actual y tildá «Estos valores corresponden a un cambio de filtros recién realizado»: así el conteo arranca de cero desde ese service. ⏱️" },
+
+  { k:['service','cambio de filtros','cambio de aceite','service del vehiculo','service del vehículo','cada cuanto service','cada cuánto service','hacer el service','proximo service','próximo service','le hice el service'], r:"El service lo manejás de dos formas en GesFlota:\n\n1️⃣ Registrar el gasto en Mantenimiento:\n   • Andá a 'Mantenimiento' (🔧) → '+ Cargar desde panel'\n   • Elegí el vehículo, tipo «Service», sector, descripción y el costo\n   • Guardá → queda en la tabla con fecha, patente y costo\n\n2️⃣ Reiniciar el aviso de cambio de filtros (por km u horas):\n   • Andá a 'Flota' (🚗) → lápiz ✏️ del vehículo\n   • Cargá el km u horas actual\n   • Tildá «Estos valores corresponden a un cambio de filtros recién realizado»\n   • Guardá → el sistema vuelve a contar desde cero para el próximo aviso\n\nAsí tenés el gasto registrado y el aviso del próximo service al día. 🔧" },
+
   { k:['mantenimiento','arreglo','compra','service','reparac','taller','repuesto','compras y arreglos'], r:"La sección Mantenimiento (Pro y Enterprise) está en el menú lateral, tercera opción (ícono de llave 🔧). Ahí se llama 'Compras y Arreglos'.\n\nPara cargar un registro nuevo:\n1. Tocá el botón dorado '+ Cargar desde panel' (arriba a la derecha)\n2. Elegí el vehículo, tipo (arreglo, compra, service o incidente), sector y descripción\n3. Cargá el costo si lo tiene\n4. Guardá\n\nCada registro aparece en la tabla con su fecha, patente, tipo, descripción, origen, costo y estado (Pendiente o Finalizado).\n\nFiltros disponibles arriba de la tabla:\n🔍 Buscador por patente o interno\n📋 Filtro por sector/obra\n🏷️ Filtro por tipo (arreglo, compra, service, incidente, o por tipo de observación)\n📦 Filtro por origen (Panel o Check-list)\n💰 Filtro por con/sin costo\n📅 Filtro por período (semana actual, anterior, mes o historial completo)\n📊 Botón 'Mostrar gráficos' para ver gráficos de gestión\n\nDisponible en Pro y Enterprise. 🔧" },
 
   { k:['eliminar mantenimiento','borrar mantenimiento','eliminar registro','borrar registro','boton eliminar','botón eliminar','tacho','basura','eliminar en mantenimiento','boton rojo'], r:"Para eliminar un registro de mantenimiento:\n\n1. Andá a 'Mantenimiento' en el menú lateral (tercera opción, ícono 🔧)\n2. Buscá el registro en la tabla\n3. En la última columna de la derecha de cada fila, vas a ver los botones de acción apilados uno arriba del otro\n4. El botón '🗑️ Eliminar' está abajo de todo, escrito en color rojo con un ícono de tacho de basura\n\nSi el registro está pendiente, los botones son:\n   • 📝 Obs. (arriba)\n   • ✓ Finalizar (medio, en verde)\n   • 🗑️ Eliminar (abajo, en rojo)\n\nSi el registro ya está finalizado, los botones son:\n   • 📋 Ver (arriba)\n   • 🗑️ Eliminar (abajo, en rojo)\n\nSi no ves los botones en el celular, deslizá la tabla hacia la derecha. ⚠️ Eliminar no se puede deshacer. 🗑️" },
@@ -3706,18 +3710,20 @@ var GES_RESPUESTAS = [
 
   { k:['falla','fallas','falla de checklist','falla de check-list','llega a mantenimiento','cae en mantenimiento'], r:"Cuando un operario marca algo como 'mal' en un check-list, esa falla cae automáticamente en Mantenimiento como un registro nuevo.\n\nLo reconocés porque:\n• El tipo aparece como 'Falla' con un badge rojo\n• El origen dice '👷 Operario' o '👷 Mantenimiento' en vez de '🖥️ Panel'\n• Si hay varias fallas, se listan debajo de la descripción en rojo con un ⚠️\n\nDesde ahí podés agregar observaciones, cargar el costo de reparación y finalizar cuando esté resuelto. 🔴" },
 
+  { k:['historial','historial del vehiculo','historial del vehículo','historial de mantenimiento','ver historial','historial de arreglos','que le hicieron al vehiculo','antecedentes del vehiculo','trazabilidad'], r:"Para ver el historial de un vehículo (todo lo que se le hizo):\n\n1. Andá a 'Mantenimiento' (🔧, tercera opción del menú)\n2. Filtrá por la patente con el buscador 🔍\n3. En el filtro de período, elegí 'Historial completo' para ver TODOS los registros (no solo la semana)\n4. En cada registro tocá '📝 Obs.' (si está pendiente) o '📋 Ver' (si está finalizado) para ver el detalle: observaciones, costos y fechas\n\nAhí tenés la trazabilidad completa: arreglos, compras, services, incidentes y las fallas que llegaron de los check-list, cada uno con su estado (Pendiente / Finalizado) y su origen (Panel, Mant o el puesto que lo cargó). 📚" },
+
   // ═══════════════════════════════════════
   //  CHECK-LISTS (DETALLADO)
   // ═══════════════════════════════════════
   { k:['check','checklist','check-list','control de vehiculo','control de vehículo','revision','revisión'], r:"El módulo de Check-list (Pro con add-on / Enterprise) está en el menú lateral, cuarta opción (ícono de clipboard 📋).\n\nDesde ahí ves todos los check-lists cargados por tu equipo, con filtros por:\n🔍 Patente o interno\n📋 Sector/obra\n📅 Período (semana, mes, etc.)\n👷 Persona que lo cargó\n\nCada check-list muestra: fecha, vehículo, quién lo cargó, resultado de cada ítem y observaciones.\n\nPara configurar QUÉ se controla (los ítems del check-list), andá a Configuración → 'Armá el check-list de cada puesto'. Para dar acceso a tu personal, andá a Configuración → 'Personal y accesos'. ✅" },
 
-  { k:['qr','link','operario','chofer','personal','pin','acceso personal','acceso operario','compartir checklist','compartir check-list'], r:"Para que tu personal cargue check-lists desde el celular:\n\n1. Andá a Configuración (ícono de engranaje ⚙️, última opción del menú lateral)\n2. Buscá la sección 'Personal y accesos'\n3. Tocá '+ Agregar persona'\n4. Completá: nombre completo y puesto (chofer, operario, etc.)\n5. El sistema genera un PIN automáticamente\n6. Tocá el botón de compartir y elegí: 📱 WhatsApp o 📋 Copiar link\n\nTu personal entra con el link, pone su nombre y PIN, y carga el check-list del vehículo. Solo pueden cargar check-lists — no ven tus datos, costos ni configuración.\n\nEl QR y el link son únicos por persona. Si alguien pierde el PIN, podés regenerarlo desde la misma sección. 🔐" },
+  { k:['qr','link','operario','chofer','personal','pin','accesos','acceso personal','acceso operario','personal y accesos','compartir checklist','compartir check-list','agregar persona','regenerar pin','dar de alta al personal'], r:"👷 PERSONAL Y ACCESOS — para que tu equipo cargue check-lists desde el celular, sin entrar a tu panel.\n\nDónde: Configuración → se abre la ventana 'Configurar check-list' → pestaña '👷 Personal y accesos'.\n\nPasos:\n1. Tocá '+ Agregar persona'\n2. Completá nombre completo y puesto (chofer, operario, jefe, mantenimiento…)\n3. El sistema genera un PIN automático\n4. Compartí el acceso: 📱 WhatsApp, 📋 Copiar link, o el código QR\n\nCómo entra tu personal: abre el link (o escanea el QR), pone su nombre y PIN, elige el vehículo y completa el check-list. Solo ve el formulario — no ve tus datos, costos ni configuración.\n\nEl link y el PIN son únicos por persona. Si alguien pierde el PIN, lo regenerás desde la misma pestaña. 🔐" },
 
   { k:['frecuencia','cada cuanto','cada cuánto','cuantas veces','cuántas veces','diario','semanal'], r:"Con el motor de reglas configurás cada cuánto se debe cargar el check-list:\n\n• Diario\n• X veces por semana (ej: 3 veces)\n• Días específicos (ej: martes y viernes)\n• X veces por mes\n• Cada X días\n\nPara configurarlo:\n1. Andá a Configuración → sección de reglas de check-list\n2. Creá una regla: elegís el puesto, la categoría de vehículo y la frecuencia\n3. Guardá\n\nDespués en el panel de Check-lists ves si cada vehículo está al día o pendiente, con gráficos de cumplimiento y ranking. 📅" },
 
-  { k:['regla','reglas','motor de reglas','por categoria','por categoría','por puesto','por sector'], r:"El motor de reglas (Enterprise, o Pro con add-on) te deja crear reglas de check-list específicas:\n\n1. Andá a Configuración\n2. Buscá la sección de reglas de check-list\n3. Tocá '+ Nueva regla'\n4. Elegí:\n   • Puesto responsable (chofer, operario, mantenimiento, etc.)\n   • A qué se aplica (una categoría de vehículos, un sector/obra, o vehículos puntuales)\n   • Frecuencia (diaria, semanal, etc.)\n5. Guardá\n\nCada regla cuenta para el cumplimiento y los gráficos. Podés tener varias reglas para el mismo puesto en distintas categorías. 🎯" },
+  { k:['regla','reglas','motor de reglas','reglas del checklist','reglas de check-list','por categoria','por categoría','por puesto','por sector','quien controla','cada cuanto se controla'], r:"📋 REGLAS — definen QUIÉN controla QUÉ y CADA CUÁNTO. Son la base del cumplimiento del check-list.\n\nDónde: Configuración → ventana 'Configurar check-list' → pestaña '📋 Reglas' → '+ Nueva regla'.\n\nEn cada regla elegís:\n1. Puesto responsable: chofer, operario, jefe, mantenimiento…\n2. A qué se aplica: una categoría de vehículos, un sector/obra, o vehículos puntuales\n3. Frecuencia:\n   • Diaria\n   • X veces por semana\n   • Días específicos (ej. martes y viernes)\n   • X veces por mes\n   • Cada X días\n\nLas frecuencias se calculan sobre los días laborables que configuraste (Configuración → Días laborables): si trabajás de lunes a viernes, no cuenta el sábado.\n\n💡 Consejo: cada regla cuenta solo los vehículos de su categoría. Si un mismo puesto (ej. chofer) maneja camiones y camionetas, creá una regla por cada categoría, así el cumplimiento suma bien todos los check-list.\n\nEl panel de cumplimiento (gráficos) compara lo cargado vs. lo esperado según estas reglas, con ranking por sector y por puesto. 🎯" },
 
-  { k:['armar checklist','configurar checklist','items','ítems','tipo de checklist','checklist por puesto','constructor','armar el check'], r:"Para armar el check-list de cada puesto:\n\n1. Andá a Configuración (ícono de engranaje ⚙️)\n2. Buscá la sección 'Armá el check-list de cada puesto'\n3. Elegí el puesto (chofer, operario, mantenimiento, etc.)\n4. Agregá los ítems que querés que controlen\n5. Para cada ítem elegí el tipo de respuesta: bien/mal/NA, mercadería, documentación, sí/no o texto libre\n6. Guardá\n\nPodés tener check-lists distintos para cada puesto. Por ejemplo: el chofer revisa estado del vehículo y documentación, y mantenimiento revisa arreglos y repuestos. 🧩" },
+  { k:['armar checklist','configurar checklist','items','ítems','tipo de checklist','checklist por puesto','constructor','armar el check','como armo el checklist','armar el checklist','construir checklist','plantilla checklist','catalogo de items','catálogo de ítems'], r:"🧩 CONSTRUCTOR — armás la lista de ítems que se controla, propia de cada puesto.\n\nDónde: Configuración → ventana 'Configurar check-list' → pestaña '🧩 Constructor'.\n\nPasos:\n1. Elegí el puesto (chofer, operario, jefe, mantenimiento, o 'Carga Tareas Mantenimiento')\n2. Agregá los ítems — tenés 3 formas:\n   • 'Cargar plantilla sugerida' (y la editás)\n   • Elegir del catálogo de ítems\n   • Escribir ítems a mano\n3. Para cada ítem elegí el tipo de respuesta: bien/mal/NA, mercadería, documentación, sí/no o texto libre\n4. Definí la frecuencia de ese puesto\n5. Guardá\n\nCada puesto tiene su propio check-list (ej.: el chofer revisa estado y documentación; mantenimiento revisa arreglos y repuestos).\n\nTodos los check-list incluyen al final, fijos: una observación con tipos (estado del vehículo, documentación, hidrogrúa…) y la firma. Lo que se marca como 'mal' o se observa cae automáticamente en Mantenimiento. 🧩" },
 
   // ═══════════════════════════════════════
   //  ALERTAS
@@ -3931,7 +3937,8 @@ var GES_SINONIMOS = {
   operario: ['operario','operarios','empleado','empleados','personal','chofer','choferes','conductor','gente','equipo','trabajador','usuario'],
   checklist: ['checklist','check','chequeo','control','revision','revisar','inspeccion','planilla'],
   alerta: ['alerta','alertas','aviso','avisos','notificacion','notificaciones','recordatorio','vencimiento','vence','avisar'],
-  mantenimiento: ['mantenimiento','service','arreglo','arreglos','reparacion','taller','filtros','aceite','cubiertas'],
+  mantenimiento: ['mantenimiento','arreglo','arreglos','reparacion','taller','cubiertas'],
+  service: ['service','cambio de filtros','filtros','aceite','cambio de aceite'],
   informe: ['informe','informes','reporte','reportes','pdf','excel','exportar','descargar','estadistica'],
   registro: ['registro','registrar','cuenta','crear cuenta','suscribir','contratar','alta','empezar'],
   vtv: ['vtv','revision tecnica','verificacion'],
@@ -4057,6 +4064,53 @@ function gesProcesarPregunta(texto){
 
   // 2. Buscar la MEJOR coincidencia por puntaje (con normalización + sinónimos + typos)
   var temaDetectado = null;
+
+  // 1b. PRIORIDAD: coincidencia EXACTA de palabra clave para consultas cortas
+  //     (1-2 palabras), ej. "vtv", "service", "km", "reglas", "constructor",
+  //     "personal", "accesos". El puntaje difuso + sinónimos a veces desvía estas
+  //     a una entrada genérica (ej. "vtv" caía en check-list). Acá, si el texto
+  //     ES una keyword o una de sus 1-2 palabras ES una keyword, devolvemos esa
+  //     entrada directo, prefiriendo la keyword más específica (más larga).
+  if(!respuesta){
+    var toksEx = textoNorm.trim().split(/\s+/).filter(function(w){ return w.length>=2; });
+    if(toksEx.length>=1 && toksEx.length<=2){
+      var mejorEx=null, mejorLen=0;
+      var evalExacta = function(lista){
+        lista.forEach(function(item){
+          item.k.forEach(function(kw){
+            var kwn=_gesNormalizar(kw).trim();
+            if(!kwn) return;
+            if(textoNorm.trim()===kwn || toksEx.indexOf(kwn)>=0){
+              if(kwn.length>mejorLen){ mejorLen=kwn.length; mejorEx=item.r; temaDetectado=item.k[0]; }
+            }
+          });
+        });
+      };
+      evalExacta(GES_PROBLEMAS); evalExacta(GES_RESPUESTAS);
+      if(mejorEx){ respuesta = mejorEx; }
+    }
+  }
+
+  // 1c. Frase clave LARGA (multi-palabra, ≥12 chars) que aparece textual en la
+  //     pregunta: señal muy fuerte y específica (ej. "reglas del checklist"→Reglas,
+  //     "como armo el checklist"→Constructor). No desvía frases genéricas porque
+  //     exige que la frase completa esté contenida en el texto.
+  if(!respuesta){
+    var mejorFr=null, mejorFrLen=0;
+    var evalFrase = function(lista){
+      lista.forEach(function(item){
+        item.k.forEach(function(kw){
+          var kwn=_gesNormalizar(kw).trim();
+          if(kwn.length>=12 && kwn.indexOf(' ')>=0 && textoNorm.indexOf(kwn)>=0){
+            if(kwn.length>mejorFrLen){ mejorFrLen=kwn.length; mejorFr=item.r; temaDetectado=item.k[0]; }
+          }
+        });
+      });
+    };
+    evalFrase(GES_PROBLEMAS); evalFrase(GES_RESPUESTAS);
+    if(mejorFr){ respuesta = mejorFr; }
+  }
+
   if(!respuesta){
     var mejor = null, mejorScore = 0;
     function evaluar(lista){
