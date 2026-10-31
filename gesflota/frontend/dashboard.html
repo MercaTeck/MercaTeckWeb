@@ -16,7 +16,9 @@
     /* Nota: NO forzar display aquí. El sistema de vistas (.view / .view.active)
        es el que muestra u oculta cada panel. Un display:block !important acá
        dejaba el dashboard SIEMPRE visible y lo apilaba con el panel admin. */
-    #view-dashboard { padding-top: var(--nav-h); }
+    /* El espacio bajo la barra fija lo reserva .app-layout (padding-top:var(--nav-h)).
+       No duplicar acá: ponerlo también dejaba el doble y un hueco grande arriba
+       de todos los paneles del dashboard. */
     body { background: var(--black); color: var(--white); min-height: 100vh; }
   </style>
 </head>
@@ -1577,7 +1579,7 @@
 <!-- MODAL POPUP CONFIGURACIÓN INICIAL DEL CHECK-LIST -->
 <div class="modal-overlay" id="popupConfigInicialChecklist">
   <div class="modal-box" style="max-width:440px;">
-    <div style="text-align:center;padding:.5rem 0 1rem;">
+    <div style="text-align:center;padding:1.75rem 1.5rem 1.5rem;">
       <div style="font-size:40px;margin-bottom:.5rem;">📋</div>
       <div style="font-size:18px;font-weight:700;color:var(--gold);margin-bottom:.6rem;">Configurá tu check-list</div>
       <div style="font-size:13px;color:var(--gray);line-height:1.6;margin-bottom:1.25rem;text-align:left;">
