@@ -901,23 +901,11 @@ function applyPlanRestrictions(plan){
     });
   }
 
-  // ══ BÁSICO ══
-  // Sin Compras/Arreglos, sin email notif, sin checklist app (solo manual).
-  if(plan==='demo'){
-    if(mantItem){
-      mantItem.setAttribute('onclick','showPlanUpgrade("mantenimiento")');
-      mantItem.style.opacity='.5';
-      addLock(mantItem);
-    }
-    if(clItem){
-      // El Demo no puede sumar el check-list como add-on: necesita pasar a Pro
-      clItem.setAttribute('onclick','showPlanUpgrade("checklist")');
-      clItem.style.opacity='.5';
-      addLock(clItem);
-    }
-    if(emailCard) emailCard.style.display = 'none';
-    showDataSourceBanner();
-  }
+  // ══ DEMO ══
+  // La Demo tiene TODAS las funciones habilitadas (igual que Enterprise) para que
+  // el cliente pueda probar el sistema completo. El único límite es 5 vehículos
+  // (LIMITES_VEHICULOS.demo) y 1 mes de vigencia; no se limita por sección.
+  // Se trata junto con Enterprise en el bloque de abajo, así que acá no se bloquea nada.
 
   // ══ PRO ══
   // Compras/Arreglos habilitado + email notif. Checklist solo si lo compran aparte.
@@ -929,9 +917,10 @@ function applyPlanRestrictions(plan){
     }
   }
 
-  // ══ ENTERPRISE ══
+  // ══ ENTERPRISE (y DEMO) ══
   // Todo habilitado: mantenimiento, checklist incluido, alertas automáticas.
-  if(plan==='enterprise'){
+  // La Demo recibe el mismo set de funciones (limitada a 5 vehículos / 1 mes).
+  if(plan==='enterprise' || plan==='demo'){
     window._checklistIncluded = true;
     window._showChecklistShare = true;
     if(clItem){
@@ -1115,9 +1104,9 @@ function renderGuia(){
   var cont = document.getElementById('guiaContenido');
   if(!cont) return;
   var plan = (currentUser && currentUser.plan) ? currentUser.plan : 'demo';
-  var tieneMant = (plan==='pro' || plan==='enterprise');
-  var tieneCl   = (plan==='enterprise') || (plan==='pro' && window._addonChecklist===true);
-  var tieneInf  = (plan==='pro' || plan==='enterprise');
+  var tieneMant = (plan==='demo' || plan==='pro' || plan==='enterprise');
+  var tieneCl   = (plan==='demo' || plan==='enterprise') || (plan==='pro' && window._addonChecklist===true);
+  var tieneInf  = (plan==='demo' || plan==='pro' || plan==='enterprise');
   var limite    = {demo:'5', pro:'50', enterprise:'sin límite'}[plan] || '5';
 
   var secciones = [];
@@ -1680,8 +1669,7 @@ function _actualizarPrecioCambio(){
   var lbl = document.getElementById('cpAddonLabel');
   // El add-on es solo para Pro (Enterprise ya lo incluye; Demo no puede tenerlo)
   if(chk){
-    if(plan==='demo'){ chk.checked=false; chk.disabled=true; if(lbl) lbl.style.opacity='.4'; }
-    else if(plan==='enterprise'){ chk.checked=true; chk.disabled=true; if(lbl) lbl.style.opacity='.6'; }
+    if(plan==='demo' || plan==='enterprise'){ chk.checked=true; chk.disabled=true; if(lbl) lbl.style.opacity='.6'; }
     else { chk.disabled=false; if(lbl) lbl.style.opacity='1'; }
   }
   var addon = chk ? chk.checked : false;
@@ -2438,6 +2426,51 @@ function guardarNuevaPassword(){
     showToast('✓ Contraseña cambiada. Ya podés ingresar.','success');
     // Cerrar la sesión temporal del link y mandarlo al login
     sb.auth.signOut().then(function(){ showView('login'); }).catch(function(){ showView('login'); });
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  CAMBIAR CONTRASEÑA (estando logueado, desde Configuración)
+//  Desplegable debajo de "Mi suscripción". Cambia la clave en Supabase con
+//  updateUser: la sesión actual sigue válida y la nueva clave queda tomada
+//  para el próximo ingreso. No requiere email.
+// ══════════════════════════════════════════════════════
+function toggleCambiarPass(){
+  var body = document.getElementById('cambiarPassBody');
+  var arrow = document.getElementById('cambiarPassArrow');
+  if(!body) return;
+  var abierto = body.style.display !== 'none';
+  body.style.display = abierto ? 'none' : 'block';
+  if(arrow) arrow.textContent = abierto ? 'Cambiar ▾' : 'Cerrar ▴';
+}
+
+function cambiarMiPassword(){
+  var p1 = (document.getElementById('cpNueva')||{}).value || '';
+  var p2 = (document.getElementById('cpNueva2')||{}).value || '';
+  var err = document.getElementById('cpPassError');
+  var okEl = document.getElementById('cpPassOk');
+  function fallo(msg){ if(err){ err.textContent=msg; err.style.display='block'; } }
+  if(err) err.style.display='none';
+  if(okEl) okEl.style.display='none';
+  if(!p1 || !p2) return fallo('Completá los dos campos.');
+  var faltan = (typeof _validarPassword==='function') ? _validarPassword(p1) : [];
+  if(faltan.length) return fallo('La contraseña necesita: '+faltan.join(', ')+'.');
+  if(p1 !== p2) return fallo('Las contraseñas no coinciden.');
+  if(!sb){ return fallo('Sin conexión. Reintentá en un momento.'); }
+  var btn = document.getElementById('cpPassBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Guardando...'; }
+  // updateUser cambia la contraseña en Supabase (auth.users) para el usuario
+  // logueado. No hace falta la clave anterior ni cerrar sesión.
+  sb.auth.updateUser({ password: p1 }).then(function(res){
+    if(btn){ btn.disabled=false; btn.textContent='Guardar contraseña'; }
+    if(res && res.error){ return fallo('No se pudo cambiar la contraseña: '+(res.error.message||'')); }
+    var i1=document.getElementById('cpNueva'); if(i1) i1.value='';
+    var i2=document.getElementById('cpNueva2'); if(i2) i2.value='';
+    if(okEl){ okEl.textContent='✓ Contraseña actualizada. La próxima vez que ingreses, usá la nueva.'; okEl.style.display='block'; }
+    showToast('✓ Contraseña cambiada','success');
+  }).catch(function(e){
+    if(btn){ btn.disabled=false; btn.textContent='Guardar contraseña'; }
+    fallo('No se pudo cambiar la contraseña: '+e);
   });
 }
 

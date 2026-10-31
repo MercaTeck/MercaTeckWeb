@@ -1135,6 +1135,26 @@
           </div>
             </div>
           </div>
+
+          <!-- Cambiar contraseña: desplegable debajo de "Mi suscripción" (todos los planes) -->
+          <div style="margin-top:.75rem;">
+            <button class="btn-outline" onclick="toggleCambiarPass()" style="width:100%;padding:14px 16px;font-size:13px;font-weight:600;color:var(--gold);display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+              <span>🔒 Cambiar contraseña</span>
+              <span id="cambiarPassArrow" style="color:var(--gray);font-weight:400;font-size:12px;">Cambiar ▾</span>
+            </button>
+            <div id="cambiarPassBody" style="display:none;">
+              <div class="app-card" style="padding:1.5rem;margin-bottom:.75rem;">
+                <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Elegí una nueva contraseña para tu cuenta. La vas a usar la próxima vez que ingreses.</div>
+                <div style="display:grid;gap:.75rem;max-width:360px;">
+                  <input id="cpNueva" type="password" autocomplete="new-password" placeholder="Nueva contraseña" style="width:100%;padding:11px 14px;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);color:var(--white);font-size:14px;">
+                  <input id="cpNueva2" type="password" autocomplete="new-password" placeholder="Repetir nueva contraseña" style="width:100%;padding:11px 14px;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);color:var(--white);font-size:14px;">
+                </div>
+                <div id="cpPassError" style="display:none;color:#F87171;font-size:13px;margin-top:.6rem;"></div>
+                <div id="cpPassOk" style="display:none;color:#4ADE80;font-size:13px;margin-top:.6rem;"></div>
+                <button id="cpPassBtn" class="btn-gold" style="font-size:13px;padding:10px 20px;margin-top:1rem;" onclick="cambiarMiPassword()">Guardar contraseña</button>
+              </div>
+            </div>
+          </div>
           <!-- (El bloque "Borrar mis datos" se quitó del panel del cliente;
                la función borrarDatos() se mantiene en el JS por si se reutiliza) -->
 
@@ -2051,7 +2071,7 @@
 
   <!-- Lógica Frontend -->
   <script src="js/utils.js"></script>
-  <script src="js/ui-dashboard.js?v=20261031b"></script>
+  <script src="js/ui-dashboard.js?v=20261031c"></script>
   <script>
 // Muestra el botón "volver arriba" y el chat de IA solo cuando el usuario baja.
 (function(){

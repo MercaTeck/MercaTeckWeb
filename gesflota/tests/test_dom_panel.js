@@ -63,6 +63,32 @@ const BASE = 'file://' + path.join(__dirname, '..', 'frontend') + '/';
   const visDash = await p2.evaluate(()=>{ if(typeof showView==='function') showView('dashboard'); return [...document.querySelectorAll('.view')].filter(v=>getComputedStyle(v).display!=='none').map(v=>v.id); });
   check(visDash.length===1 && visDash[0]==='view-dashboard', 'dash: showView("dashboard") muestra solo dashboard → '+JSON.stringify(visDash));
 
+  // Cambiar contraseña (Configuración) — desplegable + funciones
+  check(await p2.$('#cambiarPassBody')!==null, 'dash: #cambiarPassBody (desplegable cambiar contraseña)');
+  for (const fn of ['toggleCambiarPass','cambiarMiPassword']){
+    const t = await p2.evaluate(n => typeof window[n], fn);
+    check(t==='function', 'dash: '+fn+'() definida');
+  }
+  // Demo con TODAS las funciones: applyPlanRestrictions('demo') no bloquea mant/checklist
+  const demoFeat = await p2.evaluate(()=>{
+    if(typeof applyPlanRestrictions!=='function') return {err:'no applyPlanRestrictions'};
+    applyPlanRestrictions('demo');
+    const mant = document.querySelector('[data-tab="dash-mantenimiento"]');
+    const cl   = document.querySelector('[data-tab="dash-checklist"]');
+    return {
+      mantOnclick: mant ? (mant.getAttribute('onclick')||'') : null,
+      clOnclick:   cl ? (cl.getAttribute('onclick')||'') : null,
+      mantLock: mant ? !!mant.querySelector('.lock-icon') : null,
+      clLock:   cl ? !!cl.querySelector('.lock-icon') : null,
+      checklistIncluido: window._checklistIncluded===true
+    };
+  });
+  check(demoFeat.mantOnclick && demoFeat.mantOnclick.indexOf('setTab')>=0, 'demo: Mantenimiento accesible (setTab) → '+demoFeat.mantOnclick);
+  check(demoFeat.clOnclick && demoFeat.clOnclick.indexOf('setTab')>=0, 'demo: Check-list accesible (setTab) → '+demoFeat.clOnclick);
+  check(demoFeat.mantLock===false, 'demo: Mantenimiento sin candado');
+  check(demoFeat.clLock===false, 'demo: Check-list sin candado');
+  check(demoFeat.checklistIncluido===true, 'demo: checklist marcado como incluido');
+
   // login.html — regresión: loginSuccess NO debe tirar (antes fallaba en navUserName)
   // y showToast debe auto-crear su contenedor. En el split, login.html no tiene el DOM del panel.
   const p3 = await ctx.newPage(); const e3=[];
