@@ -438,10 +438,12 @@ function doRegister(){
     email: email,
     password: pass,
     options: {
-      // El email de confirmación debe volver al subdominio nuevo (login.html),
-      // que procesa el token_hash. Debe estar en la lista blanca de Redirect URLs
-      // de Supabase, si no Supabase usa el Site URL por defecto.
-      emailRedirectTo: window.location.origin + '/login.html',
+      // El email de confirmación debe volver al login del subdominio, que
+      // procesa el token_hash. Se arma RELATIVO a la carpeta actual (p. ej.
+      // /frontend/) para que apunte a login.html en la misma ruta, sin asumir
+      // que la app está en la raíz. Debe estar en la lista blanca de Redirect
+      // URLs de Supabase, si no Supabase usa el Site URL por defecto.
+      emailRedirectTo: window.location.origin + window.location.pathname.replace(/[^\/]*$/, 'login.html'),
       data: {
         empresa: company,
         nombre: name,
@@ -1480,8 +1482,8 @@ function crearCuentaDemo(){
     password: pass,
     options: {
       // Mismo criterio que el registro público: la confirmación vuelve al
-      // subdominio nuevo (login.html), no al HTML viejo.
-      emailRedirectTo: window.location.origin + '/login.html',
+      // login.html de la carpeta actual (relativo), no al HTML viejo.
+      emailRedirectTo: window.location.origin + window.location.pathname.replace(/[^\/]*$/, 'login.html'),
       captchaToken: (HCAPTCHA_SITE_KEY && _altaDemoCaptchaToken) ? _altaDemoCaptchaToken : undefined,
       data: { empresa: empresa, nombre: nom, apellido: ape, email: email, plan: 'demo', version_terminos: '2025-06', user_agent: 'alta-demo-mercateck' }
     }
@@ -1511,9 +1513,10 @@ function crearCuentaDemo(){
 function enviarEmailAltaDemo(email, nombre, empresa, vence){
   if(!sb) return;
   // El botón "Ingresar a GesFlota" debe llevar SIEMPRE a la pantalla de login
-  // del subdominio. Antes usaba window.location.pathname, que al dar el alta
-  // desde el panel quedaba apuntando a dashboard.html (el panel del admin).
-  var link = window.location.origin + '/login.html';
+  // del subdominio, en la MISMA carpeta donde está la app (p. ej. /frontend/).
+  // Se arma relativo a la página actual: si el admin da el alta desde
+  // /frontend/dashboard.html, el link queda en /frontend/login.html.
+  var link = window.location.origin + window.location.pathname.replace(/[^\/]*$/, 'login.html');
   var cuerpo =
     '<p>¡Hola'+(nombre?(' <strong>'+escapeHtml(nombre)+'</strong>'):'')+'!</p>'
     +'<p><strong>MercaTeck</strong> le dio de alta a <strong>'+escapeHtml(empresa||'')+'</strong> la opción <strong>Demo</strong> de GesFlota: podés cargar hasta <strong>5 vehículos</strong> y usar el sistema durante <strong>1 mes</strong>, con todas las funciones.</p>'
