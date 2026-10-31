@@ -1486,7 +1486,7 @@ function crearCuentaDemo(){
     if(errMsg || !data || data.ok !== true){
       return fallo((data && data.error) ? data.error : (errMsg || 'No se pudo crear la cuenta.'));
     }
-    enviarEmailAltaDemo(email, nombre, empresa, vence);
+    enviarEmailAltaDemo(email, nombre, empresa, vence, pass);
     if(ok){
       ok.innerHTML = '✓ Cuenta demo creada para <strong>'+escapeHtml(empresa)+'</strong>. Le mandamos el acceso a '+escapeHtml(email)+'. Vence el '+_fechaAR(vence)+'.<br>'
         + '<span style="color:var(--gray);font-size:12px;">Ya puede ingresar directo con el email y la contraseña (no necesita confirmar nada).</span>';
@@ -1499,7 +1499,7 @@ function crearCuentaDemo(){
 }
 
 // Email que recibe la empresa cuando MercaTeck le da el alta de la demo
-function enviarEmailAltaDemo(email, nombre, empresa, vence){
+function enviarEmailAltaDemo(email, nombre, empresa, vence, pass){
   if(!sb) return;
   // El botón "Ingresar a GesFlota" debe llevar SIEMPRE a la pantalla de login
   // del subdominio, en la MISMA carpeta donde está la app (p. ej. /frontend/).
@@ -1510,12 +1510,14 @@ function enviarEmailAltaDemo(email, nombre, empresa, vence){
     '<p>¡Hola'+(nombre?(' <strong>'+escapeHtml(nombre)+'</strong>'):'')+'!</p>'
     +'<p><strong>MercaTeck</strong> le dio de alta a <strong>'+escapeHtml(empresa||'')+'</strong> la opción <strong>Demo</strong> de GesFlota: podés cargar hasta <strong>5 vehículos</strong> y usar el sistema durante <strong>1 mes</strong>, con todas las funciones.</p>'
     +'<div style="background:#faf7f0;border-left:3px solid #C49A3A;padding:14px 16px;margin:18px 0;border-radius:0 6px 6px 0;">'
-      +'<div style="font-weight:700;color:#1a1a1a;margin-bottom:8px;">Para empezar</div>'
-      +'<div style="margin-bottom:6px;">Ingresá a GesFlota con el email <strong>'+escapeHtml(email)+'</strong> y la contraseña que te pasamos.</div>'
+      +'<div style="font-weight:700;color:#1a1a1a;margin-bottom:8px;">Tus datos de acceso</div>'
+      +'<div style="margin-bottom:4px;">Email: <strong>'+escapeHtml(email)+'</strong></div>'
+      +'<div style="margin-bottom:8px;">Contraseña: <strong>'+escapeHtml(pass||'')+'</strong></div>'
+      +'<div style="font-size:12px;color:#8a6d1f;background:#fff8e1;border:1px solid #ffe082;border-radius:4px;padding:7px 9px;margin-bottom:8px;">🔒 Por seguridad, cambiá esta contraseña la primera vez que entres: Configuración → Cambiar contraseña.</div>'
       +'<div style="font-size:13px;color:#666;">Tu demo está disponible hasta el <strong>'+_fechaAR(vence)+'</strong>.</div>'
     +'</div>'
     +'<p style="text-align:center;margin:24px 0;"><a href="'+link+'" style="display:inline-block;background:#C49A3A;color:#1a1a1a;font-weight:700;text-decoration:none;padding:12px 28px;border-radius:6px;">Ingresar a GesFlota</a></p>'
-    +'<p style="font-size:13px;color:#666;">Si es la primera vez que entrás, confirmá tu email con el mensaje que te llega del sistema y después usá el botón de arriba.</p>'
+    +'<p style="font-size:13px;color:#666;">Tu cuenta ya está activa: tocá el botón de arriba e ingresá directo con tu email y contraseña. No necesitás confirmar nada.</p>'
     +'<p>Cualquier duda, respondé este email o escribinos a <strong>germanmercado@mercateck.com.ar</strong>.</p>'
     +'<p style="color:#888;">Gracias por probar GesFlota.<br><strong style="color:#C49A3A;">El equipo de MercaTeck</strong></p>';
   sb.functions.invoke('enviar-email-flota', {
@@ -1523,7 +1525,7 @@ function enviarEmailAltaDemo(email, nombre, empresa, vence){
       to: email,
       subject: 'MercaTeck te dio de alta la demo de GesFlota',
       html: _plantillaEmail('Tu demo ya está activa 🎁', cuerpo),
-      text: 'MercaTeck le dio de alta a '+(empresa||'')+' la opción Demo de GesFlota: hasta 5 vehículos durante 1 mes. Ingresá en '+link+' con el email '+email+' y la contraseña que te pasamos. La demo vence el '+_fechaAR(vence)+'.'
+      text: 'MercaTeck le dio de alta a '+(empresa||'')+' la opción Demo de GesFlota: hasta 5 vehículos durante 1 mes. Ingresá en '+link+' con el email '+email+' y la contraseña '+(pass||'')+'. Por seguridad, cambiala la primera vez que entres (Configuración → Cambiar contraseña). La demo vence el '+_fechaAR(vence)+'.'
     }
   }).then(function(){}).catch(function(){});
 }
