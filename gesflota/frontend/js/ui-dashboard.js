@@ -1469,38 +1469,27 @@ function crearCuentaDemo(){
 
   btn.disabled = true; btn.textContent = 'Creando...';
 
-  // Cliente aparte: así el alta no reemplaza tu sesión de superadmin
-  var sbAlta;
-  try {
-    sbAlta = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: { persistSession:false, autoRefreshToken:false, detectSessionInUrl:false, storageKey:'gesflota-alta-demo' }
-    });
-  } catch(e){ return fallo('No se pudo preparar el alta.'); }
+  var vence = _finDeDemo();
 
-  sbAlta.auth.signUp({
-    email: email,
-    password: pass,
-    options: {
-      // Mismo criterio que el registro público: la confirmación vuelve al
-      // login.html de la carpeta actual (relativo), no al HTML viejo.
-      emailRedirectTo: window.location.origin + window.location.pathname.replace(/[^\/]*$/, 'login.html'),
-      captchaToken: (HCAPTCHA_SITE_KEY && _altaDemoCaptchaToken) ? _altaDemoCaptchaToken : undefined,
-      data: { empresa: empresa, nombre: nom, apellido: ape, email: email, plan: 'demo', version_terminos: '2025-06', user_agent: 'alta-demo-mercateck' }
-    }
+  // Alta por edge function segura 'crear-demo' (service role). La función valida
+  // contra tu JWT que seas superadmin y crea el usuario YA CONFIRMADO
+  // (email_confirm:true), así el cliente ingresa directo con email + contraseña,
+  // sin depender del email de confirmación de Supabase. Se llama con TU sesión
+  // (sb); el service role nunca sale del servidor y no reemplaza tu sesión.
+  sb.functions.invoke('crear-demo', {
+    body: { empresa: empresa, nombre: nombre, email: email, password: pass }
   }).then(function(res){
     // El token de hCaptcha es de un solo uso: lo reseteamos siempre tras el intento
     _resetCaptchaAltaDemo();
-    if(res.error){
-      var msg = res.error.message || 'No se pudo crear la cuenta.';
-      if(msg.indexOf('already registered')>=0) msg = 'Ese email ya tiene cuenta en GesFlota.';
-      if(msg.toLowerCase().indexOf('captcha')>=0) msg = 'La verificación anti-robot falló o expiró. Reintentá el "No soy un robot".';
-      return fallo(msg);
+    var data = res && res.data;
+    var errMsg = (res && res.error) ? (res.error.message || 'No se pudo crear la cuenta.') : null;
+    if(errMsg || !data || data.ok !== true){
+      return fallo((data && data.error) ? data.error : (errMsg || 'No se pudo crear la cuenta.'));
     }
-    var vence = _finDeDemo();
     enviarEmailAltaDemo(email, nombre, empresa, vence);
     if(ok){
       ok.innerHTML = '✓ Cuenta demo creada para <strong>'+escapeHtml(empresa)+'</strong>. Le mandamos el acceso a '+escapeHtml(email)+'. Vence el '+_fechaAR(vence)+'.<br>'
-        + '<span style="color:var(--gray);font-size:12px;">Tiene que confirmar el email del sistema antes de poder entrar.</span>';
+        + '<span style="color:var(--gray);font-size:12px;">Ya puede ingresar directo con el email y la contraseña (no necesita confirmar nada).</span>';
       ok.style.display='block';
     }
     btn.disabled=false; btn.textContent='Crear cuenta demo';
