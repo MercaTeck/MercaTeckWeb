@@ -95,6 +95,17 @@ const BASE = 'file://' + path.join(__dirname, '..', 'frontend') + '/';
   // 6) Registro público: el campo Nombre NO puede ser un email (candado anti-autocompletado)
   await page.goto(BASE+'login.html', { waitUntil:'domcontentloaded' });
   await page.waitForTimeout(400);
+
+  // 6a) El botón "Continuar con Google" debe quedar OCULTO incluso al abrir el registro
+  const g = await page.evaluate(()=>{
+    try{ if(typeof showView==='function') showView('register'); }catch(e){}
+    const btns = Array.from(document.querySelectorAll('#view-register .auth-google'));
+    const visible = btns.some(b => getComputedStyle(b).display !== 'none');
+    return { count: btns.length, visible };
+  });
+  check(g.count>0, 'No se encontró el botón .auth-google en el registro');
+  check(g.visible===false, 'El botón "Continuar con Google" quedó VISIBLE al abrir el registro');
+
   const reg = await page.evaluate(()=>{
     const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v; };
     set('regCompany','Transportes SA');

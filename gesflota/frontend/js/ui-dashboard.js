@@ -2514,8 +2514,16 @@ function showView(name, targetId){
       if(typeof _initCaptcha==='function') _initCaptcha();
       var box = document.getElementById('regConfirmBox');
       if(box) box.remove();
-      var campos = document.querySelectorAll('#view-register .field, #view-register .auth-btn, #view-register .auth-divider, #view-register .auth-google');
+      var campos = document.querySelectorAll('#view-register .field, #view-register .auth-btn');
       campos.forEach(function(el){ el.style.display=''; });
+      // El botón "Continuar con Google" y su divisor "o" deben seguir OCULTOS
+      // (el provider no está habilitado en Supabase). No los restauramos acá, y
+      // los re-ocultamos por las dudas: así no reaparecen al abrir el registro.
+      document.querySelectorAll('#view-register .auth-google').forEach(function(btn){
+        btn.style.display='none';
+        var prev = btn.previousElementSibling;
+        if(prev && prev.classList && prev.classList.contains('auth-divider')) prev.style.display='none';
+      });
     }
   } else {
     // Si la vista está en otro archivo HTML, redirigir fluidamente
