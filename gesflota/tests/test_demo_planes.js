@@ -92,6 +92,25 @@ const BASE = 'file://' + path.join(__dirname, '..', 'frontend') + '/';
   check(envio.cuerpo.includes('Juan Pérez'), 'El email de la solicitud no incluye el nombre y apellido');
   check(envio.cuerpo.includes('Jefe de flota'), 'El email de la solicitud no incluye el puesto');
 
+  // 6) Registro público: el campo Nombre NO puede ser un email (candado anti-autocompletado)
+  await page.goto(BASE+'login.html', { waitUntil:'domcontentloaded' });
+  await page.waitForTimeout(400);
+  const reg = await page.evaluate(()=>{
+    const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v; };
+    set('regCompany','Transportes SA');
+    set('regName','mercateckinfo@gmail.com'); // email metido en el campo Nombre
+    set('regLast','pro');
+    set('regEmail','juan@empresa.com');
+    set('regPass','Abcd1234');
+    const pl=document.getElementById('regPlan'); if(pl) pl.value='pro';
+    const tc=document.getElementById('regTerms'); if(tc) tc.checked=true;
+    if(typeof doRegister!=='function') return { ok:false, motivo:'doRegister no existe' };
+    try{ doRegister(); }catch(e){ return { ok:false, motivo:e.message }; }
+    const err=document.getElementById('regError');
+    return { ok: !!(err && err.style.display==='block' && /email/i.test(err.textContent)) };
+  });
+  check(reg.ok, 'doRegister debería rechazar un email en el campo Nombre ('+(reg.motivo||'')+')');
+
   check(perr.length===0, 'Errores de página: '+perr.join(' | '));
 
   console.log('\nErrores de página: '+(perr.length?perr.join(' | '):'ninguno'));

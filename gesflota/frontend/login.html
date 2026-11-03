@@ -121,8 +121,8 @@
       <div class="auth-success" id="regSuccess"></div>
       <div class="field"><label>Empresa</label><input type="text" id="regCompany" placeholder="Nombre de tu empresa"/></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-        <div class="field"><label>Nombre</label><input type="text" id="regName" placeholder="Tu nombre"/></div>
-        <div class="field"><label>Apellido</label><input type="text" id="regLast" placeholder="Tu apellido"/></div>
+        <div class="field"><label>Nombre</label><input type="text" id="regName" autocomplete="given-name" placeholder="Tu nombre"/></div>
+        <div class="field"><label>Apellido</label><input type="text" id="regLast" autocomplete="family-name" placeholder="Tu apellido"/></div>
       </div>
       <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="empresa@ejemplo.com"/></div>
       <div class="field"><label>Contraseña</label><input type="password" id="regPass" placeholder="Mínimo 8 caracteres" oninput="_chequearPassVivo(this.value)"/>
@@ -327,7 +327,7 @@
 
   <!-- Lógica Frontend -->
   <script src="js/utils.js"></script>
-  <script src="js/ui-dashboard.js?v=20261103a"></script>
+  <script src="js/ui-dashboard.js?v=20261103b"></script>
 
   <script>
     // Inicialización de vista según hash o query

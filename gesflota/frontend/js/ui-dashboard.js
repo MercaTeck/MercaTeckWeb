@@ -391,6 +391,13 @@ function doRegister(){
     last = partes.slice(1).join(' ');
   }
 
+  // Candado: el Nombre/Apellido NO puede ser un email (evita que el autocompletado
+  // del navegador meta un mail en el campo Nombre y quede como identidad de la cuenta).
+  if(/@/.test(name) || /@/.test(last)){
+    errEl.textContent='El nombre y apellido no pueden ser un email. Revisalos.';
+    errEl.style.display='block'; return;
+  }
+
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='El email no tiene un formato válido.'; errEl.style.display='block'; return; }
   // Si eligieron mandar los avisos a otro email, validarlo
   var _chkAl = document.getElementById('regAlertasMismoMail');
@@ -1382,6 +1389,7 @@ function enviarSolicitudDemo(){
   var tel     = (document.getElementById('demoTel').value||'').trim();
 
   if(nombre.length < 2) return fallo('Escribí tu nombre y apellido.');
+  if(/@/.test(nombre)) return fallo('El nombre y apellido no puede ser un email.');
   if(puesto.length < 2) return fallo('Escribí tu puesto.');
   if(empresa.length < 2) return fallo('Escribí el nombre de la empresa.');
   if(!cant || Number(cant) < 1) return fallo('Escribí cuántos vehículos tenés.');
