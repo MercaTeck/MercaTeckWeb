@@ -810,6 +810,13 @@ function loginSuccess(user){
   document.getElementById('sidebarPlan').textContent = user.plan ? user.plan.charAt(0).toUpperCase()+user.plan.slice(1) : 'Pro';
   // Aplicar restricciones por plan
   applyPlanRestrictions(user.plan);
+  // ¿Pendiente de pago? Un plan pago (pro/enterprise) sin el pago confirmado
+  // (estado_pago distinto de al_dia, y que no sea un vencido/suspendido ya en
+  // modo solo-lectura) solo puede entrar a Configuración → Mi suscripción.
+  window._pendientePago = (!isAdmin && !!user.plan && user.plan !== 'demo'
+      && user.estado_pago !== 'al_dia'
+      && user.estado_pago !== 'vencido'
+      && user.estado_pago !== 'suspendido');
   // Aplicar modo solo-lectura si corresponde
   if(window._soloLectura){ activarModoSoloLectura(user); }
   showToast('Bienvenido, '+( user.name||user.email)+'! Tu panel está listo.','success');
@@ -826,7 +833,38 @@ function loginSuccess(user){
       loadChecklistRegistros();
       if(typeof cargarTicketsCliente==='function'){ cargarTicketsCliente(); }
     }
+    // Pendiente de pago: dejar solo Configuración y llevar a Mi suscripción.
+    if(window._pendientePago){ aplicarBloqueoPendientePago(user); }
   }
+}
+
+// Bloqueo "pendiente de pago": oculta todo el menú salvo Configuración, muestra
+// un aviso con botón para confirmar el pago y lleva a Mi suscripción. El resto
+// de las secciones quedan inaccesibles hasta que el pago esté confirmado.
+function aplicarBloqueoPendientePago(user){
+  try{
+    document.querySelectorAll('.sidebar-item').forEach(function(it){
+      var tab = it.getAttribute('data-tab');
+      if(!tab){ var m=(it.getAttribute('onclick')||'').match(/dash-[a-z]+/); tab = m?m[0]:''; }
+      if(tab && tab !== 'dash-config'){ it.style.display='none'; }
+    });
+    var cont = document.getElementById('dash-config');
+    if(cont && !document.getElementById('bannerPendientePago')){
+      var planLbl = (user.plan||'').charAt(0).toUpperCase()+(user.plan||'').slice(1);
+      var b = document.createElement('div');
+      b.id = 'bannerPendientePago';
+      b.style.cssText = 'background:linear-gradient(90deg,rgba(224,169,59,.16),rgba(224,169,59,.05));border:1px solid var(--gold-border);border-radius:var(--r);padding:1.1rem 1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;';
+      b.innerHTML = '<div style="font-size:24px;">🔒</div>'
+        +'<div style="flex:1;min-width:220px;">'
+          +'<div style="font-size:14px;font-weight:700;color:var(--gold);">Tu plan '+escapeHtml(planLbl)+' está pendiente de pago</div>'
+          +'<div style="font-size:13px;color:var(--gray);margin-top:3px;">Para activar todas las funciones, confirmá el pago por transferencia. Acá abajo, en <strong>Mi suscripción</strong>, tenés los datos para transferir y el botón para subir el comprobante.</div>'
+        +'</div>'
+        +'<button class="btn-gold" style="font-size:13px;padding:10px 18px;white-space:nowrap;" onclick="(typeof abrirConfirmarPago===\'function\')?abrirConfirmarPago():(function(){var d=document.getElementById(\'datosBancariosBox\');if(d)d.scrollIntoView({behavior:\'smooth\',block:\'center\'});})()">Confirmar pago</button>';
+      cont.insertBefore(b, cont.firstChild);
+    }
+    var cfgItem = document.querySelector('[data-tab="dash-config"]') || document.querySelector('[onclick*="dash-config"]');
+    setTab(cfgItem, 'dash-config');
+  }catch(e){}
 }
 
 // Muestra el banner de vencimiento y bloquea las acciones de carga/edición.
@@ -2452,6 +2490,24 @@ function guardarNuevaPassword(){
 //  updateUser: la sesión actual sigue válida y la nueva clave queda tomada
 //  para el próximo ingreso. No requiere email.
 // ══════════════════════════════════════════════════════
+
+// Mostrar / ocultar la contraseña de un campo (botón propio con ojito).
+function _togglePass(btn){
+  try{
+    var inp = btn.parentElement ? btn.parentElement.querySelector('input') : null;
+    if(!inp) return;
+    if(inp.type === 'password'){
+      inp.type = 'text';
+      btn.textContent = '🙈';
+      btn.setAttribute('aria-label','Ocultar contraseña');
+    } else {
+      inp.type = 'password';
+      btn.textContent = '👁';
+      btn.setAttribute('aria-label','Mostrar contraseña');
+    }
+  }catch(e){}
+}
+
 function toggleCambiarPass(){
   var body = document.getElementById('cambiarPassBody');
   var arrow = document.getElementById('cambiarPassArrow');
@@ -2553,6 +2609,13 @@ function showView(name, targetId){
 
 // Dashboard tabs
 function setTab(el, tabId){
+  // Candado "pendiente de pago": solo se permite Configuración.
+  if(window._pendientePago && tabId !== 'dash-config'){
+    if(typeof showToast==='function') showToast('Activá tu plan confirmando el pago para usar esta sección.','warning');
+    tabId = 'dash-config';
+    el = document.querySelector('[data-tab="dash-config"]') || document.querySelector('[onclick*="dash-config"]') || el;
+  }
+  if(!el) return;
   document.querySelectorAll('.sidebar-item').forEach(function(i){ i.classList.remove('active'); });
   el.classList.add('active');
   var tabs = ['dash-inicio','dash-flota','dash-mantenimiento','dash-checklist','dash-informes','dash-soporte','dash-guia','dash-config'];

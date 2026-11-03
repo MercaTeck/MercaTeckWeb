@@ -46,7 +46,7 @@
       <div class="auth-sub">Ingresá a tu panel de control</div>
       <div class="auth-alert" id="loginError"></div>
       <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="empresa@ejemplo.com"/></div>
-      <div class="field"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••••"/></div>
+      <div class="field"><label>Contraseña</label><div class="pass-wrap"><input type="password" id="loginPass" placeholder="••••••••"/><button type="button" class="pass-eye" onclick="_togglePass(this)" aria-label="Mostrar contraseña">👁</button></div></div>
       <div id="loginCaptchaBox" style="display:none;margin-bottom:.75rem;"><div id="hcaptcha-login"></div></div>
       <button class="auth-btn" onclick="doLogin()">Ingresar</button>
       <!-- Login con Google oculto temporalmente: el provider no está habilitado en Supabase.
@@ -77,8 +77,8 @@
       <div class="auth-title">Elegí tu nueva contraseña</div>
       <div class="auth-sub">Escribila dos veces para confirmar</div>
       <div class="auth-alert" id="resetError"></div>
-      <div class="field"><label>Nueva contraseña</label><input type="password" id="resetPass1" placeholder="Mínimo 8 caracteres" onkeyup="if(event.key==='Enter')guardarNuevaPassword()"/></div>
-      <div class="field"><label>Repetí la contraseña</label><input type="password" id="resetPass2" placeholder="••••••••" onkeyup="if(event.key==='Enter')guardarNuevaPassword()"/></div>
+      <div class="field"><label>Nueva contraseña</label><div class="pass-wrap"><input type="password" id="resetPass1" placeholder="Mínimo 8 caracteres" onkeyup="if(event.key==='Enter')guardarNuevaPassword()"/><button type="button" class="pass-eye" onclick="_togglePass(this)" aria-label="Mostrar contraseña">👁</button></div></div>
+      <div class="field"><label>Repetí la contraseña</label><div class="pass-wrap"><input type="password" id="resetPass2" placeholder="••••••••" onkeyup="if(event.key==='Enter')guardarNuevaPassword()"/><button type="button" class="pass-eye" onclick="_togglePass(this)" aria-label="Mostrar contraseña">👁</button></div></div>
       <div style="font-size:11px;color:var(--gray);margin-bottom:1rem;">Usá al menos 8 caracteres. Te recomendamos combinar letras y números.</div>
       <button class="auth-btn" onclick="guardarNuevaPassword()">Guardar contraseña</button>
       <div class="auth-footer">
@@ -125,7 +125,7 @@
         <div class="field"><label>Apellido</label><input type="text" id="regLast" autocomplete="family-name" placeholder="Tu apellido"/></div>
       </div>
       <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="empresa@ejemplo.com"/></div>
-      <div class="field"><label>Contraseña</label><input type="password" id="regPass" placeholder="Mínimo 8 caracteres" oninput="_chequearPassVivo(this.value)"/>
+      <div class="field"><label>Contraseña</label><div class="pass-wrap"><input type="password" id="regPass" placeholder="Mínimo 8 caracteres" oninput="_chequearPassVivo(this.value)"/><button type="button" class="pass-eye" onclick="_togglePass(this)" aria-label="Mostrar contraseña">👁</button></div>
         <div id="regPassReqs" style="font-size:10px;color:var(--gray);margin-top:6px;line-height:1.6;">
           <span id="reqLen">⚪ 8 caracteres</span> ·
           <span id="reqMay">⚪ mayúscula</span> ·
@@ -327,7 +327,7 @@
 
   <!-- Lógica Frontend -->
   <script src="js/utils.js"></script>
-  <script src="js/ui-dashboard.js?v=20261103c"></script>
+  <script src="js/ui-dashboard.js?v=20261103d"></script>
 
   <script>
     // Inicialización de vista según hash o query

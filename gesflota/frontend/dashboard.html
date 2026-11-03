@@ -1148,8 +1148,8 @@
               <div class="app-card" style="padding:1.5rem;margin-bottom:.75rem;">
                 <div style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Elegí una nueva contraseña para tu cuenta. La vas a usar la próxima vez que ingreses.</div>
                 <div style="display:grid;gap:.75rem;max-width:360px;">
-                  <input id="cpNueva" type="password" autocomplete="new-password" placeholder="Nueva contraseña" style="width:100%;padding:11px 14px;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);color:var(--white);font-size:14px;">
-                  <input id="cpNueva2" type="password" autocomplete="new-password" placeholder="Repetir nueva contraseña" style="width:100%;padding:11px 14px;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);color:var(--white);font-size:14px;">
+                  <div class="pass-wrap"><input id="cpNueva" type="password" autocomplete="new-password" placeholder="Nueva contraseña" style="width:100%;padding:11px 44px 11px 14px;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);color:var(--white);font-size:14px;"><button type="button" class="pass-eye" onclick="_togglePass(this)" aria-label="Mostrar contraseña">👁</button></div>
+                  <div class="pass-wrap"><input id="cpNueva2" type="password" autocomplete="new-password" placeholder="Repetir nueva contraseña" style="width:100%;padding:11px 44px 11px 14px;background:var(--input-bg);border:1px solid var(--bdr);border-radius:var(--r);color:var(--white);font-size:14px;"><button type="button" class="pass-eye" onclick="_togglePass(this)" aria-label="Mostrar contraseña">👁</button></div>
                 </div>
                 <div id="cpPassError" style="display:none;color:#F87171;font-size:13px;margin-top:.6rem;"></div>
                 <div id="cpPassOk" style="display:none;color:#4ADE80;font-size:13px;margin-top:.6rem;"></div>
@@ -2073,7 +2073,7 @@
 
   <!-- Lógica Frontend -->
   <script src="js/utils.js"></script>
-  <script src="js/ui-dashboard.js?v=20261103c"></script>
+  <script src="js/ui-dashboard.js?v=20261103d"></script>
   <script>
 // Muestra el botón "volver arriba" y el chat de IA solo cuando el usuario baja.
 (function(){
