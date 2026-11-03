@@ -1046,8 +1046,8 @@ function logout(){
 var PLAN_PRECIO = { demo:0, pro:87800, enterprise:178800 }; // precios vigentes (coinciden con la landing)
 
 // ── Datos bancarios (se leen de la base; solo con sesión iniciada) ──
-function cargarDatosBancarios(){
-  var box = document.getElementById('datosBancariosBox');
+function cargarDatosBancarios(boxId){
+  var box = document.getElementById(boxId || 'datosBancariosBox');
   if(!box) return;
   if(!sb){ box.innerHTML = '<span style="color:var(--gray);">Iniciá sesión para ver los datos.</span>'; return; }
   sb.from('datos_bancarios').select('*').eq('id',1).single().then(function(res){
@@ -1641,6 +1641,10 @@ function cargarMiSuscripcion(){
     var planLbl = {demo:'Demo', pro:'Pro', enterprise:'Enterprise'};
     function set(id,v,color){ var el=document.getElementById(id); if(el){ el.textContent=v; if(color) el.style.color=color; } }
     set('susPlan', planLbl[e.plan]||e.plan||'—');
+
+    // El botón "Confirmar pago" aparece en todos los planes menos la Demo.
+    var btnCp = document.getElementById('btnConfirmarPago');
+    if(btnCp) btnCp.style.display = (e.plan==='demo') ? 'none' : 'inline-flex';
 
     // Estado con color
     var estados = {
@@ -2841,23 +2845,8 @@ var currentPayMethod = 'transfer';
 function openPayment(plan, amount){
   // El Demo no se paga: lo activa MercaTeck
   if(String(plan).toLowerCase()==='demo'){ abrirSolicitudDemo(); return; }
-  // Precios base EN PESOS (mensual)
-  var arsMesBase = {'Demo':0,'Pro':87800,'Enterprise':178800}[plan] || 0;
-  var periodoTxt, pesos;
-  if(_periodoAnual){
-    pesos = Math.round(arsMesBase*12*0.85/100)*100; // anual: -15%
-    periodoTxt = 'año';
-  } else {
-    pesos = arsMesBase;
-    periodoTxt = 'mes';
-  }
-  var precioFinal = pesos.toLocaleString('es-AR');
-  document.getElementById('payPlanName').textContent = plan + (_periodoAnual ? ' (anual)' : '');
-  document.getElementById('payAmount').textContent = precioFinal;
-  var perEl = document.getElementById('payPeriod');
-  if(perEl) perEl.textContent = 'ARS/'+periodoTxt;
-  document.getElementById('payModal').classList.add('open');
-  selectPayMethod('transfer');
+  // Circuito nuevo: ventana de Confirmar pago (elegir plan/periodo + comprobante)
+  abrirConfirmarPago();
 }
 
 function closePayment(){ document.getElementById('payModal').classList.remove('open'); }
@@ -2873,9 +2862,130 @@ function selectPayMethod(method){
   if(txt) txt.textContent = 'Confirmar transferencia';
 }
 
-function confirmPayment(){
-  closePayment();
-  showToast('Enviá el comprobante de la transferencia a germanmercado@mercateck.com.ar','success');
+function confirmPayment(){ abrirConfirmarPago(); }
+
+// ══════════════════════════════════════════════════════
+//  CONFIRMAR PAGO (circuito nuevo: comprobante + alta manual)
+//  El cliente elige plan/periodicidad/add-on, ve el total, sube el comprobante
+//  y confirma. La edge function registrar-pago valida y calcula el monto del
+//  lado del servidor, guarda el comprobante y avisa a MercaTeck.
+// ══════════════════════════════════════════════════════
+var _cpPlan = 'pro';
+var _cpArchivoB64 = null, _cpArchivoTipo = '', _cpArchivoNombre = '';
+
+// Total en pesos según plan + periodicidad + add-on (coincide con el servidor).
+function _cpCalc(plan, periodo, addon){
+  var mes = { pro:87800, enterprise:178800 }[plan] || 0;
+  var conAddon = addon && plan === 'pro';
+  if(periodo === 'anual'){
+    var t = Math.round(mes*12*0.85/100)*100;
+    if(conAddon) t += Math.round(30000*12*0.85/100)*100;
+    return t;
+  }
+  var tot = mes;
+  if(conAddon) tot += 30000;
+  return tot;
+}
+
+function abrirConfirmarPago(){
+  var m = document.getElementById('confirmarPagoModal');
+  if(!m) return;
+  // Reset
+  _cpArchivoB64 = null; _cpArchivoTipo=''; _cpArchivoNombre='';
+  var err = document.getElementById('cpError'); if(err){ err.style.display='none'; err.textContent=''; }
+  var s1=document.getElementById('cpStep1'), s2=document.getElementById('cpStep2');
+  if(s1) s1.style.display='block'; if(s2) s2.style.display='none';
+  var fi=document.getElementById('cpComprobante'); if(fi) fi.value='';
+  var an=document.getElementById('cpArchName'); if(an) an.textContent='';
+  var ad=document.getElementById('cpAddon'); if(ad) ad.checked=false;
+  var rm=document.querySelector('input[name="cpPeriodo"][value="mensual"]'); if(rm) rm.checked=true;
+  // Plan por defecto: el del usuario (o Pro)
+  var planActual = (currentUser && currentUser.plan && currentUser.plan!=='demo') ? currentUser.plan : 'pro';
+  _cpElegirPlan(planActual);
+  // Datos bancarios
+  if(typeof cargarDatosBancarios==='function') cargarDatosBancarios('cpDatosBancarios');
+  m.classList.add('open');
+}
+function cerrarConfirmarPago(){ var m=document.getElementById('confirmarPagoModal'); if(m) m.classList.remove('open'); }
+
+function _cpElegirPlan(plan){
+  _cpPlan = plan;
+  document.querySelectorAll('#cpPlanCards .plan-card').forEach(function(c){
+    var sel = c.getAttribute('data-plan')===plan;
+    c.style.borderColor = sel ? 'var(--gold)' : 'var(--bdr)';
+    c.style.background  = sel ? 'var(--gold-dim)' : 'var(--input-bg)';
+  });
+  // El add-on de check-list solo aplica al Pro
+  var box = document.getElementById('cpAddonBox');
+  if(box) box.style.display = (plan==='pro') ? 'block' : 'none';
+  if(plan!=='pro'){ var ad=document.getElementById('cpAddon'); if(ad) ad.checked=false; }
+  _cpActualizar();
+}
+
+function _cpActualizar(){
+  var periodo = (document.querySelector('input[name="cpPeriodo"]:checked')||{}).value || 'mensual';
+  var addon = !!(document.getElementById('cpAddon') && document.getElementById('cpAddon').checked);
+  var total = _cpCalc(_cpPlan, periodo, addon);
+  var tEl = document.getElementById('cpTotal');
+  if(tEl) tEl.textContent = total.toLocaleString('es-AR');
+  var det = document.getElementById('cpTotalDet');
+  if(det){
+    var nombre = _cpPlan.charAt(0).toUpperCase()+_cpPlan.slice(1);
+    det.textContent = nombre + ' · ' + (periodo==='anual'?'anual':'mensual') + (addon && _cpPlan==='pro' ? ' + check-list' : '');
+  }
+}
+
+function _cpArchivo(){
+  var fi = document.getElementById('cpComprobante');
+  var btn = document.getElementById('cpBtn');
+  var an = document.getElementById('cpArchName');
+  var err = document.getElementById('cpError');
+  _cpArchivoB64 = null;
+  if(!fi || !fi.files || !fi.files[0]){ if(btn){ btn.disabled=true; btn.style.opacity='.5'; btn.style.cursor='not-allowed'; } if(an) an.textContent=''; return; }
+  var f = fi.files[0];
+  var tipoOk = /pdf|jpeg|jpg|png/i.test(f.type) || /\.(pdf|jpe?g|png)$/i.test(f.name);
+  if(!tipoOk){ if(err){ err.textContent='El comprobante debe ser PDF, JPG o PNG.'; err.style.display='block'; } fi.value=''; return; }
+  if(f.size > 8*1024*1024){ if(err){ err.textContent='El comprobante supera los 8 MB.'; err.style.display='block'; } fi.value=''; return; }
+  if(err) err.style.display='none';
+  var reader = new FileReader();
+  reader.onload = function(){
+    _cpArchivoB64 = String(reader.result||'');
+    _cpArchivoTipo = f.type || '';
+    _cpArchivoNombre = f.name || 'comprobante';
+    if(an) an.textContent = '📎 ' + _cpArchivoNombre;
+    if(btn){ btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer'; }
+  };
+  reader.onerror = function(){ if(err){ err.textContent='No se pudo leer el archivo.'; err.style.display='block'; } };
+  reader.readAsDataURL(f);
+}
+
+function _cpConfirmar(){
+  var err = document.getElementById('cpError');
+  var btn = document.getElementById('cpBtn');
+  if(err) err.style.display='none';
+  if(!_cpArchivoB64){ if(err){ err.textContent='Subí el comprobante para poder confirmar.'; err.style.display='block'; } return; }
+  if(!sb){ if(err){ err.textContent='Sin conexión. Probá de nuevo en un momento.'; err.style.display='block'; } return; }
+  var periodo = (document.querySelector('input[name="cpPeriodo"]:checked')||{}).value || 'mensual';
+  var addon = !!(document.getElementById('cpAddon') && document.getElementById('cpAddon').checked);
+  if(btn){ btn.disabled=true; btn.textContent='Enviando...'; }
+  sb.functions.invoke('registrar-pago', {
+    body: { plan:_cpPlan, periodo:periodo, addon:addon, comprobante_base64:_cpArchivoB64, comprobante_tipo:_cpArchivoTipo, comprobante_nombre:_cpArchivoNombre }
+  }).then(function(res){
+    var data = res && res.data ? res.data : null;
+    if((res && res.error) || !data || !data.ok){
+      var msg = (data && data.error) ? data.error : 'No se pudo registrar el pago. Probá de nuevo.';
+      if(err){ err.textContent=msg; err.style.display='block'; }
+      if(btn){ btn.disabled=false; btn.textContent='Confirmar pago'; }
+      return;
+    }
+    // Mostrar "pago en proceso"
+    var s1=document.getElementById('cpStep1'), s2=document.getElementById('cpStep2');
+    if(s1) s1.style.display='none'; if(s2) s2.style.display='block';
+    if(typeof cargarMiSuscripcion==='function') cargarMiSuscripcion();
+  }).catch(function(e){
+    if(err){ err.textContent='No se pudo registrar el pago: '+(e&&e.message?e.message:e); err.style.display='block'; }
+    if(btn){ btn.disabled=false; btn.textContent='Confirmar pago'; }
+  });
 }
 
 // ══════════════════════════════════════════════════════
