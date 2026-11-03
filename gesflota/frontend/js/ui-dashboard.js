@@ -850,21 +850,47 @@ function aplicarBloqueoPendientePago(user){
     });
     var cont = document.getElementById('dash-config');
     if(cont && !document.getElementById('bannerPendientePago')){
-      var planLbl = (user.plan||'').charAt(0).toUpperCase()+(user.plan||'').slice(1);
+      window._planPendienteLbl = (user.plan||'').charAt(0).toUpperCase()+(user.plan||'').slice(1);
       var b = document.createElement('div');
       b.id = 'bannerPendientePago';
-      b.style.cssText = 'background:linear-gradient(90deg,rgba(224,169,59,.16),rgba(224,169,59,.05));border:1px solid var(--gold-border);border-radius:var(--r);padding:1.1rem 1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;';
-      b.innerHTML = '<div style="font-size:24px;">🔒</div>'
-        +'<div style="flex:1;min-width:220px;">'
-          +'<div style="font-size:14px;font-weight:700;color:var(--gold);">Tu plan '+escapeHtml(planLbl)+' está pendiente de pago</div>'
-          +'<div style="font-size:13px;color:var(--gray);margin-top:3px;">Para activar todas las funciones, confirmá el pago por transferencia. Acá abajo, en <strong>Mi suscripción</strong>, tenés los datos para transferir y el botón para subir el comprobante.</div>'
-        +'</div>'
-        +'<button class="btn-gold" style="font-size:13px;padding:10px 18px;white-space:nowrap;" onclick="(typeof abrirConfirmarPago===\'function\')?abrirConfirmarPago():(function(){var d=document.getElementById(\'datosBancariosBox\');if(d)d.scrollIntoView({behavior:\'smooth\',block:\'center\'});})()">Confirmar pago</button>';
+      b.style.cssText = 'border-radius:var(--r);padding:1.1rem 1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;';
       cont.insertBefore(b, cont.firstChild);
+      _pintarBannerPago(false); // por defecto: pendiente (dorado)
+      // Si ya hay un pago cargado (comprobante enviado), mostramos "en proceso" (verde).
+      if(sb && window._empresaId){
+        sb.from('pagos').select('id').eq('empresa_id', window._empresaId).eq('estado','pendiente').limit(1)
+          .then(function(r){ if(r && r.data && r.data.length){ _pintarBannerPago(true); } })
+          .catch(function(){});
+      }
     }
     var cfgItem = document.querySelector('[data-tab="dash-config"]') || document.querySelector('[onclick*="dash-config"]');
     setTab(cfgItem, 'dash-config');
   }catch(e){}
+}
+
+// Pinta el aviso de pago: pendiente (dorado, con botón) o en proceso (verde, agradecimiento).
+function _pintarBannerPago(enProceso){
+  var b = document.getElementById('bannerPendientePago');
+  if(!b) return;
+  var planLbl = window._planPendienteLbl || 'tu plan';
+  if(enProceso){
+    b.style.background = 'linear-gradient(90deg,rgba(74,222,128,.16),rgba(74,222,128,.05))';
+    b.style.border = '1px solid rgba(74,222,128,.4)';
+    b.innerHTML = '<div style="font-size:26px;">✅</div>'
+      +'<div style="flex:1;min-width:220px;">'
+        +'<div style="font-size:14px;font-weight:700;color:#4ADE80;">El pago de tu plan está en proceso</div>'
+        +'<div style="font-size:13px;color:var(--gray);margin-top:3px;">Te avisaremos cuando quede registrado y lo verás reflejado en tu panel. ¡Muchas gracias! Estás un paso más cerca de tener el control de tu flota. 🚚</div>'
+      +'</div>';
+  } else {
+    b.style.background = 'linear-gradient(90deg,rgba(224,169,59,.16),rgba(224,169,59,.05))';
+    b.style.border = '1px solid var(--gold-border)';
+    b.innerHTML = '<div style="font-size:24px;">🔒</div>'
+      +'<div style="flex:1;min-width:220px;">'
+        +'<div style="font-size:14px;font-weight:700;color:var(--gold);">Tu plan '+escapeHtml(planLbl)+' está pendiente de pago</div>'
+        +'<div style="font-size:13px;color:var(--gray);margin-top:3px;">Para activar todas las funciones, confirmá el pago por transferencia. Acá abajo, en <strong>Mi suscripción</strong>, tenés los datos para transferir y el botón para subir el comprobante.</div>'
+      +'</div>'
+      +'<button class="btn-gold" style="font-size:13px;padding:10px 18px;white-space:nowrap;" onclick="(typeof abrirConfirmarPago===\'function\')?abrirConfirmarPago():(function(){var d=document.getElementById(\'datosBancariosBox\');if(d)d.scrollIntoView({behavior:\'smooth\',block:\'center\'});})()">Confirmar pago</button>';
+  }
 }
 
 // Muestra el banner de vencimiento y bloquea las acciones de carga/edición.
@@ -2981,6 +3007,7 @@ function _cpConfirmar(){
     // Mostrar "pago en proceso"
     var s1=document.getElementById('cpStep1'), s2=document.getElementById('cpStep2');
     if(s1) s1.style.display='none'; if(s2) s2.style.display='block';
+    if(typeof _pintarBannerPago==='function') _pintarBannerPago(true); // banner a verde
     if(typeof cargarMiSuscripcion==='function') cargarMiSuscripcion();
   }).catch(function(e){
     if(err){ err.textContent='No se pudo registrar el pago: '+(e&&e.message?e.message:e); err.style.display='block'; }
