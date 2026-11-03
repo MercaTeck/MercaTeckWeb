@@ -5,6 +5,28 @@ Repositorio: `MercaTeck/MercaTeckWeb`, carpeta `gesflota/`.
 
 ---
 
+## 2026-11-03 — Planes/Demo coherentes + fix registro (404)
+
+### Planes / Demo
+- Landing: el plan **Demo** muestra todas las funciones habilitadas (se quitaron los ítems atenuados de *Compras y arreglos*, *Notificaciones por email* y *App de check-list*). El plan **Pro** ya no dice "Todo lo del plan Demo".
+- Chatbot: la respuesta de planes deja de decir "Todo lo de la Demo" en Pro y describe el Demo con todas las funciones.
+- `PLAN_PRECIO` actualizado a los precios vigentes (Pro 87.800 / Enterprise 178.800) para el MRR del panel central (antes tenía 39.000 / 79.000).
+
+### Formulario de demo
+- El modal "Solicitá tu demo" suma **Nombre y apellido** y **Puesto** (arriba, uno al lado del otro, obligatorios), incluidos en el email interno de la solicitud.
+
+### Registro público (fix 404)
+- `emailRedirectTo` del alta pública fijado a la URL absoluta del subdominio (`https://gesflota.mercateck.com.ar/frontend/login.html`), así la confirmación no cae en una ruta inexistente aunque se registren desde el dominio viejo.
+- Requiere en Supabase → Authentication → URL Configuration: **Site URL** al subdominio; en **Redirect URLs** ya está `https://gesflota.mercateck.com.ar/**` (conviene quitar los dos viejos de `mercateck.com.ar`).
+
+### Tests
+- Nuevo `test_demo_planes.js` (13 casos: campos del form, Demo sin atenuados, Pro sin la línea, precios del MRR, texto del chatbot). Toda la batería en verde.
+
+### Cache-busting
+- `?v=20261103a` en las 4 páginas.
+
+---
+
 ## 2026-11-01 — Despliegue en subdominio + seguridad + alta de demo
 
 ### Estructura / despliegue

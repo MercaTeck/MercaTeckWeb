@@ -273,9 +273,9 @@
             <li><span>✓</span><span>Alertas visuales con anticipación configurable (7, 15 o 30 días)</span></li>
             <li><span>✓</span><span>Carga masiva por Excel</span></li>
             <li><span>✓</span><span>Exportar tu flota a Excel</span></li>
-            <li class="dim"><span>—</span><span>Compras y arreglos</span></li>
-            <li class="dim"><span>—</span><span>Notificaciones por email</span></li>
-            <li class="dim"><span>—</span><span>App de check-list</span></li>
+            <li><span>✓</span><span>Compras y arreglos</span></li>
+            <li><span>✓</span><span>Notificaciones por email</span></li>
+            <li><span>✓</span><span>App de check-list</span></li>
           </ul>
           <button class="btn-plan" onclick="abrirSolicitudDemo()">Solicitá tu demo</button>
         </div>
@@ -291,7 +291,6 @@
           <div style="font-size:11px;color:var(--gray);margin-top:2px;" id="arsPro"></div>
                     <p class="price-desc" style="margin-top:.5rem;">Para empresas medianas que necesitan control total de su operación.</p>
           <ul class="price-features">
-            <li><span>✓</span><span>Todo lo del plan Demo</span></li>
             <li><span>✓</span><span>Hasta 50 vehículos</span></li>
             <li><span>✓</span><span>Panel de Mantenimiento: arreglos, compras, services e incidentes</span></li>
             <li><span>✓</span><span>Notificaciones por email a los destinatarios que elijas</span></li>
@@ -663,6 +662,10 @@
       <p style="font-size:13px;color:var(--gray);margin-bottom:1rem;">Demo sin cargo: hasta 5 vehículos y 1 mes de uso. Dejanos estos datos y te damos de alta.</p>
       <div class="auth-alert" id="demoError"></div>
       <div class="auth-success" id="demoOk"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="field"><label>Nombre y apellido</label><input type="text" id="demoNombre" maxlength="80" placeholder="Tu nombre y apellido"/></div>
+        <div class="field"><label>Puesto</label><input type="text" id="demoPuesto" maxlength="60" placeholder="Ej: Jefe de flota"/></div>
+      </div>
       <div class="field"><label>Nombre de la empresa</label><input type="text" id="demoEmpresa" maxlength="80" placeholder="Nombre de tu empresa"/></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
         <div class="field"><label>Cantidad de vehículos</label><input type="number" id="demoCant" min="1" max="9999" placeholder="Ej: 12"/></div>
@@ -832,7 +835,7 @@
 
   <!-- Lógica Frontend -->
   <script src="js/utils.js"></script>
-  <script src="js/ui-dashboard.js?v=20261031e"></script>
+  <script src="js/ui-dashboard.js?v=20261103a"></script>
   <script src="js/ui-landing.js"></script>
   <script>
 // Muestra el botón "volver arriba" y el chat de IA solo cuando el usuario baja.

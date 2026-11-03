@@ -438,12 +438,13 @@ function doRegister(){
     email: email,
     password: pass,
     options: {
-      // El email de confirmación debe volver al login del subdominio, que
-      // procesa el token_hash. Se arma RELATIVO a la carpeta actual (p. ej.
-      // /frontend/) para que apunte a login.html en la misma ruta, sin asumir
-      // que la app está en la raíz. Debe estar en la lista blanca de Redirect
-      // URLs de Supabase, si no Supabase usa el Site URL por defecto.
-      emailRedirectTo: window.location.origin + window.location.pathname.replace(/[^\/]*$/, 'login.html'),
+      // El email de confirmación debe volver SIEMPRE al login del subdominio,
+      // que procesa el token_hash. Se fija ABSOLUTO al subdominio para que no
+      // dependa de desde qué dominio se haya hecho el registro (si se calcula
+      // con window.location y alguien entra por el dominio viejo, el link cae
+      // en una ruta inexistente → 404). Esta URL está en la lista blanca de
+      // Redirect URLs de Supabase (gesflota.mercateck.com.ar/**).
+      emailRedirectTo: 'https://gesflota.mercateck.com.ar/frontend/login.html',
       data: {
         empresa: company,
         nombre: name,
@@ -997,7 +998,7 @@ function logout(){
 // ══════════════════════════════════════════════════════
 //  PANEL SUPERADMIN — cargar empresas reales de Supabase
 // ══════════════════════════════════════════════════════
-var PLAN_PRECIO = { demo:0, pro:39000, enterprise:79000 }; // OJO: pro y enterprise tienen los precios viejos
+var PLAN_PRECIO = { demo:0, pro:87800, enterprise:178800 }; // precios vigentes (coinciden con la landing)
 
 // ── Datos bancarios (se leen de la base; solo con sesión iniciada) ──
 function cargarDatosBancarios(){
@@ -1372,12 +1373,16 @@ function enviarSolicitudDemo(){
   function fallo(msg){ if(err){ err.textContent=msg; err.style.display='block'; } }
   if(err) err.style.display='none';
 
+  var nombre  = (document.getElementById('demoNombre') ? document.getElementById('demoNombre').value : '' || '').trim();
+  var puesto  = (document.getElementById('demoPuesto') ? document.getElementById('demoPuesto').value : '' || '').trim();
   var empresa = (document.getElementById('demoEmpresa').value||'').trim();
   var cant    = (document.getElementById('demoCant').value||'').trim();
   var tipo    = (document.getElementById('demoTipo').value||'').trim();
   var email   = (document.getElementById('demoEmail').value||'').trim();
   var tel     = (document.getElementById('demoTel').value||'').trim();
 
+  if(nombre.length < 2) return fallo('Escribí tu nombre y apellido.');
+  if(puesto.length < 2) return fallo('Escribí tu puesto.');
   if(empresa.length < 2) return fallo('Escribí el nombre de la empresa.');
   if(!cant || Number(cant) < 1) return fallo('Escribí cuántos vehículos tenés.');
   if(!tipo) return fallo('Elegí el tipo de flota.');
@@ -1388,6 +1393,8 @@ function enviarSolicitudDemo(){
   btn.disabled = true; btn.textContent = 'Enviando...';
 
   var cuerpo = 'Nueva solicitud de DEMO desde el sitio\n\n'
+    + 'Nombre y apellido: '+nombre+'\n'
+    + 'Puesto: '+puesto+'\n'
     + 'Empresa: '+empresa+'\n'
     + 'Cantidad de vehículos: '+cant+'\n'
     + 'Tipo de flota: '+tipo+'\n'
@@ -1396,6 +1403,8 @@ function enviarSolicitudDemo(){
   var html = _plantillaEmail('Nueva solicitud de demo 🎁',
       '<p>Entró un pedido de demo desde el sitio:</p>'
     + '<table width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0;border:1px solid #eee;border-radius:6px;overflow:hidden;">'
+    +   '<tr><td style="padding:10px 14px;background:#faf7f0;font-size:13px;color:#666;">Nombre y apellido</td><td style="padding:10px 14px;background:#faf7f0;font-size:13px;text-align:right;"><strong>'+escapeHtml(nombre)+'</strong></td></tr>'
+    +   '<tr><td style="padding:10px 14px;font-size:13px;color:#666;">Puesto</td><td style="padding:10px 14px;font-size:13px;text-align:right;">'+escapeHtml(puesto)+'</td></tr>'
     +   '<tr><td style="padding:10px 14px;background:#faf7f0;font-size:13px;color:#666;">Empresa</td><td style="padding:10px 14px;background:#faf7f0;font-size:13px;text-align:right;"><strong>'+escapeHtml(empresa)+'</strong></td></tr>'
     +   '<tr><td style="padding:10px 14px;font-size:13px;color:#666;">Vehículos</td><td style="padding:10px 14px;font-size:13px;text-align:right;">'+escapeHtml(cant)+'</td></tr>'
     +   '<tr><td style="padding:10px 14px;background:#faf7f0;font-size:13px;color:#666;">Tipo de flota</td><td style="padding:10px 14px;background:#faf7f0;font-size:13px;text-align:right;">'+escapeHtml(tipo)+'</td></tr>'
@@ -1412,7 +1421,7 @@ function enviarSolicitudDemo(){
       ok.style.display='block';
     }
     btn.textContent = 'Solicitud enviada';
-    ['demoEmpresa','demoCant','demoEmail','demoTel'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+    ['demoNombre','demoPuesto','demoEmpresa','demoCant','demoEmail','demoTel'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
     var t=document.getElementById('demoTipo'); if(t) t.value='';
     setTimeout(cerrarSolicitudDemo, 2600);
   }, 700);
@@ -3627,7 +3636,7 @@ var GES_RESPUESTAS = [
   // ═══════════════════════════════════════
   //  PLANES Y PRECIOS
   // ═══════════════════════════════════════
-  { k:['plan','precio','cuesta','vale','cuanto','cuánto','tarifa','valor','mensual','anual'], r:"GesFlota tiene 3 planes:\n\n🎁 Demo — Gratis, hasta 5 vehículos por 1 mes. La activa MercaTeck a pedido. Incluye panel de flota, VTV, seguros, alertas y carga por Excel. No incluye mantenimiento ni check-list.\n\n⭐ Pro — $87.800/mes, hasta 50 vehículos. Todo lo de la Demo + mantenimiento, informes, notificaciones por email, gráficos. El check-list se puede sumar como add-on ($30.000/mes).\n\n🏢 Enterprise — $178.800/mes, vehículos ilimitados. Todo lo del Pro + check-list incluido, motor de reglas, alertas automáticas programadas, recomendaciones por IA, marca propia (white-label).\n\nCon pago anual tenés 15% de descuento. Los planes los ves en la sección 'Planes' de la página principal. 💼" },
+  { k:['plan','precio','cuesta','vale','cuanto','cuánto','tarifa','valor','mensual','anual'], r:"GesFlota tiene 3 planes:\n\n🎁 Demo — Gratis, hasta 5 vehículos por 1 mes. La activa MercaTeck a pedido. Incluye TODAS las funciones (igual que Enterprise): flota, mantenimiento, check-list, informes y alertas, para que la pruebes completa.\n\n⭐ Pro — $87.800/mes, hasta 50 vehículos. Incluye mantenimiento, informes, notificaciones por email y gráficos. El check-list se puede sumar como add-on ($30.000/mes).\n\n🏢 Enterprise — $178.800/mes, vehículos ilimitados. Todo lo del Pro + check-list incluido, motor de reglas, alertas automáticas programadas, recomendaciones por IA, marca propia (white-label).\n\nCon pago anual tenés 15% de descuento. Los planes los ves en la sección 'Planes' de la página principal. 💼" },
 
   { k:['diferencia','comparar','cual elijo','cuál elijo','que plan','qué plan','recomendas','recomendás','me conviene'], r:"Te oriento rápido:\n\n• Si querés probarlo primero → Demo sin cargo (5 vehículos, 1 mes, la activamos nosotros)\n• Si necesitás mantenimiento, informes y avisos por email → Pro ($87.800/mes, hasta 50 vehículos)\n• Si además querés check-list para operarios, reglas por puesto, alertas automáticas y tu logo propio → Enterprise ($178.800/mes, ilimitado)\n\nEl check-list se puede activar como add-on en Pro ($30.000/mes extra). En Enterprise ya viene incluido.\n\nPodés ver la comparación detallada en la sección 'Planes' de la página principal, donde cada plan lista lo que incluye con ✓ y lo que no con —. 👍" },
 
